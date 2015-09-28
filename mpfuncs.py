@@ -18,7 +18,7 @@ from os import rename
 #       key = node name
 #       value = list of indices of the rows in
 #           the edge matrix where node (key) appears
-matrix of Edges (N,4), set of Vertices
+# matrix of Edges (N,4), set of Vertices
 def readEdgeFile(datafile, delimiter) :
 
     # get the number of lines in the file
@@ -79,7 +79,6 @@ def readEdgeFile(datafile, delimiter) :
 #       key = node name
 #       value = list of indices of the rows in
 #           the edge matrix where node (key) appears
-matrix of Edges (N,4), set of Vertices
 def readEdgeFilePlus(edgefile, nodefile, delimiter) :
 
     # get the number of lines in the file
@@ -119,6 +118,99 @@ def readEdgeFilePlus(edgefile, nodefile, delimiter) :
     #end loop
 
     return Edges, Nodes
+#end def ######## ######## ########
+######## ######## ######## ########
+# Function: Write the Knowledge Graph to a file
+# Returns: nothing
+def writeEdgeFile(network, datafile, delimiter) :
+
+    f = open(datafile, 'wb')
+
+    first = True
+    for row in network :
+
+        if first :
+            f.write('{1}{0}{2}{0}{3}{0}{4}'.format(
+                delimiter, row[0], row[1], row[2], row[3]))
+            first = False
+            continue
+        #end if
+
+
+        f.write('\n{1}{0}{2}{0}{3}{0}{4}'.format(
+            delimiter, row[0], row[1], row[2], row[3]))
+    #end loop
+
+    f.close()
+
+#end def ######## ######## ########
+######## ######## ######## ########
+# Function: Write the Knowledge Graph to a file
+# Returns: nothing
+def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
+
+    # Save the network (edge list) to a file
+    f = open(edgefile, 'wb')
+
+    first = True
+    for row in network :
+
+        if first :
+            f.write('{1}{0}{2}{0}{3}{0}{4}'.format(
+                delimiter, row[0], row[1], row[2], row[3]))
+            first = False
+            continue
+        #end if
+
+
+        f.write('\n{1}{0}{2}{0}{3}{0}{4}'.format(
+            delimiter, row[0], row[1], row[2], row[3]))
+    #end loop
+
+    f.close()
+
+#TODO: write the node dictionary to file
+
+    # Save the dictionary to a file
+    allKeys = nodeDict.keys()
+    allKeys.sort()
+
+    g = open(dictfile, 'wb')
+    first = True
+    for key in allKeys :
+        # Don't print empty values from dictionary
+        if not (nodeDict[key]) :
+            continue
+        #end if
+
+        # Insert newline in all but first row
+        if first :
+            first = False
+        else :
+            g.write("\n")
+        #end if
+
+
+        # Print each (key, value), where value is a list
+        # first print the key
+        g.write("{}{}".format(key, delim))
+
+        # then print the list of indeces
+        run = 0
+        templist = np.unique(nodeDict[key])
+        for item in templist :
+            if run == 0 :
+                run = 1
+                g.write("{}".format(item))
+            else :
+                g.write("{}{}".format(",",item))
+            #end if
+        #end loop
+        g.write("\n")
+
+    #end loop
+    g.close()
+
 #end def ######## ######## ########
 
 
