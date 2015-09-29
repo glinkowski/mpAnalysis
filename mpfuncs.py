@@ -49,7 +49,6 @@ def readEdgeFile(datafile, delimiter) :
         Edges[i] = lv
 
         # add node locations to dict
-#        if (lv[0] in Nodes.keys()) :
         if (lv[0] in nodeSet) :
             Nodes[lv[0]].append(i)
         else :
@@ -57,7 +56,6 @@ def readEdgeFile(datafile, delimiter) :
             Nodes[lv[0]].append(i)
             nodeSet.add(lv[0])
         #end if
-#        if (lv[1] in Nodes.keys()) :
         if (lv[1] in nodeSet) :
             Nodes[lv[1]].append(i)
         else :
@@ -75,7 +73,6 @@ def readEdgeFile(datafile, delimiter) :
 #    print "  file contained {:,} lines".format(nLines)
     return Edges, Nodes
 #end def ######## ######## ########
-
 ######## ######## ######## ########
 # Function: Read in an edge file with corresponding
 #       node dictionary file
@@ -92,8 +89,9 @@ def readEdgeFilePlus(edgefile, nodefile, delimiter) :
     nLines = sum( 1 for line in open(datafile, "rb") )
 
     # assign space for edge list
-#    dt = np.dtype('a23')
-    dt = np.dtype.str
+    dt = np.dtype('a30')
+#    dt = np.dtype(str)
+#    dt = np.dtype(object)
     Edges = np.empty( (nLines,4), dtype=dt)
     # Start reading from the file
     ef = open(edgefile, "rb")
@@ -153,6 +151,7 @@ def writeEdgeFile(network, datafile, delimiter) :
 #end def ######## ######## ########
 ######## ######## ######## ########
 # Function: Write the Knowledge Graph to a file
+#           AND -- write the node index dict to a file
 # Returns: nothing
 def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
 
@@ -175,8 +174,6 @@ def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
     #end loop
 
     f.close()
-
-#TODO: write the node dictionary to file
 
     # Save the dictionary to a file
     allKeys = nodeDict.keys()
@@ -219,6 +216,9 @@ def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
     g.close()
 
 #end def ######## ######## ########
+
+
+
 
 
 
