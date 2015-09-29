@@ -25,13 +25,16 @@ def readEdgeFile(datafile, delimiter) :
     nLines = sum( 1 for line in open(datafile, "rb") )
 
     # assign space for edge list
-#    dt = np.dtype('a23')
-    dt = np.dtype.str
+    dt = np.dtype('a30')
+#    dt = np.dtype(str)
+#    dt = np.dtype(object)
+
 #    Edges = np.empty( [nLines,4], dtype=dt)
     Edges = np.empty( (nLines,4), dtype=dt)
 
     # dictionary to hold Node indices
     Nodes = dict()
+    nodeSet = set()
 
     # Start reading from the file
     df = open(datafile, "rb")
@@ -46,17 +49,21 @@ def readEdgeFile(datafile, delimiter) :
         Edges[i] = lv
 
         # add node locations to dict
-        if (lv[0] in Nodes.keys()) :
+#        if (lv[0] in Nodes.keys()) :
+        if (lv[0] in nodeSet) :
             Nodes[lv[0]].append(i)
         else :
             Nodes[lv[0]] = list()
             Nodes[lv[0]].append(i)
+            nodeSet.add(lv[0])
         #end if
-        if (lv[1] in Nodes.keys()) :
+#        if (lv[1] in Nodes.keys()) :
+        if (lv[1] in nodeSet) :
             Nodes[lv[1]].append(i)
         else :
             Nodes[lv[1]] = list()
             Nodes[lv[1]].append(i)
+            nodeSet.add(lv[1])
         #end if
 
         i += 1
@@ -193,7 +200,7 @@ def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
 
         # Print each (key, value), where value is a list
         # first print the key
-        g.write("{}{}".format(key, delim))
+        g.write("{}{}".format(key, delimiter))
 
         # then print the list of indeces
         run = 0
