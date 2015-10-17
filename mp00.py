@@ -8,27 +8,61 @@
 #   Save the corrections as a new file.
 # Additionally, collect basic stats.
 # ----------------------------------------------------
-
+import sys
+import re
 
 
 
 ####### ####### ####### ####### 
 # PARAMETERS
 
+#outname = 'hsa_dghmw_c'
 outname = 'all-v1'
 path = '../networks/'
 
+#infile = 'hsa_dghmw.edge.txt'
 infile = 'all_edges.txt'
 outfile = outname + '.edge.txt'
 delim = '\t'
 
-####### ####### ####### ####### 
+# species               gene designation
+include_human = True   # ENSG
+include_mouse = True   # ENSM
+include_fly = True     # FBgn
+include_bee = True     # GB[45][0123456789]
+include_worm = True    # WBGe
+include_yeast = True   # Y[ABCDEFGHIJKLMNOP][LR][0123456]
+include_grass = True   # AT[12345CM]G
 
+######## ######## ######## ########
+
+
+
+######## ######## ######## ########
+# IMPLEMENT PARAMETERS
+
+gene_regex = ['ENSG', 'ENSM', 'FBgn', 'GB[45][0123456789]', 'WBGe', 'Y[ABCDEFGHIJKLMNOP][LR][0123456]', 'AT[12345CM]G']
+gene_select = [include_human, include_mouse, include_fly, include_bee, include_worm, include_yeast, include_grass]
+
+keepGenes = list()
+for i in range(0, len(gene_regex)) :
+    if gene_select[i] :
+        keepGenes.append(gene_regex[i])
+#end loop
+
+#print keepGenes
+
+######## ######## ######## ########
 
 
 
 ####### ####### ####### ####### 
 # BEGIN MAIN FUNCTION
+
+if (path+outfile) == (path+infile) :
+    print "ERROR: Input and output are same file: {}".format(path+outfile)
+    sys.exit()
+#end if
 
 typo1 = ['PPI_IntAct', 'PPI_intact']
 correct1 = 'PPI_IntAct'
@@ -54,6 +88,10 @@ pfSet = set()
 # stats: get size of each KEGG pathway
 kgTerms = dict()
 kgSet = set()
+# stats: get degree for each gene
+geneDict = dict()
+geneSet = set()
+
 
 ifile = open(path + infile, 'rb')
 ofile = open(path + outfile, 'wb')
@@ -177,6 +215,35 @@ for line in ifile :
     #end if
 
 
+    # stats: collect all the genes, count degrees
+    m0 = list()
+    m1 = list()
+    # check if node matches with a gene regex
+    for gt in keepGenes :
+        m0.append( re.match(gt, lv[0]) )
+        m1.append( re.match(gt, lv[1]) )
+    #end loop
+    # if a node matched, add to the geneDict
+    if any(match != None for match in m0) :
+        # add the genes to the dict
+        if lv[0] in geneSet :
+            geneDict[lv[0]] += 1
+        else :
+            geneDict[lv[0]] = 1
+            geneSet.add(lv[0])
+        #end if
+    #end if
+    if any(match != None for match in m1) :
+        # add the genes to the dict
+        if lv[1] in geneSet :
+            geneDict[lv[1]] += 1
+        else :
+            geneDict[lv[1]] = 1
+            geneSet.add(lv[1])
+        #end if
+    #end if
+
+
     # write to output file
     ofile.write("{1}{0}{2}{0}{3}{0}{4}".format(delim,
         lv[0], lv[1], lv[2], etype))
@@ -187,6 +254,27 @@ print "There were {:,} lines in the file.".format(count)
 ifile.close()
 ofile.close()
 
+
+# Save the list of genes to a file
+geneList = list(geneSet)
+del geneSet
+geneList.sort()
+gefile = outname + ".genes.txt"
+print "Saving genes to {}".format(gefile)
+gef = open(path + gefile, 'wb')
+first = True
+for g in geneList :
+    if first :
+        gef.write("{}{}{}".format(g, delim, geneDict[g]))
+        first = False
+        continue
+    #end if
+    gef.write("\n{}{}{}".format(g, delim, geneDict[g]))
+#end loop
+gef.close()
+
+geneDict.clear()
+del geneList
 
 
 

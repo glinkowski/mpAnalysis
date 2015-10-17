@@ -15,7 +15,8 @@ import numpy as np
 ####### ####### ####### ####### 
 # PARAMETERS
 
-ename = 'all-v1'
+ename = 'hsa_dghmw_c'
+#ename = 'all-v1'
 path = '../networks/'
 
 infile = ename + '.edge.txt'

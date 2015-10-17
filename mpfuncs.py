@@ -46,7 +46,10 @@ def readEdgeFile(datafile, delimiter) :
         lv = line.split(delimiter)
 
         # insert into the edge list
-        Edges[i] = lv
+        Edges[i,0] = lv[0]
+        Edges[i,1] = lv[1]
+        Edges[i,2] = lv[2]
+        Edges[i,3] = lv[3]
 
         # add node locations to dict
         if (lv[0] in nodeSet) :
@@ -101,7 +104,11 @@ def readEdgeFilePlus(edgefile, nodefile, delimiter) :
         line = line.rstrip()
         lv = line.split(delimiter)
         # insert into the edge list
-        Edges[i] = lv
+        Edges[i,0] = lv[0]
+        Edges[i,1] = lv[1]
+        Edges[i,2] = lv[2]
+        Edges[i,3] = lv[3]
+#        Edges[i] = lv
         i += 1
     #end loop
     # close the data file
