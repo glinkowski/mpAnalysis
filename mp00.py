@@ -16,12 +16,12 @@ import re
 ####### ####### ####### ####### 
 # PARAMETERS
 
-#outname = 'hsa_dghmw_c'
-outname = 'all-v1'
+outname = 'hsa_dghmw_c'
+#outname = 'all-v1'
 path = '../networks/'
 
-#infile = 'hsa_dghmw.edge.txt'
-infile = 'all_edges.txt'
+infile = 'hsa_dghmw.edge.txt'
+#infile = 'all_edges.txt'
 outfile = outname + '.edge.txt'
 delim = '\t'
 

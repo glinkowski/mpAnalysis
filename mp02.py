@@ -118,7 +118,7 @@ for etx in range(0,4) :
             newEdge = cType + '_sm'
         elif  (tSize >= cutf[cType][1]) & (tSize < cutf[cType][2]) :
             newEdge = cType + '_md'
-        elif (tSize >= cutf[cType][2]) :
+        elif (tSize >= cutf[cType][2]) & (tSize < cutf[cType][3]) :
             newEdge = cType + '_lg'
         #end if
 
