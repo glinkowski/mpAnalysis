@@ -36,9 +36,9 @@ ftypes = ename + '.matrix.types.txt'
 # OUTPUT ####
 # The output matrix -- metapath counts
 omatrix = ename + '.metapaths.'
-# matrix row names -- the gene pairs
+# output column names -- the gene pairs
 ogpairs = ename + '.meta.gene_pairs.txt'
-# matrix column names -- the meta paths
+# output row names -- the meta paths
 opnames = ename + '.meta.path_names.txt'
 
 
