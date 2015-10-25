@@ -19,7 +19,8 @@ import mpfuncs as mp
 ####### ####### ####### ####### 
 # PARAMETERS
 
-ename = 'hsa_dghmw_c'
+ename = 'toy_hsa_c'
+#ename = 'hsa_dghmw_c'
 #ename = 'all-v1'
 path = '../networks/'
 infile = ename + '.edge_norm.txt'

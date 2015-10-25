@@ -5,6 +5,7 @@
 # Metapths, step 01
 #
 # Normalize weights per edge type.
+# Save new edge file and node-index dictionary.
 # ----------------------------------------------------
 
 import mpfuncs as mp
@@ -15,7 +16,8 @@ import numpy as np
 ####### ####### ####### ####### 
 # PARAMETERS
 
-ename = 'hsa_dghmw_c'
+ename = 'toy_hsa_c'
+#ename = 'hsa_dghmw_c'
 #ename = 'all-v1'
 path = '../networks/'
 

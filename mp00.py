@@ -16,11 +16,12 @@ import re
 ####### ####### ####### ####### 
 # PARAMETERS
 
-outname = 'hsa_dghmw_c'
+outname = 'toy_hsa_c'
+#outname = 'hsa_dghmw_c'
 #outname = 'all-v1'
 path = '../networks/'
 
-infile = 'hsa_dghmw.edge.txt'
+infile = 'toy2_hsa.edge.txt'
 #infile = 'all_edges.txt'
 outfile = outname + '.edge.txt'
 delim = '\t'
@@ -354,7 +355,8 @@ if "GO_term" in typeList :
 #    #end loop
 
     # Save term lengths to a file
-    gofile = outname + ".goList.txt"
+    gofile = outname + ".GO_term.txt"
+#    gofile = outname + ".goList.txt"
     print "Saving GO terms to {}".format(gofile)
     gf = open(path + gofile, 'wb')
 #    goList = list(goSet)
@@ -407,7 +409,8 @@ if "motif_u5_gc" in typeList :
     nummt = len(mtList)
 
     # Save term lengths to a file
-    mtfile = outname + ".mtList.txt"
+    mtfile = outname + ".motif_u5_gc.txt"
+#    mtfile = outname + ".mtList.txt"
     print "Saving motif terms to {}".format(mtfile)
     mf = open(path + mtfile, 'wb')
     for mt in mtList :
@@ -451,7 +454,8 @@ if "pfam_domain" in typeList :
     numpf = len(pfList)
 
     # Save term lengths to a file
-    pffile = outname + ".pfList.txt"
+    pffile = outname + ".pfam_domain.txt"
+#    pffile = outname + ".pfList.txt"
     print "Saving Protein Families to {}".format(pffile)
     pf = open(path + pffile, 'wb')
     for pt in pfList :
@@ -517,7 +521,8 @@ if "KEGG" in typeList :
     numkg = len(kgList)
 
     # Save term lengths to a file
-    kgfile = outname + ".kgList.txt"
+    kgfile = outname + ".KEGG.txt"
+#    kgfile = outname + ".kgList.txt"
     print "Saving KEGG terms to {}".format(kgfile)
     kf = open(path + kgfile, 'wb')
     for kg in kgList :

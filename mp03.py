@@ -20,7 +20,8 @@ import mpfuncs as mp
 
 
 # INPUT ####
-ename = 'hsa_dghmw_c'
+ename = 'toy_hsa_c'
+#ename = 'hsa_dghmw_c'
 #ename = 'all-v1'
 path = '../networks/'
 delim = '\t'
@@ -93,3 +94,64 @@ for line in gf :
 gf.close()
 
 print pTypes
+
+
+# Preparation for saving metapaths
+print "Preparing to calculate metapaths ..."
+mPaths = list()
+mpfn = path + omatrix + 'txt'
+mpfile = open(mpfn, 'wb')
+mpfile.close()
+
+# Create the length-1 metapath list
+firstLine = True
+for mp in pTypes :
+
+	print "    finding {}".format(mp)
+	A = np.load(path + fmatrix + mp + '.npy')
+	L = A.shape[0]
+	row = list()
+
+#	count = 0
+	for i in range(0, L) :
+		for j in range(i+1, L) :
+
+#			count += A[i,j]
+			row.append(A[i,j])
+		#end loop
+	#end loop
+
+
+	print "        saving..."
+	mpfile = open(mpfn, 'ab')
+	if (not firstLine) :
+		mpfile.write("\n")
+	#end if
+	firstLine = False
+
+	firstItem = True
+	for r in row :
+		if (not firstItem) :
+			mpfile.write("{}".format(delim))
+		#end if
+		mpfile.write("{}".format(r))
+		firstItem = False
+	#end loop
+	mpfile.close()
+
+
+	mPaths.append([mp, sum(row)])
+#end loop
+
+
+pfile = open(path + opnames, 'wb')
+firstLine = True
+for item in pTypes :
+	if (not firstLine) :
+		pfile.write("\n")
+	#end if
+	firstLine = False
+
+	pfile.write("{}{}{}".format(item[0],delim,item[1]))
+#end loop
+pfile.close()
