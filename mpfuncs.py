@@ -227,6 +227,77 @@ def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
 
 
 
+######## ######## ######## ########
+# Function: Read in the dataset from a samplename
+def readWholeSample(path, sampleName) :
+    sampleNodes = list()
+    # There are two files: _UP.txt and _DN.txt
+    sf1 = open(path + sampleName + "_DN", "rb")
+    for line in sf1 :
+        # remove any \n or whitespace to right
+        sampleNodes.append( line.rstrip() )
+    #end loop
+    sf1.close()
+    # read file 2
+    sf2 = open(path + sampleName + "_UP", "rb")
+    for line in sf2 :
+        sampleNodes.append( line.rstrip() )
+    #end loop
+    sf2.close()
+    # number of genes specified in this dataset
+    sampleSize = len(sampleNodes)
+    return sampleNodes, sampleSize
+#end def ######## ######## ########
+
+
+
+
+
+######## ######## ######## ########
+# Function: Read in the provided dataset (two files)
+def readTwoSamples(path, file1, file2) :
+    sampleNodes = list()
+    # There are two files: _UP.txt and _DN.txt
+    sf1 = open(path + file1, "rb")
+    for line in sf1 :
+        # remove any \n or whitespace to right
+        sampleNodes.append( line.rstrip() )
+    #end loop
+    sf1.close()
+    # read file 2
+    sf2 = open(path + file2, "rb")
+    for line in sf2 :
+        sampleNodes.append( line.rstrip() )
+    #end loop
+    sf2.close()
+    # remove the up/dn suffix from sample name
+    sampleName = file1.rstrip("_UP.txt")
+    sampleName = sampleName.rstrip("_DN.txt")
+    # number of genes specified in this dataset
+    sampleSize = len(sampleNodes)
+    return sampleName, sampleNodes, sampleSize
+#end def ######## ######## ########
+######## ######## ######## ########
+# Function: Read in the provided dataset (single file)
+def readOneSample(path, samplefile) :
+    sampleNodes = list()
+    # Using one of the two files: _UP.txt and _DN.txt
+    sf = open(path + samplefile, "rb")
+    for line in sf :
+        # remove any \n or whitespace to right
+        sampleNodes.append( line.rstrip() )
+    #end loop
+    sf.close()
+    # remove the .txt suffix from sample name
+    sampleName = samplefile.rstrip(".txt")
+    # number of genes specified in this dataset
+    sampleSize = len(sampleNodes)
+    return sampleName, sampleNodes, sampleSize
+#end def ######## ######## ########
+
+
+
+
 
 
 
@@ -345,50 +416,6 @@ def readOnlyGenesFlex(datafile, delimiter, letters, numlet) :
     return Verts
 #end def ######## ######## ########
 
-
-
-######## ######## ######## ########
-# Function: Read in the provided dataset (two files)
-def readTwoSamples(path, file1, file2) :
-    sampleNodes = list()
-    # There are two files: _UP.txt and _DN.txt
-    sf1 = open(path + file1, "rb")
-    for line in sf1 :
-        # remove any \n or whitespace to right
-        sampleNodes.append( line.rstrip() )
-    #end loop
-    sf1.close()
-    # read file 2
-    sf2 = open(path + file2, "rb")
-    for line in sf2 :
-        sampleNodes.append( line.rstrip() )
-    #end loop
-    sf2.close()
-    # remove the up/dn suffix from sample name
-    sampleName = file1.rstrip("_UP.txt")
-    sampleName = sampleName.rstrip("_DN.txt")
-    # number of genes specified in this dataset
-    sampleSize = len(sampleNodes)
-    return sampleName, sampleNodes, sampleSize
-#end def ######## ######## ########
-
-######## ######## ######## ########
-# Function: Read in the provided dataset (single file)
-def readOneSample(path, samplefile) :
-    sampleNodes = list()
-    # Using one of the two files: _UP.txt and _DN.txt
-    sf = open(path + samplefile, "rb")
-    for line in sf :
-        # remove any \n or whitespace to right
-        sampleNodes.append( line.rstrip() )
-    #end loop
-    sf.close()
-    # remove the .txt suffix from sample name
-    sampleName = samplefile.rstrip(".txt")
-    # number of genes specified in this dataset
-    sampleSize = len(sampleNodes)
-    return sampleName, sampleNodes, sampleSize
-#end def ######## ######## ########
 
 
 
