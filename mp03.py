@@ -108,8 +108,11 @@ firstLine = True
 for mp in pTypes :
 
 	print "    finding {}".format(mp)
+	# Load the gene-gene matrix from file
 	A = np.load(path + fmatrix + mp + '.npy')
 	L = A.shape[0]
+
+	# the row of values to write to master mp file
 	row = list()
 
 #	count = 0
@@ -123,6 +126,7 @@ for mp in pTypes :
 
 
 	print "        saving..."
+	# OUTPUT: write the row to the file
 	mpfile = open(mpfn, 'ab')
 	if (not firstLine) :
 		mpfile.write("\n")
@@ -140,13 +144,61 @@ for mp in pTypes :
 	mpfile.close()
 
 
+	# track: the name of this metapath & count (in order)
 	mPaths.append([mp, sum(row)])
 #end loop
 
 
+# Create the length-2 metapath list
+for mp1 in pTypes :
+	for mp2 in pTypes :
+		mp = mp1 + '-' + mp2
+
+		print "    finding {}".format(mp)
+		# Load the gene-gene matrices from file
+		A = np.load(path + fmatrix + mp1 + '.npy')
+		L = A.shape[0]
+		B = np.load(path + fmatrix + mp2 + '.npy')
+
+		# Calculte the new matrix
+		C = np.multiply(A, B)
+
+		# the row of values to write to master mp file
+		row = list()
+		for i in range(0, L) :
+			for j in range(i+1, L) :
+				row.append(C[i,j])
+			#end loop
+		#end loop
+
+		print "        saving..."
+		# OUTPUT: write the row to the file
+		mpfile = open(mpfn, 'ab')
+		mpfile.write("\n")
+
+		firstItem = True
+		for r in row :
+			if (not firstItem) :
+				mpfile.write("{}".format(delim))
+			#end if
+			mpfile.write("{}".format(r))
+			firstItem = False
+		#end loop
+		mpfile.close()
+
+		# track: the name of this metapath & count (in order)
+		mPaths.append([mp, sum(row)])
+	#end loop
+#end loop
+
+
+
+
+
+# OUTPUT: list of metapaths in order --> row names
 pfile = open(path + opnames, 'wb')
 firstLine = True
-for item in pTypes :
+for item in mPaths :
 	if (not firstLine) :
 		pfile.write("\n")
 	#end if
@@ -155,3 +207,6 @@ for item in pTypes :
 	pfile.write("{}{}{}".format(item[0],delim,item[1]))
 #end loop
 pfile.close()
+
+
+print "\nDone. ... for now\n"
