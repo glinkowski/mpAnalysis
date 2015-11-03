@@ -2,14 +2,9 @@
 # author: Greg Linkowski
 # project: metapaths for KnowEnG
 # 
-# Metapths, step 02
+# Metapths, demo part 01
 #
-# Create matrices consisting only of gene-gene edges.
-#   Replace indirect edges with direct edges. Along
-#   the way, create new edges reflective of the
-#   strength of membership for that term.
-# For example, 3-4 new GO_term edge types to represent
-#   higher import of sharing a smaller term.
+# 
 # ----------------------------------------------------
 import numpy as np
 import mpfuncs as mp
@@ -20,34 +15,19 @@ import mpfuncs as mp
 # PARAMETERS
 
 sname = ''
+spath = '../samples/'
 
 ename = 'toy_hsa_c'
-path = '../networks/'
+epath = '../networks/'
 
-
-mfile = ename + '.metapath.txt'
+mfile = ename + '.metapaths.txt'
 gfile = ename + '.genes.txt'
-pfile = ename + '.paths.txt'
+rfile = ename + '.meta.gene_pairs.txt'
+pfile = ename + '.meta.path_names.txt'
 delim = '\t'
 
-
-indirect=(
-    ['GO_term', 'motif_u5_gc', 'pfam_domain', 'KEGG'])
-
-direct = (['prot_homol', 'STRING_experimental',
-    'STRING_coexpression',  'STRING_textmining', 
-    'STRING_neighborhood', 'PPI_IntAct', 
-    'STRING_database', 'STRING_cooccurrence', 
-    'STRING_fusion', 'PPI_MINT', 'PPI_DIP', 'PPI_BioGRID'])
-
-
-top = 65534
-cutf = dict()
-cutf['GO_term'] = [0, 40, 100, 450]
-cutf['motif_u5_gc'] = [0, 3000, 8000, 10000]
-cutf['pfam_domain'] = [0, 40, 300, top]
-cutf['KEGG'] = [0, 20, 100, top]
-
+ofile = 'mp_demo01-'
+opath = '../output/'
 
 ####### ####### ####### ####### 
 
@@ -58,27 +38,27 @@ cutf['KEGG'] = [0, 20, 100, top]
 # BEGIN MAIN FUNCTION
 
 
-## Collect the list of included genes
-#geneSet = set()
-#gf = open(path + gfile, 'rb')
-#for line in gf :
-#    lv = line.split('delim')
-#    geneSet.add(lv[0])
-##end if
-#gf.close()
+# Collect the list of included genes
+geneSet = set()
+gf = open(path + gfile, 'rb')
+for line in gf :
+    lv = line.split('delim')
+    geneSet.add(lv[0])
+#end if
+gf.close()
 
 
 # Collect the list of included pairs
 pairDict = dict()
 row = 0
-gf = open(path + gfile, 'rb')
-for line in gf :
+rf = open(path + rfile, 'rb')
+for line in rf :
     lv = line.split('delim')
     pairDict[lv[0]] = row
     row += 1
 #end if
-pairSet = set(pairDict.keys())
-gf.close()
+#pairSet = set(pairDict.keys())
+rf.close()
 
 
 # Collect the list of included paths
@@ -119,29 +99,33 @@ for line in mf :
 
 
 
+# genes in the sample which aren't in the network
+leftout = set()
 
 # The main part of the show
 sums = np.zeros([nCols])
 
 numPairs = 0
 for g1 in sGenes :
-#    if (g1 not in geneSet) :
-#        continue
-#    #end if
+    if (g1 not in geneSet) :
+        leftout.add(g1)
+        continue
+    #end if
 
     for g2 in sGenes :
-#        if (g2 not in geneSet) :
-#            continue
-#        #end if
+        if (g2 not in geneSet) :
+            leftout.add(g2)
+            continue
+        #end if
 
         if (g1 == g2) :
             continue
         #end if
 
         pair = g1 + '-' + g2
-        if (pair not in pairSet) :
-            continue
-        #end if
+#        if (pair not in pairSet) :
+#            continue
+#        #end if
 
         numPairs += 1
 
