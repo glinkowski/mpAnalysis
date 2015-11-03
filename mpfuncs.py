@@ -229,30 +229,28 @@ def writeEdgeFilePlus(network, nodeDict, edgefile, dictfile, delimiter) :
 
 ######## ######## ######## ########
 # Function: Read in the dataset from a samplename
-def readWholeSample(path, sampleName) :
+#   path: path the the sample files
+#   sampleName: name of the sample to be read (less _UP.txt or _DN.txt)
+#   up, down: boolean -- only read the _UP or _DN file if true
+def readWholeSample(path, sampleName, up, down) :
     sampleNodes = list()
     # There are two files: _UP.txt and _DN.txt
-    sf1 = open(path + sampleName + "_DN", "rb")
-    for line in sf1 :
-        # remove any \n or whitespace to right
-        sampleNodes.append( line.rstrip() )
-    #end loop
-    sf1.close()
+    if up :
+        sf1 = open(path + sampleName + "_DN", "rb")
+        for line in sf1 :
+            # remove any \n or whitespace to right
+            sampleNodes.append( line.rstrip() )
+        sf1.close()
     # read file 2
-    sf2 = open(path + sampleName + "_UP", "rb")
-    for line in sf2 :
-        sampleNodes.append( line.rstrip() )
-    #end loop
-    sf2.close()
+    if down :
+        sf2 = open(path + sampleName + "_UP", "rb")
+        for line in sf2 :
+            sampleNodes.append( line.rstrip() )
+        sf2.close()
     # number of genes specified in this dataset
     sampleSize = len(sampleNodes)
     return sampleNodes, sampleSize
 #end def ######## ######## ########
-
-
-
-
-
 ######## ######## ######## ########
 # Function: Read in the provided dataset (two files)
 def readTwoSamples(path, file1, file2) :
@@ -298,123 +296,26 @@ def readOneSample(path, samplefile) :
 
 
 
-
-
-
-
-
-#-# 
-#-# ######## ######## ######## ########
-#-# # Function: Read in the Knowledge Graph
-#-# # Returns: matrix of Edges (N,4), set of Vertices
-#-# def readGraphData(datafile, delimiter) :
-#-# 
-#-# #TODO: np.fromfile should be useful, if I could
-#-# #   get it to work ...
-#-# #    df = open(datafile, "rb")
-#-# #    dt = np.dtype('a21')
-#-# #    Edges = np.fromfile(df, dtype=dt, sep=" ", count=3)
-#-# ##    Edges = np.fromfile(df, dtype=str, sep=" ", count=-1)
-#-# ##    Edges = Edges.reshape( (nLines,4) )
-#-# #    print Edges
-#-# #    df.close()
-#-# 
-#-#     # get the number of lines in the file
-#-#     nLines = sum( 1 for line in open(datafile, "rb") )
-#-# 
-#-#     # assign space for edge list
-#-#     dt = np.dtype('a23')
-#-#     Edges = np.empty( [nLines,4], dtype=dt)
-#-# 
-#-#     # use a set for faster lookup
-#-#     Verts = set()
-#-# 
-#-#     # Start reading from the file
-#-#     df = open(datafile, "rb")
-#-# 
-#-#     i = 0
-#-#     for line in df:
-#-#         # extract the data from the file
-#-#         line = line.rstrip()
-#-#         lv = line.split(delimiter)
-#-# 
-#-#         # insert into the edge list
-#-#         Edges[i] = lv
-#-# 
-#-# #        print line
-#-# #        print lv
-#-# 
-#-#         # insert into the vertice list
-#-#         if lv[0] not in Verts:
-#-#             Verts.add(lv[0])
-#-#         if lv[1] not in Verts:
-#-#             Verts.add(lv[1])
-#-# 
-#-#         i += 1
-#-#     #end loop
-#-# 
-#-#     # close the data file
-#-#     df.close()
-#-# 
-#-#     print "  file contained {:,} lines".format(nLines)
-#-#     return Edges, Verts
-#-# #end def ######## ######## ########
-
 ######## ######## ######## ########
-# Function: Read in the Knowledge Graph
-# Returns: set of all human & mouse genes in edge file
-def readOnlyGenes(datafile, delimiter) :
-
-    # use a set for faster lookup
-    Verts = set()
-
-    # Start reading from the file
-    df = open(datafile, "rb")
-
-    for line in df:
-        # extract the data from the file
-        line = line.rstrip()
-        lv = line.split(delimiter)
-
-        # insert into the vertice list
-        if (lv[0][0] == 'E') :
-            if lv[0] not in Verts:
-              Verts.add(lv[0])
-        if (lv[1][0] == 'E') :
-            if lv[1] not in Verts:
-              Verts.add(lv[1])
+# Function: Get sorted list of files in directory
+# Return: List of file names
+def getFileListSorted(where) :
+    # Get (sorted) list of everything in directory
+    dList = listdir(where)
+    dList.sort()
+    # Keep only the file names
+    fNames = list()
+    for f in range(0, len(dList)) :
+        if isfile(where + dList[f]) :
+            fNames.append(dList[f])
+        #end if
     #end loop
+    fNames.sort()
 
-    # close the data file
-    df.close()
+    return fNames
+#end def ######## ######## ########
 
-    return Verts
-#end def ######## ######## ########
-# Function: Read in the Knowledge Graph
-# Returns: set of all genes in the graph
-#   can read from edge files with different gene names
-#   based on the first two letters of gene designation
-def readOnlyGenesFlex(datafile, delimiter, letters, numlet) :
-    # use a set for faster lookup
-    Verts = set()
-    # Start reading from the file
-    df = open(datafile, "rb")
-    for line in df:
-        # extract the data from the file
-        line = line.rstrip()
-        lv = line.split(delimiter)
-        # insert into the vertice list
-        if (lv[0][0:(numlet)] == letters) :
-            if lv[0] not in Verts:
-              Verts.add(lv[0])
-        if (lv[1][0:(numlet)] == letters) :
-            if lv[1] not in Verts:
-              Verts.add(lv[1])
-    #end loop
-    # close the data file
-    df.close()
-    return Verts
-#end def ######## ######## ########
+
 
 
 
@@ -438,115 +339,6 @@ def selectRandomNodes(N, VertSet) :
     return testSet
 #end def ######## ######## ########
 
-
-
-
-#-# ######## ######## ######## ########
-#-# # Function: Count the paths in the test set
-#-# def countPathsInSet(testSet, Edges, maxPathLen) :
-#-# 
-#-#     # convert to list so we can iterate
-#-#     testList = list(testSet)
-#-#     # will use both set and list below
-#-# 
-#-#     # Build sub-graph from test set
-#-#     G = nx.Graph()
-#-#     # add the nodes
-#-#     G.add_nodes_from(testList)
-#-# 
-#-#     # step through edge list
-#-#     for e in range(0,Edges.shape[0]) :
-#-#         # if both nodes are in the test set
-#-#         if (Edges[e,0] in testSet) and (Edges[e,1] in testSet) :
-#-#             # then add that edge to the graph
-#-#             G.add_edge( Edges[e,0], Edges[e,1], weight=Edges[e,2], type=Edges[e,3] )
-#-#         #end if
-#-#     #end loop
-#-# 
-#-#     # Count number simple paths in G
-#-#     P = 0
-#-# 
-#-#     # find paths b/t each pair of vertices
-#-#     # Note: edges are undirected
-#-#     for i in range( 0, (len(testList)-1) ) :
-#-#         for j in range( (i+1), len(testList) ) :
-#-#             paths = nx.all_simple_paths(G, source=testList[i], target=testList[j], cutoff=maxPathLen)
-#-#             # P is the running total count
-#-#             P += len(list(paths))
-#-#         #end loop
-#-#     #end loop
-#-# 
-#-#     G.clear()
-#-# 
-#-#     return P
-#-# #end def ######## ######## ########
-#-# 
-#-# ######## ######## ######## ########
-#-# # Function: Count the paths in a gene-only set
-#-# def countPathsInOnlyGenes(testSet, Edges, maxPathLen) :
-#-# 
-#-#     # convert to list so we can iterate
-#-#     testList = list(testSet)
-#-#     # will use both set and list below
-#-# 
-#-#     # Build sub-graph from test set
-#-#     G = nx.Graph()
-#-#     # add the nodes
-#-#     G.add_nodes_from(testList)
-#-# 
-#-#     # step through edge list
-#-#     for e in range(0,Edges.shape[0]) :
-#-#         # if both nodes are in the test set
-#-#         if (Edges[e,0] in testSet) and (Edges[e,1] in testSet) :
-#-#             # then add that edge to the graph
-#-#             G.add_edge( Edges[e,0], Edges[e,1], weight=Edges[e,2], type=Edges[e,3] )
-#-#         # if an edge other than gene-gene
-#-#         elif (Edges[e,1] in testSet) and (Edges[e,0][0] != 'E') :
-#-#             G.add_edge( Edges[e,0], Edges[e,1], weight=Edges[e,2], type=Edges[e,3] )
-#-#         #end if
-#-#     #end loop
-#-# 
-#-#     # Count number simple paths in G
-#-#     P = 0
-#-# 
-#-#     # find paths b/t each pair of vertices
-#-#     # Note: edges are undirected
-#-#     for i in range( 0, (len(testList)-1) ) :
-#-#         for j in range( (i+1), len(testList) ) :
-#-#             paths = nx.all_simple_paths(G, source=testList[i], target=testList[j], cutoff=maxPathLen)
-#-#             # P is the running total count
-#-#             P += len(list(paths))
-#-#         #end loop
-#-#     #end loop
-#-# 
-#-#     G.clear()
-#-# 
-#-#     return P
-#-# #end def ######## ######## ########
-#-# 
-#-# 
-#-# 
-#-# 
-#-# ######## ######## ######## ########
-#-# # Function: Draw image of the entire graph
-#-# def drawWholeGraph(Edges, Verts, toShow, toFile) :
-#-#     A = nx.Graph()
-#-#     # add the nodes
-#-#     A.add_nodes_from(list(Verts))
-#-#     # step through edge list
-#-#     for e in range(0,Edges.shape[0]) :
-#-#         # add each edge to the graph
-#-#         A.add_edge( Edges[e,0], Edges[e,1], weight=Edges[e,2], type=Edges[e,3] )
-#-#     #end loop
-#-#     # draw the graph
-#-#     nx.draw(A)
-#-#     if toFile :
-#-#         plt.savefig(toFile)
-#-#     if toShow :
-#-#         plt.show()
-#-#     # clear graph
-#-#     A.clear()
-#-# #end def ######## ######## ########
 
 
 
@@ -656,24 +448,4 @@ def getSampleSingleFile(origpath, newpath) :
     #end if
 
     return sName, sNodes, sSize
-#end def ######## ######## ########
-
-
-######## ######## ######## ########
-# Function: Get sorted list of files in directory
-# Return: List of file names
-def getFileListSorted(where) :
-    # Get (sorted) list of everything in directory
-    dList = listdir(where)
-    dList.sort()
-    # Keep only the file names
-    fNames = list()
-    for f in range(0, len(dList)) :
-        if isfile(where + dList[f]) :
-            fNames.append(dList[f])
-        #end if
-    #end loop
-    fNames.sort()
-
-    return fNames
 #end def ######## ######## ########

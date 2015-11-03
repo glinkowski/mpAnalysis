@@ -93,7 +93,7 @@ pf.close()
 
 # Get the genes from the sample
 print "Reading the sample {}".format(sname)
-sGenes, sSize = mp.readWholeSample(path, sname)
+sGenes, sSize = mp.readWholeSample(path, sname, True, True)
 
 
 # Load the metapaths matrix
