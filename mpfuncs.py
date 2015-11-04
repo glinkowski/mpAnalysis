@@ -236,14 +236,14 @@ def readWholeSample(path, sampleName, up, down) :
     sampleNodes = list()
     # There are two files: _UP.txt and _DN.txt
     if up :
-        sf1 = open(path + sampleName + "_DN", "rb")
+        sf1 = open(path + sampleName + "_DN.txt", "rb")
         for line in sf1 :
             # remove any \n or whitespace to right
             sampleNodes.append( line.rstrip() )
         sf1.close()
     # read file 2
     if down :
-        sf2 = open(path + sampleName + "_UP", "rb")
+        sf2 = open(path + sampleName + "_UP.txt", "rb")
         for line in sf2 :
             sampleNodes.append( line.rstrip() )
         sf2.close()
