@@ -13,6 +13,7 @@
 import numpy as np
 import mpfuncs as mp
 
+import sys
 
 
 ####### ####### ####### ####### 
@@ -93,7 +94,57 @@ for line in gf :
 #end loop
 gf.close()
 
-print pTypes
+
+print "Types included in this network file: "
+print " ", pTypes
+
+
+
+
+
+
+# OUTPUT: list of gene pairs in order --> column names
+geneDict.clear() # no longer needed
+# Get the ordered list of genes in these matrices
+gList = list()
+gf = open(path + fgenes, 'rb')
+for line in gf :
+    lv = line.split(delim)
+    gList.append(lv[0])
+#end loop
+gf.close()
+
+print gList[0], gList[30], gList[8]
+
+# Build the ordered list of gene-pairs
+gpList = list()
+for i in range(0, numG) :
+	for j in range(i+1, numG) :
+		gpList.append(gList[i] + '-' + gList[j])
+	#end loop
+#end loop
+
+print gpList[1], gpList[30]
+
+# Save the list of gene-pairs to a file
+rfile = open(path + ogpairs, 'wb')
+firstLine = True
+for item in gpList :
+	if (not firstLine) :
+		rfile.write("\n")
+	#end if
+	firstLine = False
+	rfile.write("{}".format(item))
+#end loop
+rfile.close()
+
+
+
+#print "\nExiting early\n"
+#sys.exit()
+
+
+
 
 
 # Preparation for saving metapaths
@@ -181,7 +232,7 @@ for mp1 in pTypes :
 			if (not firstItem) :
 				mpfile.write("{}".format(delim))
 			#end if
-			mpfile.write("{}".format(r))
+			mpfile.write("{}".format(int(r)))
 			firstItem = False
 		#end loop
 		mpfile.close()
@@ -195,36 +246,36 @@ for mp1 in pTypes :
 
 
 
-# OUTPUT: list of gene pairs in order --> column names
-geneDict.clear() # no longer needed
-# Get the ordered list of genes in these matrices
-gList = list()
-gf = open(path + fgenes, 'rb')
-for line in gf :
-    lv = line.split(delim)
-    gList.append(lv[0])
-#end loop
-gf.close()
-
-# Build the ordered list of gene-pairs
-gpList = list()
-for i in range(0, numG) :
-	for j in range(i+1, numG) :
-		gpList.append(gList[i] + '-' + gList[j])
-	#end loop
-#end loop
-
-# Save the list of gene-pairs to a file
-rfile = open(path + ogpairs, 'wb')
-firstLine = True
-for item in gpList :
-	if (not firstLine) :
-		pfile.write("\n")
-	#end if
-	firstLine = False
-	rfile.write("{}{}{}".format(item[0]))
-#end loop
-rfile.close()
+## OUTPUT: list of gene pairs in order --> column names
+#geneDict.clear() # no longer needed
+## Get the ordered list of genes in these matrices
+#gList = list()
+#gf = open(path + fgenes, 'rb')
+#for line in gf :
+#    lv = line.split(delim)
+#    gList.append(lv[0])
+##end loop
+#gf.close()
+#
+## Build the ordered list of gene-pairs
+#gpList = list()
+#for i in range(0, numG) :
+#	for j in range(i+1, numG) :
+#		gpList.append(gList[i] + '-' + gList[j])
+#	#end loop
+##end loop
+#
+## Save the list of gene-pairs to a file
+#rfile = open(path + ogpairs, 'wb')
+#firstLine = True
+#for item in gpList :
+#	if (not firstLine) :
+#		pfile.write("\n")
+#	#end if
+#	firstLine = False
+#	rfile.write("{}{}{}".format(item[0]))
+##end loop
+#rfile.close()
 
 
 
