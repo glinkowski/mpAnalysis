@@ -3,8 +3,8 @@ Repo: 15-Falls
 
 mpfuncs -- frequently-used functions
 
-Part 01: pre-processing the network
-       Must be done before any further work. Allows fast statistics generation on network.
+Part 01: pre-processing the network \n
+       Must be done before any further work. Allows fast statistics generation on network. \n
  mp00 -- fix known typos, collect basic network stats
  mp01 -- normalize edge weights per edge type
          node-index dictionary used for fast edge lookups give node name
