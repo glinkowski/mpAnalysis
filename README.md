@@ -1,6 +1,5 @@
-# Repo: 15-Falls
-
-Metapath Analysis of Genomic Data
+Repo: 15-Falls
+# Metapath Analysis of Genomic Data
 
 mpfuncs -- frequently-used functions
 
