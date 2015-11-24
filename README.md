@@ -3,13 +3,26 @@ Repo: 15-Falls
 
 * mpfuncs -- frequently-used functions
 
-**Part 01**: pre-processing the network  
+**Current Approach**: recreate the network as edge matricies, 
+		 building a master metapath matrix, so that testing a
+		 sample takes minutes, not days.
+
+**Part 01**: pre-process the network  
 Must be done before any further work. Allows fast statistics generation on network.
-* mp00 -- fix known typos, collect basic network stats
-* mp01 -- normalize edge weights per edge type
+* preProc00 -- fix known typos, collect basic network stats
+* preProc01 -- normalize edge weights per edge type
          node-index dictionary used for fast edge lookups give node name
-* mp02 -- replace indirect edges with direct gene-gene edges
+* preProc02 -- replace indirect edges with direct gene-gene edges
          create path matrix for each edge type (gene-by-gene)
-* mp03 -- final pre-processing step: calculate the metapaths
+* preProc03 -- final pre-processing step: calculate the metapaths
          up to a certain length, save in an output file
+
+
+**Part 02**: collect metapaths for a given sample
+* demo01 -- proof-of-concept, outputs file with comparison
+		 to random samples of similar size
+
+
+**Previous Approach**: collect path info using DFS
+* mpDFSWalk00 -- use DFS on edge file, tracking paths between nodes
 
