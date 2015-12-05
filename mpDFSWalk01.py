@@ -56,16 +56,15 @@ del Nodes # not needed
 
 
 # Get the Genes known to be in the network
-geneSet = set()
+geneList = list()
 gf = open(genefile, "rb")
 for line in gf:
     lv = line.split(delim)
-    geneSet.add(lv[0])
+    geneList.append(lv[0])
 #end loop
 
 # Select N random genes from gene set
 sourceList = list()
-geneList = list(geneSet)
 for n in range(0,numSource) :
     sourceList.append(random.choice(geneList))
 #end loop
