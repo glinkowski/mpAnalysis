@@ -15,16 +15,13 @@ import sys
 ####### ####### ####### ####### 
 # PARAMETERS
 
-readMaxLines = 75
-mpValDT = np.dtype(np.uint8)
-
-numRandSets = 75
+numRandSets = 3
 maxMPLen = 2
 
-sname = 'POOLA_INVASIVE_BREAST_CANCER'
+sname = 'LEE_LIVER_CANCER_E2F1'
 spath = '../samples/'
 
-ofile = 'mp_demo01-g.txt'
+ofile = 'mp_demo01-a.txt'
 opath = '../output/'
 
 ename = 'toy_hsa_c'
@@ -48,31 +45,27 @@ print "Loading files ..."
 
 # Collect the list of included genes
 print "    loading genes in network"
-geneDict = dict()
 geneSet = set()
 gf = open(epath + gfile, 'rb')
-numG = 0
 for line in gf :
-    lv = line.split(delim)
-    geneDict[lv[0]] = numG
+    lv = line.split('delim')
     geneSet.add(lv[0])
-    numG += 1
 #end if
 gf.close()
 
 
-#- # Collect the list of included pairs
-#- print "    reading the list of gene-pairs (column headers)"
-#- pairDict = dict()
-#- row = 0
-#- rf = open(epath + rfile, 'rb')
-#- for line in rf :
-#-     lv = line.split(delim)
-#-     pairDict[lv[0]] = row
-#-     row += 1
-#- #end if
-#- #pairSet = set(pairDict.keys())
-#- rf.close()
+# Collect the list of included pairs
+print "    reading the list of gene-pairs (column headers)"
+pairDict = dict()
+row = 0
+rf = open(epath + rfile, 'rb')
+for line in rf :
+    lv = line.split('delim')
+    pairDict[lv[0]] = row
+    row += 1
+#end if
+#pairSet = set(pairDict.keys())
+rf.close()
 
 
 # Collect the list of included paths
@@ -80,7 +73,7 @@ print "    reading the list of calculated metapaths (row headers)"
 pTypes = list()
 pf = open(epath + pfile, 'rb')
 for line in pf :
-    lv = line.split(delim)
+    lv = line.split('delim')
     pTypes.append(lv[0])
 #end if
 pf.close()
@@ -94,13 +87,10 @@ sGenes.sort()
 
 # Load the metapaths matrix
 print "Reading the list of metapths from {}".format(mfile)
-#nRows = len(pairDict)
-nRows = numG * (numG - 1) / 2
+nRows = len(pairDict)
 #nCols = sum( 1 for line in open(path + mfile, "rb") )
 nCols = len(pTypes)
-#mpMatrix = np.zeros([nRows,nCols], dtype=np.dtype(np.uint16))
-#mpMatrix = np.zeros([nRows,nCols], dtype='i16')
-mpMatrix = np.zeros([nRows,nCols], dtype=mpValDT)
+mpMatrix = np.zeros([nRows,nCols], dtype=np.uint16)
 
 print "nRows = {}, nCols = {}".format(nRows, nCols)
 
@@ -108,7 +98,7 @@ mf = open(epath + mfile, 'rb')
 col = 0
 for line in mf :
     line = line.rstrip('\n')
-    lv = line.split(delim)
+    lv = line.split('delim')
 
 #    print line
 #    print lv[0], lv[1]
@@ -118,24 +108,18 @@ for line in mf :
 #    for item in lv :
     for i in range(0, len(lv)) :
 #        mpMatrix[row, col] = int(item)
-        mpMatrix[row, col] = int(float(lv[i]))
+        mpMatrix[row, col] = int(lv[i])
         row += 1
     #end loop
     
     col += 1
-
-    print "    read line {}".format(col)
-
-    if col == readMaxLines :
-        nCols = col-1
-        break
-
-#    break
 #end loop
 
+print mpMatrix[0,0], mpMatrix[0,5], mpMatrix[3,32]
 
-#print mpMatrix[0,0], mpMatrix[0,5] #, mpMatrix[3,32]
-#sys.exit()
+
+
+sys.exit()
 
 
 
@@ -167,30 +151,18 @@ for i in range(0, len(sGenes)) :
             continue
         #end if
 
-        if ( len(leftout) == len(sGenes) ) :
-            print "\nERROR: no sample genes in network!\n"
-            sys.exit()
-        #end if
-
 #        if (g1 == g2) :
 #            continue
 #        #end if
 
-#        pair = g1 + '-' + g2
+        pair = g1 + '-' + g2
 #        if (pair not in pairSet) :
 #            continue
 #        #end if
 
-        id1 = geneDict[g1]
-        id2 = geneDict[g2]
-        pairIndex = 0.5 * ( -pow(id1,2) + (id1*(2*numG + 1)) - (2*numG))
-        pairIndex = pairIndex + (id2 - id1 - 1)
+        numPairs += 1
 
-
-#        numPairs += 1
-
-#        row = pairDict[pair]
-        row = pairIndex
+        row = pairDict[pair]
         for col in range(0, nCols) :
             sums[col] += mpMatrix[row, col]
         #end loop
@@ -198,9 +170,7 @@ for i in range(0, len(sGenes)) :
         numPairs += 1
     #end loop
 #end loop
-
-#avgs = sums / numPairs
-#avgs = np.divide(sums, numPairs)
+avgs = sums / numPairs
 
 
 
@@ -218,30 +188,20 @@ for r in range(0, numRandSets) :
     # Get a random set of genes
     N = len(sGenes) - len(leftout)
     randSet =  mp.selectRandomNodes(N, geneSet)
-    randList = list(randSet)
-    del randSet
-    randList.sort()
 
 
-    for i in range(0, N) :
-        g1 = randList[i]
-        for j in range(i+1, N) :
-            g2 = randList[j]
+    for i in range(0, len(sGenes)) :
+        g1 = sGenes[i]
+        for j in range(i+1, len(sGenes)) :
+            g2 = sGenes[j]
 
-#            pair = g1 + '-' + g2
-##TODO: this shouldn't be necessary ???
-#            if (pair not in pairSet) :
-#               continue
-#            #end if
+            pair = g1 + '-' + g2
+#TODO: this shouldn't be necessary ???
+            if (pair not in pairSet) :
+               continue
+            #end if
 
-            id1 = geneDict[g1]
-            id2 = geneDict[g2]
-            pairIndex = 0.5 * ( -pow(id1,2) + (id1*(2*numG + 1)) - (2*numG))
-            pairIndex = pairIndex + (id2 - id1 - 1)
-
-
-            row = pairIndex
-#            row = pairDict[pair]
+            row = pairDict[pair]
             for col in range(0, nCols) :
                 stats[col, r] += mpMatrix[row, col]
             #end loop
@@ -257,7 +217,7 @@ for r in range(0, numRandSets) :
 print "Done searching. Writing output file."
 
 # Free some memory
-#pairDict.clear()
+pairDict.clear()
 del mpMatrix
 
 
@@ -265,10 +225,10 @@ del mpMatrix
 of = open(opath + ofile, 'wb')
 
 of.write("{}\n{}\n".format(sname, ename))
-of.write("max MetaPath length: {}\n\n".format(maxMPLen))
+of.write("max MetaPath lenght: {}}\n\n".format(maxMPLen))
 
-of.write("  primary              {} random samples\n".format(numRandSets))
-of.write("     sums        mean    st.d.     max       min     median\n")
+of.write("  primary      {} random samples\n")
+of.write("    mean       mean    st.d.     max       min     median\n")
 
 for c in range(0, nCols) :
     rmean = np.mean(stats[c,:])
@@ -278,17 +238,7 @@ for c in range(0, nCols) :
     rmed = np.median(stats[c,:])
 
     of.write("{}\n".format(pTypes[c]))
-    of.write("  {:>8.1f}   {:>8.1f} {:>7.1f} {:>9.1f} {:>9.1f} {:>9.1f}\n".format(
-        sums[c], #avgs[c],
-        rmean, rstd, rmax, rmin, rmed))
+    of.write("  {:>8}   {:>8} {:>7} {:>9} {:>9} {:>9}\n".format(
+        avgs[c], rmean, rstd, rmax, rmin, rmed))
 #end loop
-
-# Make note of the left out genes
-of.write("\nGenes in sample, but not in network:")
-loList = list(leftout)
-loList.sort()
-for gene in loList :
-    of.write("\n  {}".format(gene))
-#end loop
-
 of.close()
