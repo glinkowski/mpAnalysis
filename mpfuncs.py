@@ -1,3 +1,11 @@
+# ----------------------------------------------------
+# author: Greg Linkowski
+# project: metapath search for KnowEnG
+# 
+# Library of useful functions
+#
+# ----------------------------------------------------
+
 #import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,6 +13,7 @@ import random
 from os import listdir
 from os.path import isfile
 from os import rename
+from datetime import datetime
 
 
 
@@ -448,4 +457,209 @@ def getSampleSingleFile(origpath, newpath) :
     #end if
 
     return sName, sNodes, sSize
+#end def ######## ######## ########
+
+
+
+######## ######## ######## ########
+# DFS search for metapaths b/t 2 nodes, preferably genes
+######## ######## ######## ########
+# FUNCTION: output DFS results to file
+# Inputs:
+#   outfile, str: 'path + name' of file to write output
+#   maxLength, int: max # edges to count as a path
+#   sampname, str: name of the sample tested
+#   ntwkname, str: name of the network used
+#   network, numpy 2-D array:
+#           cols: NodeA, NodeB, weight, edge type
+#           rows: each row represents an edge in the graph
+#   sourceList, list: list of source nodes
+#   targetList, list: list of target nodes
+#       NOTE: when searching for all paths within a set,
+#           pass the same list for sourceList & targetList
+# Returns: nothing
+#   writes the results to a file
+def outputMetaPathsDFS(outfile, maxLength, sampname, ntwkname,
+    network, sourceList, targetList) :
+
+    timestart = datetime.now()
+
+    fout = open(outfile, "wb")
+    fout.write("{}\n".format(sampname))
+    fout.write("{}\n".format(ntwkname))
+    fout.write("maxPath: {}\n".format(maxLength))
+    fout.write("sources: {}\n{}\n".format(len(sourceList), sourceList))
+    fout.write("targets: {}\n{}\n".format(len(targetList), targetList))
+    fout.write("\n")
+    for s in sourceList :
+        for t in targetList :
+
+            fout.write("from {} to {}\n".format(s,t))
+            fout.close()
+
+            time1 = datetime.now()
+            mpathDict, lengthDict = findMetaPathsDFS(s, t,
+             maxLength, network)
+            time2 = datetime.now()
+
+            fout = open(outfile, "ab")
+            keyList = mpathDict.keys()
+            keyList.sort()
+            if not keyList :
+                fout.write(" zero paths \n")
+            for key in keyList :
+                fout.write(" {:>3}\t{}\n".format(mpathDict[key], key))
+            #end loop
+            fout.write("\n")
+
+            print "{} to {} has {} paths; time = {}".format( s,t,
+                sum(mpathDict.values()),(time2 - time1) )
+        #end loop
+    #end loop
+
+    timestop = datetime.now()
+    fout.write("\n{}".format(timestop - timestart))
+    fout.close()
+#end def ######## ######## ########
+######## ######## ######## ########
+# FUNCTION: parent function, begins the search
+# Input:
+#   source, str: source gene name
+#   target, str: target gene name
+#   maxLength, int: max # edges to count as a path
+#   network, numpy 2-D array:
+#           cols: NodeA, NodeB, weight, edge type
+#           rows: each row represents an edge in the graph
+# Returns: two dictionaries
+#   mpathDict key = metapath (GO_term-prot_homol-GO_term)
+#           value = number of occurrences of that path
+#   lengthDict key = length of path (ie: 5 [edges])
+#           value = number of paths of that length
+def findMetaPathsDFS(source, target, maxLength, network) :
+
+    # Initialize dicts to store path info
+    mpathDict = dict()
+    lengthDict = dict()
+    for i in range(0,maxLength+1) :
+        lengthDict[i] = 0
+    #end loop
+
+    # main stack will contain (edge, node)
+    edgeStack = list()
+    # path stack will contain info on current path
+    pathStack = list()
+
+
+    # Find all edges adjacent to current node
+    idxList = list()
+    idxList.extend( np.where(network[:,0] == source)[0] )
+    idxList.extend( np.where(network[:,1] == source)[0] )
+    idxList = np.unique(idxList)
+    idxList.sort()
+
+
+    # Add each (edge, node) to the main edge stack
+    for n in idxList :
+        node0 = network[n,0]
+        node1 = network[n,1]
+        if (node0 == source) :
+            edgeStack.append( (n,node1) )
+        else :
+            edgeStack.append( (n,node0) )
+    #end loop
+
+    # Call self till stack empty
+    while edgeStack :
+        findMetaPathsDFSHelper(source, target, maxLength, network, mpathDict, lengthDict, edgeStack, pathStack)
+    # end loop
+
+    return mpathDict, lengthDict
+#end def ######## ######## ########
+######## ######## ######## ########
+# FUNCTION: recursive helper for metapaths search
+# Inputs passed from parent function findMetaPaths
+# Returns: two dictionaries
+#   mpathDict key = metapath (GO_term-prot_homol-GO_term)
+#           value = number of occurrences of that path
+#   lengthDict key = length of path (ie: 5 [edges])
+#           value = number of paths of that length
+def findMetaPathsDFSHelper(source, target, maxLength, network, mpathDict, lengthDict, edgeStack, pathStack) :
+
+#    findMetaPathsHelper(source, target, maxLength, network, mpathDict, lengthDict, nodeQueue, currIdx)
+
+#    print edgeStack, pathStack
+    mainPop = edgeStack.pop()
+
+    # Add (edge, node) to current path stack
+    pathStack.append(mainPop[0])
+
+    # Ending Conditions ########
+    #   1) reached target node
+    if (mainPop[1] == target) :
+        # Record the path info
+        # Update the metapaths dict
+        mpkey = str()
+        for i in pathStack :
+            mpkey = mpkey + network[i,3] + "-"
+        # remove last dash
+        mpkey = mpkey.rstrip("-")
+        # add to mpath dict
+        if (mpkey in mpathDict.keys()) :
+            mpathDict[mpkey] += 1
+        else :
+            mpathDict[mpkey] = 1
+        #end loop
+
+        # Update the length dict
+        lengthDict[len(pathStack)] += 1
+
+        # Remove newest edge from current path and return
+        pathStack.pop()
+        return
+
+    # 2) at maximum path length
+    elif ( len(pathStack) >= maxLength) :
+        # Remove newest edge from current path and return
+        pathStack.pop()
+        return
+
+    # 3) don't traverse same edge multiple times
+    elif ( pathStack.count(mainPop[0]) > 1 ) :
+        pathStack.pop()
+        return
+    #end if ########
+
+    # Find all edges adjacent to current node
+    cNode = mainPop[1]
+    idxList = list()
+    idxList.extend( np.where(network[:,0] == cNode)[0] )
+    idxList.extend( np.where(network[:,1] == cNode)[0] )
+    idxList = np.unique(idxList)
+    idxList.sort()
+
+    # Add new (edge, node) to the main edge stack
+    numNew = 0
+    for n in idxList :
+        # skip the current edge
+        if (n == mainPop[0]) :
+            continue
+        #end if
+        node0 = network[n,0]
+        node1 = network[n,1]
+        numNew += 1
+        if (node0 == mainPop[1]) :
+            edgeStack.append( (n,node1) )
+        else :
+            edgeStack.append( (n,node0) )
+    #end loop
+
+    # Call self once for each added node
+    for x in range(numNew) :
+        findMetaPathsDFSHelper(source, target, maxLength, network, mpathDict, lengthDict, edgeStack, pathStack)
+    #end loop
+
+    # Remove current (edge, node) and return
+    pathStack.pop()
+    return
+
 #end def ######## ######## ########
