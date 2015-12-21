@@ -1,0 +1,5 @@
+Type	Alias	Keep?
+GENE TYPES	--	1
+human
+EDGE TYPES	--	3
+INDIRECT	--	1
