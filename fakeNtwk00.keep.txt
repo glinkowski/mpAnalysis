@@ -1,5 +1,8 @@
 Type	Alias	Keep?
 GENE TYPES	--	1
-human
+human	G000	yes
 EDGE TYPES	--	3
-INDIRECT	--	1
+A	TypeA	yes
+B	TypeB	yes
+C	TypeC	yes
+INDIRECT	--	0
