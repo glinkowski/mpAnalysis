@@ -277,3 +277,74 @@ def applyNormalization(edges, lowBound) :
 #end def ######## ######## ########
 
 
+
+######## ######## ######## ########
+# Function: Examine the edge weights. Throw out edges
+#	that are below the threshold value. (Only keep
+#	those that are at or above.)
+# Input:
+#	edges, array (N,4) - edge array
+#		col 0: node, 1: node, 2: weight, 3: edge type 
+#	threshold, float - the value against which to test
+#		edge weights; throw out edges that are below
+# Returns:
+#	nothing
+#	Makes in-place corrections to the array
+def applyThreshold(edges, threshold) :
+	# Not using del[], because each del is O(n)
+
+#	if threshold > 1 :
+#		print ("\nWARNING: threshold value {}".format(threshold)
+#			+ " is outside the normalized range.")
+#		print ("    If network has been normalized, all"
+#			+ " edges will be kept.")
+#	#end if
+
+	# Get the weights in the network, count how
+	#	many are at/above the threshold value
+	count = 0
+	for i in range(0, edges.shape[0]) :
+		if float(edges[i,2]) >= threshold :
+			count += 1
+		#end if
+	#end loop
+
+	# If no edges are above threshold value ...
+	if count == 0 :
+		print ("\nWARNING: No edge weights above "
+			+ " {}, returning unaltered array.\n".format(threshold))
+		return edges
+	#end if
+
+	# temporary array to hold the new matrix
+	newEdges = np.empty([count,4], dtype=nodeDT)
+#	print newEdges.shape, count
+
+	# Read the weight of each edge, and add to
+	#	temp array if at or above threshold
+	index = 0
+	for i in range(0, edges.shape[0]) :
+		weight = float(edges[i,2])
+		if weight >= threshold :
+#			print i, index
+#			print edges[i,:]
+			newEdges[index] = edges[i]
+			index += 1
+#			newEdges.append(edges[i])
+		#end if
+	#end loop
+
+#	print newEdges
+
+	# Replace current network with new one
+#	edges = newEdges
+#	return
+
+	return newEdges
+
+#end def ######## ######## ########
+
+
+
+
+

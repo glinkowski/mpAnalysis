@@ -56,11 +56,15 @@ pp.applyCorrections(edgeArray, epath+cfile)
 # normalize weights
 print "Normalizing weights by edge type ..."
 pp.applyNormalization(edgeArray, 0)
-print edgeArray
+#print edgeArray
 
 # threshold according to edge weights
+thresh = 3
+print "Thresholding weights at {}".format(thresh)
+edgeArray = pp.applyThreshold(edgeArray, thresh)
+print edgeArray
 
-# skip - save updated network & node dict
+# skip? - save updated network & node dict
 #   no current use for it
 
 # ? save genes to file
