@@ -24,24 +24,29 @@ cfile = ename + '.correct.txt'
 ####### ####### ####### ####### 
 
 
+
+####### ####### ####### ####### 
+# BEGIN MAIN FUNCTION
+
+
 ####
 # read in the keep file
 #   if not there, ask to have it created
-
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
-keepGenes, keepEdges, indirEdges = pp.readKeepFile(
-    epath+kfile)
+keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
+print keepGenes
+print loseGenes
+print keepEdges
+print indirEdges
 
-#print keepGenes
-#print keepEdges
-#print indirEdges
 
 ####
 # read in the network to a matrix
 print "    reading in the edge file", efile
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
 #print edgeArray
+
 
 ####
 # read in the corrections file
@@ -58,18 +63,30 @@ print "Normalizing weights by edge type ..."
 pp.applyNormalization(edgeArray, 0)
 #print edgeArray
 
+
 # threshold according to edge weights
-thresh = 3
+#thresh = 3
 print "Thresholding weights at {}".format(thresh)
 edgeArray = pp.applyThreshold(edgeArray, thresh)
+#print edgeArray
+
+
+# throw out specified genes, edges
+edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
+    keepEdges)
 print edgeArray
+
+
+# change indirect edges to direct
+
 
 # skip? - save updated network & node dict
 #   no current use for it
+#   BUT ... might be useful for other things
+#       like DFS verification
 
 # ? save genes to file
 # ?
-# change indirect edges to direct
 
 # create matrices and network
 # save path types to file

@@ -3,6 +3,7 @@
 import os.path
 import sys
 import numpy as np
+import re
 
 
 nodeDT = np.dtype('a30')
@@ -33,6 +34,7 @@ def readKeepFile(fname) :
 
 	# The lists to return
 	keepGenes = list()
+	loseGenes = list()
 	keepEdges = list()
 	indirEdges = list()
 
@@ -53,7 +55,11 @@ def readKeepFile(fname) :
 				line = f.readline()
 				line = line.rstrip()
 				lv = line.split('\t')
-				keepGenes.append(lv[1])
+				if lv[2] == 'yes' :
+					keepGenes.append(lv[1])
+				else :
+					loseGenes.append(lv[1])
+				#end if
 			#end loop
 		# Read in the edge types (# given in file)
 		elif lv[0] == 'EDGE TYPES' :
@@ -62,7 +68,9 @@ def readKeepFile(fname) :
 				line = f.readline()
 				line = line.rstrip()
 				lv = line.split('\t')
-				keepEdges.append(lv[1])
+				if lv[2] == 'yes' :
+					keepEdges.append(lv[1])
+				#end if
 			#end loop
 		elif lv[0] == 'INDIRECT' :
 			count = int(lv[2])
@@ -72,10 +80,12 @@ def readKeepFile(fname) :
 				lv = line.split('\t')
 				keepEdges.append(lv[1])
 			#end loop
+		elif lv[0] == 'THRESHOLD' :
+			tHold = float(lv[2])
 		#end if
 	#end loop
 
-	return keepGenes, keepEdges, indirEdges
+	return keepGenes, loseGenes, keepEdges, indirEdges, tHold
 
 #end def ######## ######## ########
 
@@ -288,8 +298,7 @@ def applyNormalization(edges, lowBound) :
 #	threshold, float - the value against which to test
 #		edge weights; throw out edges that are below
 # Returns:
-#	nothing
-#	Makes in-place corrections to the array
+#	newEdges, str array - the modified edge array
 def applyThreshold(edges, threshold) :
 	# Not using del[], because each del is O(n)
 
@@ -346,5 +355,112 @@ def applyThreshold(edges, threshold) :
 
 
 
+
+
+######## ######## ######## ########
+# Function: Examine the edge weights. Throw out edges
+#	that are below the threshold value. (Only keep
+#	those that are at or above.)
+# Input:
+#	edges, str array (N,4) - edge array
+#		col 0: node, 1: node, 2: weight, 3: edge type 
+#	kGenes, str list - regex of genes to keep
+#		each entry is just the first four chars of
+#		the gene name
+#	kEdges, str list - edge types (full) to keep
+#	threshold, float - the value against which to test
+#		edge weights; throw out edges that are below
+# Returns:
+#	newEdges, str array - the modified edge array
+# NOTE: This assumes the network has been altered
+#	to just gene-gene edges !!!
+def applyKeepEdges(edges, kEdges) :
+
+	keepIndex = list()
+	kEdgeSet = set(kEdges)
+
+	for i in range(0, edges.shape[0]) :
+
+		if edges[i,3] in kEdgeSet :
+			keepIndex.append(i)
+		#end if
+
+#		# Throw out non-kept edges
+#		if edges[i,3] not in kEdgeSet :
+#			# Skip this edge
+#			continue
+#		#end if
+#		keepIndex.append(i)
+
+	#end loop
+
+	newEdges = edges[keepIndex, :]
+	return newEdges
+
+#end def ######## ######## ########
+
+
+######## ######## ######## ########
+# Function: Examine the edge weights. Throw out edges
+#	that are below the threshold value. (Only keep
+#	those that are at or above.)
+# Input:
+#	edges, str array (N,4) - edge array
+#		col 0: node, 1: node, 2: weight, 3: edge type 
+#	kGenes, str list - regex of genes to keep
+#		each entry is just the first four chars of
+#		the gene name
+#	kEdges, str list - edge types (full) to keep
+#	threshold, float - the value against which to test
+#		edge weights; throw out edges that are below
+# Returns:
+#	newEdges, str array - the modified edge array
+# NOTE: This assumes the network has been altered
+#	to just gene-gene edges !!!
+def applyKeepLists(edges, lGenes, kEdges) :
+
+	keepIndex = list()
+	kEdgeSet = set(kEdges)
+
+#	print kEdges
+#	print kEdgeSet
+#	for s in kEdgeSet : print s
+
+	for i in range(0, edges.shape[0]) :
+
+		# Throw out non-kept edges
+		if edges[i,3] not in kEdgeSet :
+			# Skip this edge
+#			print "drop", edges[i,3]
+			continue
+		#end if
+
+		# list of matches to be found
+		m0 = list()
+		m1 = list()
+		# Check nodes for matches (column 1 & 2)
+		for gt in lGenes :
+			m0.append( re.match(gt, edges[i,0]) )
+			m1.append( re.match(gt, edges[i,1]) )
+		#end loop
+		# Throw out genes that match the non-keep list
+		# Check for any match with the non-keep list
+		if any(match != None for match in m0) :
+			# Skip this edge
+			continue
+		elif any(match != None for match in m1) :
+			# Skip this edge
+			continue
+		#end if
+
+		# Finally, if no objections
+		#	add this to the list to keep
+		keepIndex.append(i)
+	#end loop
+
+	newEdges = edges[keepIndex, :]
+	return newEdges
+
+#end def ######## ######## ########
 
 
