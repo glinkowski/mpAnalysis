@@ -77,6 +77,37 @@ edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 print edgeArray
 
 
+# Question: which should I keep: allGenes,
+#   keepGenes, or loseGenes? I only need two.
+allGenes = keepGenes + loseGenes
+print allGenes
+#allGenes = keepGenes
+#for regex in loseGenes :
+#    allGenes.append(regex)
+##end loop
+#print allGenes
+
+# create an updated nodeDict from modified edge list
+nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
+# create an updated keepGenes from modified edge list
+#geneList = createGeneList(edgeArray, keepGenes)
+#print nodeDict
+#print geneList
+
+#this = set()
+#this.add('apple')
+#this.add('orange')
+#print this
+#this.add('apple')
+#print this
+
+
+
+# save edge list, node dict, genes?
+
+
+
+
 # change indirect edges to direct
 
 

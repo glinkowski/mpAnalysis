@@ -415,8 +415,6 @@ def applyKeepEdges(edges, kEdges) :
 #		edge weights; throw out edges that are below
 # Returns:
 #	newEdges, str array - the modified edge array
-# NOTE: This assumes the network has been altered
-#	to just gene-gene edges !!!
 def applyKeepLists(edges, lGenes, kEdges) :
 
 	keepIndex = list()
@@ -461,6 +459,73 @@ def applyKeepLists(edges, lGenes, kEdges) :
 	newEdges = edges[keepIndex, :]
 	return newEdges
 
-#end def ######## ######## ########
+#end def ######## ######## ######## 
+
+
+######## ######## ######## ########
+# Function: Create a node dictionary from the current
+#	edge list.
+# Input:
+#	edges, str array (N,4) - edge array
+#		col 0: node, 1: node, 2: weight, 3: edge type 
+# Returns:
+#	nodeDict - node dictionary
+#		key: str, name of node
+#		value: list of int, list of indices where
+#			these nodes occur in the edge list
+def createNodeLists(edges, aGenes) :
+
+	nodeDict = dict()
+	nodeSet = set()
+	geneSet = set()
+
+	for i in range(0, edges.shape[0]) :
+
+		# Add the first node to the dictionary,
+		#	using a set for look-up speed
+		if edges[i,0] in nodeSet :
+			nodeDict[edges[i,0]].append(i)
+		else :
+			nodeDict[edges[i,0]] = list()
+			nodeDict[edges[i,0]].append(i)
+			nodeSet.add(edges[i,0])
+		#end if
+
+		# Add the second node to the dictionary,
+		#	using a set for look-up speed
+		if edges[i,1] in nodeSet :
+			nodeDict[edges[i,1]].append(i)
+		else :
+			nodeDict[edges[i,1]] = list()
+			nodeDict[edges[i,1]].append(i)
+			nodeSet.add(edges[i,1])
+		#end if
+
+
+		# list of matches to be found
+		m0 = list()
+		m1 = list()
+		# Check nodes for matches (column 1 & 2)
+		for gt in aGenes :
+			m0.append( re.match(gt, edges[i,0]) )
+			m1.append( re.match(gt, edges[i,1]) )
+		#end loop
+		# Matches mean node is a gene; add to set
+		if any(match != None for match in m0) :
+			geneSet.add(edges[i,0])
+		if any(match != None for match in m1) :
+			geneSet.add(edges[i,1])
+		#end if
+
+	#end loop
+
+	geneList = list(geneSet)
+	geneList.sort()
+	return nodeDict, geneList
+
+#end def ######## ######## ######## 
+
+
+
 
 
