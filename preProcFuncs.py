@@ -526,6 +526,81 @@ def createNodeLists(edges, aGenes) :
 #end def ######## ######## ######## 
 
 
+def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 
+	# save edge list, node dict, genes?
+	oname = name + "_t{0}%_g{1}_".format( int(tHold*100),
+	    len(kGenes))
+#	oname = ename + "_t{0}%_g{1}_".format( int(thresh*100),
+#	    len(keepGenes))
+	for et in kEdges :
+	    oname = oname + et[0]
+	#end loop
 
+	return oname
 
+#end def ######## ######## ######## 
+
+######## ######## ######## ########
+# Function: write the modified network to a file
+#	This includes the nodeDict and geneList
+# Input:
+# Returns:
+def writeModEdgeFilePlus(path, oname, nDict, gList,	eArray) :
+
+	gfile = oname + ".genes.txt"
+	nfile = oname + ".indices.txt"
+	gf = open(path + gfile, "wb")
+	nf = open(path + nfile, "wb")
+	first = True
+	for gene in gList :
+
+	    # Start every new line but the first with \n
+	    #   This avoids ending the file with a blank line
+	    if first == True :
+	        first = False
+	    else :
+	        gf.write("\n")
+	        nf.write("\n")
+	    #end if
+
+	    gf.write("{}".format(gene))
+
+	    nf.write("{}\t".format(gene, nDict[gene]))
+
+	    fIndex = True
+	    for item in nDict[gene] :
+	        if fIndex == True :
+	            fIndex = False
+	        else :
+	            nf.write(",")
+	        #end if
+	        nf.write("{}".format(item))
+	    #end loop
+
+	#end loop
+
+	gf.close()
+	nf.close()
+
+	ofile = oname + ".edges.txt"
+	of = open(path + ofile, "wb")
+
+	first = True
+	for i in range(0, eArray.shape[0]) :
+	    if first == True :
+	        first = False
+	    else :
+	        of.write("\n")
+	    #end if
+
+	    of.write("{}\t{}\t{}\t{}".format(eArray[i,0],
+	        eArray[i,1], eArray[i,2], eArray[i,3]))
+
+	#end loop
+
+	of.close()
+
+	return
+
+#end def ######## ######## ######## 

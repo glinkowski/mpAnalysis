@@ -94,16 +94,27 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
 #print nodeDict
 #print geneList
 
+
 #this = set()
 #this.add('apple')
 #this.add('orange')
 #print this
 #this.add('apple')
 #print this
+#that = set()
+#that.add('banana')
+#those = this.union(that)
+#print those
 
 
 
 # save edge list, node dict, genes?
+outname = pp.createModEdgeFileName(ename, keepEdges,
+    keepGenes, thresh)
+pp.writeModEdgeFilePlus(epath, outname, nodeDict, geneList,
+    edgeArray)
+
+
 
 
 
