@@ -7,7 +7,7 @@ import preProcFuncs as pp
 ####### ####### ####### ####### 
 # PARAMETERS
 
-ename = 'fakeNtwk00'
+ename = 'fakeNtwk01'
 epath = '../networks/'
 
 kfile = ename + '.keep.txt'
@@ -35,10 +35,10 @@ cfile = ename + '.correct.txt'
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
 keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
-print keepGenes
-print loseGenes
+#print keepGenes
+#print loseGenes
 print keepEdges
-print indirEdges
+#print indirEdges
 
 
 ####
@@ -73,7 +73,7 @@ edgeArray = pp.applyThreshold(edgeArray, thresh)
 
 # throw out specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
-	keepEdges)
+	keepEdges, indirEdges)
 print edgeArray
 
 
@@ -120,7 +120,7 @@ pp.writeModEdgeFilePlus(epath, outname, nodeDict,
 # create the primary matrices
 #   change indirect edges to direct
 matrixList, matrixNames = pp.createMatrixList(edgeArray,
-	keepEdges, indirEdges, geneList, outname)
+	keepEdges, indirEdges, geneList, epath, outname)
 
 
 # skip? - save updated network & node dict
