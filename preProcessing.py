@@ -73,7 +73,7 @@ edgeArray = pp.applyThreshold(edgeArray, thresh)
 
 # throw out specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
-    keepEdges)
+	keepEdges)
 print edgeArray
 
 
@@ -107,19 +107,20 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
 #print those
 
 
-
 # save edge list, node dict, genes?
 outname = pp.createModEdgeFileName(ename, keepEdges,
-    keepGenes, thresh)
-pp.writeModEdgeFilePlus(epath, outname, nodeDict, geneList,
-    edgeArray)
+	keepGenes, thresh)
+pp.writeModEdgeFilePlus(epath, outname, nodeDict,
+	geneList, edgeArray)
 
 
 
 
 
-
-# change indirect edges to direct
+# create the primary matrices
+#   change indirect edges to direct
+matrixList, matrixNames = pp.createMatrixList(edgeArray,
+	keepEdges, indirEdges, geneList, outname)
 
 
 # skip? - save updated network & node dict

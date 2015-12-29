@@ -526,15 +526,24 @@ def createNodeLists(edges, aGenes) :
 #end def ######## ######## ######## 
 
 
+######## ######## ######## ########
+# Function: creates the name to use when saving the file
+# Input:
+#	name, str - the name of the original edge file
+#	kEdges, str list - list of edge types kept
+#	kGenes, str list - list of gene types kept
+#	tHold, float - threshold value for kept edge weights
+# Returns:
+#	oname, str - the new network name for the new files
 def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 
 	# save edge list, node dict, genes?
 	oname = name + "_t{0}%_g{1}_".format( int(tHold*100),
-	    len(kGenes))
+		len(kGenes))
 #	oname = ename + "_t{0}%_g{1}_".format( int(thresh*100),
 #	    len(keepGenes))
 	for et in kEdges :
-	    oname = oname + et[0]
+		oname = oname + et[0]
 	#end loop
 
 	return oname
@@ -545,8 +554,15 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 # Function: write the modified network to a file
 #	This includes the nodeDict and geneList
 # Input:
+#	path, str - path to the folder to save the file
+#	oname, str - new network name
+#	nDict, dict - 
+#		keys, node names as strings
+#		values, int list of indexes: rows in eArray where
+#			the node appears
+#		eArray, (Nx4) array - the network
 # Returns:
-def writeModEdgeFilePlus(path, oname, nDict, gList,	eArray) :
+def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 
 	gfile = oname + ".genes.txt"
 	nfile = oname + ".indices.txt"
@@ -555,28 +571,28 @@ def writeModEdgeFilePlus(path, oname, nDict, gList,	eArray) :
 	first = True
 	for gene in gList :
 
-	    # Start every new line but the first with \n
-	    #   This avoids ending the file with a blank line
-	    if first == True :
-	        first = False
-	    else :
-	        gf.write("\n")
-	        nf.write("\n")
-	    #end if
+		# Start every new line but the first with \n
+		#   This avoids ending the file with a blank line
+		if first == True :
+			first = False
+		else :
+			gf.write("\n")
+			nf.write("\n")
+		#end if
 
-	    gf.write("{}".format(gene))
+		gf.write("{}".format(gene))
 
-	    nf.write("{}\t".format(gene, nDict[gene]))
+		nf.write("{}\t".format(gene, nDict[gene]))
 
-	    fIndex = True
-	    for item in nDict[gene] :
-	        if fIndex == True :
-	            fIndex = False
-	        else :
-	            nf.write(",")
-	        #end if
-	        nf.write("{}".format(item))
-	    #end loop
+		fIndex = True
+		for item in nDict[gene] :
+			if fIndex == True :
+				fIndex = False
+			else :
+				nf.write(",")
+			#end if
+			nf.write("{}".format(item))
+		#end loop
 
 	#end loop
 
@@ -588,19 +604,141 @@ def writeModEdgeFilePlus(path, oname, nDict, gList,	eArray) :
 
 	first = True
 	for i in range(0, eArray.shape[0]) :
-	    if first == True :
-	        first = False
-	    else :
-	        of.write("\n")
-	    #end if
+		if first == True :
+			first = False
+		else :
+			of.write("\n")
+		#end if
 
-	    of.write("{}\t{}\t{}\t{}".format(eArray[i,0],
-	        eArray[i,1], eArray[i,2], eArray[i,3]))
+		of.write("{}\t{}\t{}\t{}".format(eArray[i,0],
+			eArray[i,1], eArray[i,2], eArray[i,3]))
 
 	#end loop
 
 	of.close()
 
 	return
+
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: create a mapping of genes to matrix indices
+# Input:
+# Returns:
+def createGeneMapping(gList) :
+	# From the list of genes in this network, dictionary
+	#	will indicate what index to use in matrix
+	# ASSUMPTION: file is sorted
+
+	gDict = dict()
+	numG = 0
+	for gene in gList :
+		gDict[gene] = numG
+		numG += 1
+	#end loop
+
+	return gDict
+
+#end def ######## ######## ######## 
+######## ######## ######## ########
+# Function: create a list of the primary matrices
+# Input:
+#	path, str - path to the folder to save the file
+#	oname, str - new network name
+#	nDict, dict - 
+#		keys, node names as strings
+#		values, int list of indexes: rows in eArray where
+#			the node appears
+#		eArray, (Nx4) array - the network
+# Returns:
+def createMatrixList(eArray, kEdges, iEdges, gList, oname) :
+
+	# How far from Std Dev will be kept as "Medium"
+	stdGap = 0.75
+
+	# Get a gene-to-index mapping to use with the
+	#	newly-created matrices
+	gDict = createGeneMapping(gList)
+
+	mList = list()
+	mNames = list()
+
+	iEdges.sort()
+	kEdges.sort()
+
+	# Define cut-offs for indirect edges
+	iNames = dict()
+	for et in iEdges :
+		valList = list()
+
+		eVals = eArray[eArray[:,3] == et, 2]
+		mean = np.mean(eVals)
+		std = np.std(eVals)
+
+		tSml = [max(0, mean-(2*std)), mean-(std*stdGap)]
+		tMed = [tSml+1, mean + (std*stdGap)]
+		tLrg = [tMed+1, mean+(2*std)]
+
+#		iNames.append(e+"_sm", tSml)
+#		iNames.append(e+"_md", tMed)
+#		iNames.append(e+"_lg", tLrg)
+
+		iNames.[e+"_sm"] = tSml
+		iNames.[e+"_md"] = tMed
+		iNames.[e+"_lg"] = tLrg
+	#end loop
+
+
+	# Initialize empty file
+	# This file stores what types were kept & how many edges
+	fn = path + oname + 'types.txt'
+	fet = open(fn, 'wb')
+	#fet.write("{}{}{}\n".format(et, delim, count))
+	fet.close()
+
+	# Start creating matrices
+	for et in kEdges :
+
+		# Remove indirect edges if needed
+
+
+		# If already direct, create the matrix
+		else :
+			thisM = np.zeros([numG,numG])
+			count = 0
+
+	#		print "Creating matrix from edge type: {}".format(et)
+			thisArray = edgeArray[edgeArray[:,3]==et]
+			# increment entry at (i,j) = (gene0,gene1)
+			for row in thisArray :
+				thisM[gDict[row[0]],gDict[row[1]]] += 1
+				thisM[gDict[row[1]],gDict[row[0]]] += 1
+				count += 1
+			#end loop
+
+			# save to a file
+			fn = path + oname + et
+			print "    saving to {}".format(fn)
+			np.save(fn, thisM)
+
+		#ERROR CHECK: save to a text file
+		#    fn = path + oname + et + '.txt'
+		#    print "    saving to {}".format(fn)
+		#    np.savetxt(fn, thisM, delimiter=delim)
+
+			# This file stores what types were kept & how many edges
+			fn = path + oname + '.types.txt'
+			fet = open(fn, 'ab')
+			fet.write("{}{}{}\n".format(et, delim, count))
+			fet.close()
+		#end if
+
+
+	#end loop
+
+
+	return mList, mNames
 
 #end def ######## ######## ######## 
