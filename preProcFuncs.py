@@ -683,7 +683,8 @@ def createCountDict(aList) :
 #			the node appears
 #		eArray, (Nx4) array - the network
 # Returns:
-def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
+def createMatrixList(eArray, kEdges, iEdges, gList,
+	nDict): #, path, oname) :
 
 	# How far from Std Dev will be kept as "Medium"
 	stdGap = 0.75
@@ -700,7 +701,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 	mNames = list()
 
 	# where to save the matrix files
-	mpath = path + "matrices/"
+#	mpath = path + "matrices/"
 
 	iEdges.sort()
 	kEdges.sort()
@@ -773,10 +774,10 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 
 	# Initialize empty file
 	# This file stores what types were kept & how many edges
-	fn = path + oname + 'types.txt'
-	fet = open(fn, 'wb')
-	#fet.write("{}{}{}\n".format(et, delim, count))
-	fet.close()
+#	fn = path + oname + 'types.txt'
+#	fet = open(fn, 'wb')
+#	#fet.write("{}{}{}\n".format(et, delim, count))
+#	fet.close()
 
 	# Start creating matrices
 	for et in kEdges :
@@ -876,14 +877,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 			#end loop			
 			if (count > 0) :
 				# save to a file
-				fn = mpath + oname + et + '_sm'
-				print "    saving to {}".format(fn)
-				np.save(fn, thisM)
-				# This file stores what types were kept & how many edges
-				fn = mpath + oname + 'types.txt'
-				fet = open(fn, 'ab')
-				fet.write("{}\t{}\n".format(et+'_sm', count))
-				fet.close()
+#				fn = mpath + oname + et + '_sm'
+#				print "    saving to {}".format(fn)
+#				np.save(fn, thisM)
+#				# This file stores what types were kept & how many edges
+#				fn = mpath + oname + 'types.txt'
+#				fet = open(fn, 'ab')
+#				fet.write("{}\t{}\n".format(et+'_sm', count))
+#				fet.close()
 
 				mList.append(thisM)
 				mNames.append(et+"_sm")
@@ -912,14 +913,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 			#end loop
 			if (count > 0) :
 				# save to a file
-				fn = mpath + oname + et + '_md'
-				print "    saving to {}".format(fn)
-				np.save(fn, thisM)
-				# This file stores what types were kept & how many edges
-				fn = mpath + oname + 'types.txt'
-				fet = open(fn, 'ab')
-				fet.write("{}\t{}\n".format(et+'_md', count))
-				fet.close()
+#				fn = mpath + oname + et + '_md'
+#				print "    saving to {}".format(fn)
+#				np.save(fn, thisM)
+#				# This file stores what types were kept & how many edges
+#				fn = mpath + oname + 'types.txt'
+#				fet = open(fn, 'ab')
+#				fet.write("{}\t{}\n".format(et+'_md', count))
+#				fet.close()
 
 				mList.append(thisM)
 				mNames.append(et+"_md")
@@ -948,14 +949,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 			#end loop
 			if (count > 0) :
 				# save to a file
-				fn = mpath + oname + et + '_lg'
-				print "    saving to {}".format(fn)
-				np.save(fn, thisM)
-				# This file stores what types were kept & how many edges
-				fn = mpath + oname + 'types.txt'
-				fet = open(fn, 'ab')
-				fet.write("{}\t{}\n".format(et+'_lg', count))
-				fet.close()
+#				fn = mpath + oname + et + '_lg'
+#				print "    saving to {}".format(fn)
+#				np.save(fn, thisM)
+#				# This file stores what types were kept & how many edges
+#				fn = mpath + oname + 'types.txt'
+#				fet = open(fn, 'ab')
+#				fet.write("{}\t{}\n".format(et+'_lg', count))
+#				fet.close()
 
 				mList.append(thisM)
 				mNames.append(et+"_lg")
@@ -979,20 +980,20 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 			#end loop
 
 			# save to a file
-			fn = mpath + oname + "." + et
-			print "    saving to {}".format(fn)
-			np.save(fn, thisM)
-
+#			fn = mpath + oname + "." + et
+#			print "    saving to {}".format(fn)
+#			np.save(fn, thisM)
+#
 			#ERROR CHECK: save to a text file
-			fn = mpath + oname + "." + et + '.txt'
-			print "    saving to {}".format(fn)
-			np.savetxt(fn, thisM, delimiter='\t')
-
+#			fn = mpath + oname + "." + et + '.txt'
+#			print "    saving to {}".format(fn)
+#			np.savetxt(fn, thisM, delimiter='\t')
+#
 			# This file stores what types were kept & how many edges
-			fn = mpath + oname + '.types.txt'
-			fet = open(fn, 'ab')
-			fet.write("{}\t{}\n".format(et, count))
-			fet.close()
+#			fn = mpath + oname + '.types.txt'
+#			fet = open(fn, 'ab')
+#			fet.write("{}\t{}\n".format(et, count))
+#			fet.close()
 
 
 			mList.append(thisM)
@@ -1005,5 +1006,67 @@ def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 
 
 	return mList, mNames
+
+#end def ######## ######## ######## 
+
+
+######## ######## ######## ########
+# Function: create a list of the primary matrices
+# Input:
+#	mpath, str - path to the folder to save the file
+#	mname, str - name of the file to save
+#	matrix, (NxN) list - the values to save
+#		ASSUMPTION: values are integers
+#	integer, bool - True means save values as int()
+# Returns:
+#	nothing
+def saveMatrixText(matrix, mname, mpath, integer) :
+
+#	# Where to save the matrices
+#	mpath = path + oname + "/"
+
+	# If folder doesn't exist, create it
+	if os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# Open the file
+	fout = open(mpath + mname, "wb")
+
+	# Write to the file
+	firstR = True
+	for i in range(0, matrix.shape[0]) :
+
+		# if not the first row, start with \n
+		if firstR :
+			firstR = False
+		else :
+			fout.write("\n")
+		#end if
+
+		firstC = True
+		for j in range(0, matrix.shape[1]) :
+
+			# if not the first col, start with \t
+			if firstC :
+				firstC = False
+			else :
+				fout.write("\t")
+			#end if
+
+			# Write the value to file
+			#	If integer = True, write as an integer
+			if integer :
+				fout.write("{}".format( int(matrix[i,j]) ))
+			else :
+				fout.write("{}".format( matrix[i,j] ))
+			#end if
+
+		#end loop
+	#end loop
+
+	fout.close()
+
+	return
 
 #end def ######## ######## ######## 

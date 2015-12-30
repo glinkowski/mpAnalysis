@@ -129,8 +129,7 @@ pp.writeModEdgeFilePlus(epath, outname, nodeDict,
 #   change indirect edges to direct
 print "Creating the primary gene-gene matrices ..."
 matrixList, matrixNames = pp.createMatrixList(edgeArray,
-	keepEdges, indirEdges, geneList, nodeDict,
-	epath, outname)
+	keepEdges, indirEdges, geneList, nodeDict)#, epath, outname)
 print matrixNames
 print matrixList[0]
 
