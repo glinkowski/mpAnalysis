@@ -37,7 +37,7 @@ print "    reading the keep file", kfile
 keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
 #print keepGenes
 #print loseGenes
-print keepEdges
+#print keepEdges
 #print indirEdges
 
 
@@ -74,13 +74,13 @@ edgeArray = pp.applyThreshold(edgeArray, thresh)
 # throw out specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 	keepEdges, indirEdges)
-print edgeArray
+#print edgeArray
 
 
 # Question: which should I keep: allGenes,
 #   keepGenes, or loseGenes? I only need two.
 allGenes = keepGenes + loseGenes
-print allGenes
+#print allGenes
 #allGenes = keepGenes
 #for regex in loseGenes :
 #    allGenes.append(regex)
@@ -107,9 +107,17 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
 #print those
 
 
+# skip? - save updated network & node dict
+#   no current use for it
+#   BUT ... might be useful for other things
+#       like DFS verification
+# ? save genes to file
+# ?
+
 # save edge list, node dict, genes?
 outname = pp.createModEdgeFileName(ename, keepEdges,
 	keepGenes, thresh)
+print "Saving modified network to {}.edge.txt".format(outname)
 pp.writeModEdgeFilePlus(epath, outname, nodeDict,
 	geneList, edgeArray)
 
@@ -119,17 +127,14 @@ pp.writeModEdgeFilePlus(epath, outname, nodeDict,
 
 # create the primary matrices
 #   change indirect edges to direct
+print "Creating the primary gene-gene matrices ..."
 matrixList, matrixNames = pp.createMatrixList(edgeArray,
-	keepEdges, indirEdges, geneList, epath, outname)
+	keepEdges, indirEdges, geneList, nodeDict,
+	epath, outname)
+print matrixNames
+print matrixList[0]
 
 
-# skip? - save updated network & node dict
-#   no current use for it
-#   BUT ... might be useful for other things
-#       like DFS verification
-
-# ? save genes to file
-# ?
 
 # create matrices and network
 # save path types to file

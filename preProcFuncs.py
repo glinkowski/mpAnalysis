@@ -545,7 +545,7 @@ def createNodeLists(edges, aGenes) :
 def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 
 	# save edge list, node dict, genes?
-	oname = name + "_t{0}%_g{1}_".format( int(tHold*100),
+	oname = name + "_g{1}t{0}_".format( int(tHold*100),
 		len(kGenes))
 #	oname = ename + "_t{0}%_g{1}_".format( int(thresh*100),
 #	    len(keepGenes))
@@ -648,6 +648,29 @@ def createGeneMapping(gList) :
 
 	return gDict
 
+#end def ######## ######## ######## ######## ######## ######## ########
+# Function: create a dict of node counts
+# Input:
+# Returns:
+def createCountDict(aList) :
+	# From the list of genes in this network, dictionary
+	#	will return a count of how many times each appears
+
+	aSet = set()
+	aDict = dict()
+
+	for item in aList :
+
+		if item in aSet :
+			aDict[item] += 1
+		else :
+			aSet.add(item)
+			aDict[item] = 1
+		#end if
+	#end loop
+
+	return aDict
+
 #end def ######## ######## ######## 
 ######## ######## ######## ########
 # Function: create a list of the primary matrices
@@ -660,7 +683,7 @@ def createGeneMapping(gList) :
 #			the node appears
 #		eArray, (Nx4) array - the network
 # Returns:
-def createMatrixList(eArray, kEdges, iEdges, gList, path, oname) :
+def createMatrixList(eArray, kEdges, iEdges, gList, nDict, path, oname) :
 
 	# How far from Std Dev will be kept as "Medium"
 	stdGap = 0.75
@@ -676,44 +699,76 @@ def createMatrixList(eArray, kEdges, iEdges, gList, path, oname) :
 	mList = list()
 	mNames = list()
 
+	# where to save the matrix files
+	mpath = path + "matrices/"
+
 	iEdges.sort()
 	kEdges.sort()
 
 	# Define cut-offs for indirect edges
+	# ASSUMPTION: indirect edges, col 0 is non-gene node
 	iNames = dict()
+		# key: edge type + sm/md/lg
+		# value: integer tuple w/ low & high cutoffs
+
 	for et in iEdges :
-		valList = list()
 
-#		eValStr = eArray[eArray[:,3] == et][:,2]
-		eValStr = eArray[eArray[:,3] == et, 2]
+		# Get the degree of each node for this edge type
+		nodeList = list(eArray[eArray[:,3]==et, 0])
+		nodeCount = createCountDict(nodeList)
 
-		print "-----inside createMatrixList----------"
-#		print eArray
-#		print eArray[eArray[:,3] == et, :]
-#		print et, eValStr
+		# Get the mean & std dev for the node degrees
+		mean = int(round(np.mean(nodeCount.values())))
+		std = int(round(np.std(nodeCount.values())))
+		stdPart = int(round(std * stdGap))
 
-		# Convert the strings to float
-		eVals = list()
-		eVals = [float(x) for x in eValStr]
-#		print eVals
-
-		mean = np.mean(eVals)
-		std = np.std(eVals)
-
-		tSml = [max(0, mean-(2*std)), mean-(std*stdGap)]
-		tMed = [tSml[1]+1, mean + (std*stdGap)]
+		# Create the breakdown by small/med/large
+		tSml = [max(0, mean-(2*std)), mean - stdPart]
+		tMed = [tSml[1]+1, mean + stdPart]
 		tLrg = [tMed[1]+1, mean+(2*std)]
 
-#		iNames.append(e+"_sm", tSml)
-#		iNames.append(e+"_md", tMed)
-#		iNames.append(e+"_lg", tLrg)
-
+		# Save those tuples to the look-up dict
 		iNames[et+"_sm"] = tSml
 		iNames[et+"_md"] = tMed
 		iNames[et+"_lg"] = tLrg
 	#end loop
 
-	print iNames
+#	print iNames
+
+#	iNames = dict()
+#	for et in iEdges :
+#		valList = list()
+#
+##		eValStr = eArray[eArray[:,3] == et][:,2]
+#		eValStr = eArray[eArray[:,3] == et, 2]
+#
+#		print "-----inside createMatrixList----------"
+##		print eArray
+##		print eArray[eArray[:,3] == et, :]
+##		print et, eValStr
+#
+#		# Convert the strings to float
+#		eVals = list()
+#		eVals = [float(x) for x in eValStr]
+##		print eVals
+#
+#		mean = np.mean(eVals)
+#		std = np.std(eVals)
+#
+#		tSml = [max(0, mean-(2*std)), mean-(std*stdGap)]
+#		tMed = [tSml[1]+1, mean + (std*stdGap)]
+#		tLrg = [tMed[1]+1, mean+(2*std)]
+#
+##		iNames.append(e+"_sm", tSml)
+##		iNames.append(e+"_md", tMed)
+##		iNames.append(e+"_lg", tLrg)
+#
+#		iNames[et+"_sm"] = tSml
+#		iNames[et+"_md"] = tMed
+#		iNames[et+"_lg"] = tLrg
+#	#end loop
+#
+#	print iNames
 
 
 	# Initialize empty file
@@ -726,168 +781,186 @@ def createMatrixList(eArray, kEdges, iEdges, gList, path, oname) :
 	# Start creating matrices
 	for et in kEdges :
 
-		print et, iEdges
+#		print et, kEdges, iEdges
 
 		# Remove indirect edges if needed
 		if et in iEdges :
 
+#			print et, iEdges
 
-		    # Create lists corresponding to the new edge types
-		    term_sm = list()
-		    term_md = list()
-		    term_lg = list()
+			# Create lists corresponding to the new edge types
+			term_sm = list()
+			term_md = list()
+			term_lg = list()
 
-		    # Separate out the edges of type et
-		    thisArray = eArray[eArray[:,3]==et]
+			# Separate out the edges of type et
+			thisArray = eArray[eArray[:,3]==et]
 
-		    # Get the count of each node with that edge
-		    checkSet = set()
-		    termDict = dict()
-		    for row in thisArray :
+			# Get the count of each node with that edge
+			checkSet = set()
+			termDict = dict()
+			for row in thisArray :
 
-		    	# Only add if the node is not a gene
-		    	if row[0] not in gSet :
-		    		# If not yet added, then set = 1
-		    		if row[0] in checkSet :
-		    			termDict[row[0]] == 1
-		    			checkSet.add(row[0])
-		    		# Else, increment count by 1
-		    		else :
-		    			termDict[row[0]] += 1
-		    	#end if
+#				print row
+#				print termDict
 
-		    	# Only add if the node is not a gene
-		    	if row[1] not in gSet :
-		    		# If not yet added, then set = 1
-		    		if row[1] in checkSet :
-		    			termDict[row[1]] == 1
-		    			checkSet.add(row[1])
-		    		# Else, increment count by 1
-		    		else :
-		    			termDict[row[1]] += 1
-		    	#end if
-		    #end loop
+				# Only add if the node is not a gene
+				if row[0] not in gSet :
+					# Else, increment count by 1
+					if row[0] in checkSet :
+						termDict[row[0]] += 1
+#						print "if", row[0]
+					# If not yet added, then set = 1
+					else :
+#						print "else", row[0]
+						checkSet.add(row[0])
+						termDict[row[0]] = 1
+					#end if
+				#end if
 
-		    # Assign to groups according to node degree
-		    for term in termDict.keys() :
+				## Only add if the node is not a gene
+				#if row[1] not in gSet :
+				#	# If not yet added, then set = 1
+				#	if row[1] in checkSet :
+				#		termDict[row[1]] == 1
+				#		checkSet.add(row[1])
+				#	# Else, increment count by 1
+				#	else :
+				#		termDict[row[1]] += 1
+				##end if
+			#end loop
 
-		    	# get the tuples to check
-		    	tSml = iNames[term + "_sm"]
-		    	tMed = iNames[term + "_md"]
-		    	tLrg = iNames[term + "_lg"]
+			# Assign to groups according to node degree
+			for term in termDict.keys() :
 
-
-		    	if (tSml[0] <= termDict[term] <= tSml[1]) :
-		    		term_sm.append(term)
-		    	elif (tMed[0] <= termDict[term] <= tMed[1]) :
-		    		term_md.append(term)
-		    	elif (tLrg[0] <= termDict[term] <= tLrg[1]) : 
-		    		term_lg.append(term)
-		    	#end if
-
-		    	print term_sm, term_md, term_lg
-
-		    #end loop
+				# get the tuples to check
+				tSml = iNames[row[3] + "_sm"]
+				tMed = iNames[row[3] + "_md"]
+				tLrg = iNames[row[3] + "_lg"]
 
 
-		    # Create the first (small) matrix
-		    print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][1]))
-		    thisM = np.zeros([numG,numG])
-		    count = 0
-		    for term in term_sm :
-		        # list of all edges with this term
-		        rowList = nodeDict[term]
-		        # Join all genes connected to term X
-		        for i in range(0, len(rowList)) :
-		            for j in range(0+1, len(rowList)) :
-		                # Find two genes joined by term
-		                # ASSUME: terms always in col 0, genes in col 1
-		                gA = edgeArray[i,1]
-		                gB = edgeArray[j,1]
-		                # Increment the entry(s) in the array (symmetric)
-		                thisM[geneDict[gA],geneDict[gB]] += 1
-		                thisM[geneDict[gB],geneDict[gA]] += 1
-		                count += 1
-		            #end loop
-		        #end loop
-		    #end loop
-		    if (count > 0) :
-		        # save to a file
-		        fn = path + oname + et + '_sm'
-		        print "    saving to {}".format(fn)
-		        np.save(fn, thisM)
-		        # This file stores what types were kept & how many edges
-		        fn = path + oname + 'types.txt'
-		        fet = open(fn, 'ab')
-		        fet.write("{}{}{}\n".format(et+'_sm', delim, count))
-		        fet.close()
-		    #end if
+				if (tSml[0] <= termDict[term] <= tSml[1]) :
+					term_sm.append(term)
+				elif (tMed[0] <= termDict[term] <= tMed[1]) :
+					term_md.append(term)
+				elif (tLrg[0] <= termDict[term] <= tLrg[1]) : 
+					term_lg.append(term)
+				#end if
 
-		    # Create the second (medium) matrix
-		    print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][2]))
-		    thisM = np.zeros([numG,numG])
-		    count = 0
-		    for term in term_md :
-		        # list of all edges with this term
-		        rowList = nodeDict[term]
-		        # Join all genes connected to term X
-		        for i in range(0, len(rowList)) :
-		            for j in range(0+1, len(rowList)) :
-		                # Find two genes joined by term
-		                # ASSUME: terms always in col 0, genes in col 1
-		                gA = edgeArray[i,1]
-		                gB = edgeArray[j,1]
-		                # Increment the entry(s) in the array (symmetric)
-		                thisM[geneDict[gA],geneDict[gB]] += 1
-		                thisM[geneDict[gB],geneDict[gA]] += 1
-		                count += 1
-		            #end loop
-		        #end loop
-		    #end loop
-		    if (count > 0) :
-		        # save to a file
-		        fn = path + oname + et + '_md'
-		        print "    saving to {}".format(fn)
-		        np.save(fn, thisM)
-		        # This file stores what types were kept & how many edges
-		        fn = path + oname + 'types.txt'
-		        fet = open(fn, 'ab')
-		        fet.write("{}{}{}\n".format(et+'_md', delim, count))
-		        fet.close()
-		    #end if
 
-		    # Create the third (large) matrix
-		    print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][3]))
-		    thisM = np.zeros([numG,numG])
-		    count = 0
-		    for term in term_lg :
-		        # list of all edges with this term
-		        rowList = nodeDict[term]
-		        # Join all genes connected to term X
-		        for i in range(0, len(rowList)) :
-		            for j in range(0+1, len(rowList)) :
-		                # Find two genes joined by term
-		                # ASSUME: terms always in col 0, genes in col 1
-		                gA = edgeArray[i,1]
-		                gB = edgeArray[j,1]
-		                # Increment the entry(s) in the array (symmetric)
-		                thisM[geneDict[gA],geneDict[gB]] += 1
-		                thisM[geneDict[gB],geneDict[gA]] += 1
-		                count += 1
-		            #end loop
-		        #end loop
-		    #end loop
-		    if (count > 0) :
-		        # save to a file
-		        fn = path + oname + et + '_lg'
-		        print "    saving to {}".format(fn)
-		        np.save(fn, thisM)
-		        # This file stores what types were kept & how many edges
-		        fn = path + oname + 'types.txt'
-		        fet = open(fn, 'ab')
-		        fet.write("{}{}{}\n".format(et+'_lg', delim, count))
-		        fet.close()
-		    #end if
+			#end loop
+
+#			print term_sm, term_md, term_lg
+
+
+			# Create the first (small) matrix
+#			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][1]))
+			thisM = np.zeros([numG,numG])
+			count = 0
+			for term in term_sm :
+				# list of all edges with this term
+				rowList = nDict[term]
+				# Join all genes connected to term X
+				for i in range(0, len(rowList)) :
+					for j in range(0+1, len(rowList)) :
+						# Find two genes joined by term
+						# ASSUME: terms always in col 0, genes in col 1
+						gA = eArray[i,1]
+						gB = eArray[j,1]
+						# Increment the entry(s) in the array (symmetric)
+						thisM[gDict[gA],gDict[gB]] += 1
+						thisM[gDict[gB],gDict[gA]] += 1
+						count += 1
+					#end loop
+				#end loop
+			#end loop			
+			if (count > 0) :
+				# save to a file
+				fn = mpath + oname + et + '_sm'
+				print "    saving to {}".format(fn)
+				np.save(fn, thisM)
+				# This file stores what types were kept & how many edges
+				fn = mpath + oname + 'types.txt'
+				fet = open(fn, 'ab')
+				fet.write("{}\t{}\n".format(et+'_sm', count))
+				fet.close()
+
+				mList.append(thisM)
+				mNames.append(et+"_sm")
+			#end if
+
+			# Create the second (medium) matrix
+#			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][2]))
+			thisM = np.zeros([numG,numG])
+			count = 0
+			for term in term_md :
+				# list of all edges with this term
+				rowList = nDict[term]
+				# Join all genes connected to term X
+				for i in range(0, len(rowList)) :
+					for j in range(0+1, len(rowList)) :
+						# Find two genes joined by term
+						# ASSUME: terms always in col 0, genes in col 1
+						gA = eArray[i,1]
+						gB = eArray[j,1]
+						# Increment the entry(s) in the array (symmetric)
+						thisM[gDict[gA],gDict[gB]] += 1
+						thisM[gDict[gB],gDict[gA]] += 1
+						count += 1
+					#end loop
+				#end loop
+			#end loop
+			if (count > 0) :
+				# save to a file
+				fn = mpath + oname + et + '_md'
+				print "    saving to {}".format(fn)
+				np.save(fn, thisM)
+				# This file stores what types were kept & how many edges
+				fn = mpath + oname + 'types.txt'
+				fet = open(fn, 'ab')
+				fet.write("{}\t{}\n".format(et+'_md', count))
+				fet.close()
+
+				mList.append(thisM)
+				mNames.append(et+"_md")
+			#end if
+			
+			# Create the third (large) matrix
+#			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][3]))
+			thisM = np.zeros([numG,numG])
+			count = 0
+			for term in term_lg :
+				# list of all edges with this term
+				rowList = nDict[term]
+				# Join all genes connected to term X
+				for i in range(0, len(rowList)) :
+					for j in range(0+1, len(rowList)) :
+						# Find two genes joined by term
+						# ASSUME: terms always in col 0, genes in col 1
+						gA = eArray[i,1]
+						gB = eArray[j,1]
+						# Increment the entry(s) in the array (symmetric)
+						thisM[gDict[gA],gDict[gB]] += 1
+						thisM[gDict[gB],gDict[gA]] += 1
+						count += 1
+					#end loop
+				#end loop
+			#end loop
+			if (count > 0) :
+				# save to a file
+				fn = mpath + oname + et + '_lg'
+				print "    saving to {}".format(fn)
+				np.save(fn, thisM)
+				# This file stores what types were kept & how many edges
+				fn = mpath + oname + 'types.txt'
+				fet = open(fn, 'ab')
+				fet.write("{}\t{}\n".format(et+'_lg', count))
+				fet.close()
+
+				mList.append(thisM)
+				mNames.append(et+"_lg")
+			#end if
+			
 
 
 
@@ -906,20 +979,25 @@ def createMatrixList(eArray, kEdges, iEdges, gList, path, oname) :
 			#end loop
 
 			# save to a file
-			fn = path + oname + "." + et
+			fn = mpath + oname + "." + et
 			print "    saving to {}".format(fn)
 			np.save(fn, thisM)
 
 			#ERROR CHECK: save to a text file
-			fn = path + oname + "." + et + '.txt'
+			fn = mpath + oname + "." + et + '.txt'
 			print "    saving to {}".format(fn)
 			np.savetxt(fn, thisM, delimiter='\t')
 
 			# This file stores what types were kept & how many edges
-			fn = path + oname + '.types.txt'
+			fn = mpath + oname + '.types.txt'
 			fet = open(fn, 'ab')
 			fet.write("{}\t{}\n".format(et, count))
 			fet.close()
+
+
+			mList.append(thisM)
+			mNames.append(et)
+			
 		#end if
 
 
