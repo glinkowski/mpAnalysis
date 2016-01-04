@@ -3,6 +3,8 @@
 
 import preProcFuncs as pp
 
+import numpy as np
+
 
 ####### ####### ####### ####### 
 # PARAMETERS
@@ -138,11 +140,26 @@ pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 # create matrices (? and network)
 # save path types to file
 
+mpPath = epath + outname + "_MetaPaths/"
 # Create the 1-step paths
-primNames = matrixNames
+#primNames = matrixNames #NOPE! This just makes a pointer
+primNames = list()
+for name in matrixNames :
+	primNames.append(name)
+#end loop
 # Create the 2-step paths
+for i in range(0, len(primNames)) :
+	for j in range(0, len(primNames)) :
+		newM = np.multiply(matrixList[i], matrixList[j])
+		name = primNames[i] + "-" + primNames[j]
+		matrixList.append(newM)
+		matrixNames.append(name)
+	#end loop
+#end loop
 # Create the 3-step paths
 # Create the 4-step paths
+
+pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
 
 
 

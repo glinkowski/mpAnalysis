@@ -545,14 +545,18 @@ def createNodeLists(edges, aGenes) :
 def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 
 	# save edge list, node dict, genes?
-	oname = name + "_g{1}t{0}_".format( int(tHold*100),
-		len(kGenes))
+#	oname = name + "_g{1}t{0}_".format( int(tHold*100),
+#		len(kGenes))
+
 #	oname = ename + "_t{0}%_g{1}_".format( int(thresh*100),
 #	    len(keepGenes))
-	for et in kEdges :
-		oname = oname + et[0]
-	#end loop
 
+#	for et in kEdges :
+#		oname = oname + et[0]
+#	#end loop
+
+	oname = name + "_g{}t{}h{}".format( len(kGenes),
+		len(kEdges), int(tHold*100) )
 	return oname
 
 #end def ######## ######## ######## 
