@@ -118,11 +118,8 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
 outname = pp.createModEdgeFileName(ename, keepEdges,
 	keepGenes, thresh)
 print "Saving modified network to {}.edge.txt".format(outname)
-pp.writeModEdgeFilePlus(epath, outname, nodeDict,
-	geneList, edgeArray)
-
-
-
+pp.writeModEdgeFilePlus(epath+"modified/", outname,
+	nodeDict, geneList, edgeArray)
 
 
 # create the primary matrices
@@ -133,10 +130,19 @@ matrixList, matrixNames = pp.createMatrixList(edgeArray,
 print matrixNames
 print matrixList[0]
 
+# save the primary matrices
+primpath = epath + outname + "_Primaries/"
+pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 
 
-# create matrices and network
+# create matrices (? and network)
 # save path types to file
+
+# Create the 1-step paths
+primNames = matrixNames
+# Create the 2-step paths
+# Create the 3-step paths
+# Create the 4-step paths
 
 
 

@@ -571,6 +571,11 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 # Returns:
 def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 
+	# If folder doesn't exist, create it
+	if not os.path.exists(path) :
+		os.makedirs(path)
+	#end if
+
 	gfile = oname + ".genes.txt"
 	nfile = oname + ".indices.txt"
 	gf = open(path + gfile, "wb")
@@ -606,7 +611,7 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 	gf.close()
 	nf.close()
 
-	ofile = oname + ".edges.txt"
+	ofile = oname + ".edge.txt"
 	of = open(path + ofile, "wb")
 
 	first = True
@@ -1011,12 +1016,11 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 
 ######## ######## ######## ########
-# Function: create a list of the primary matrices
+# Function: save the given matrix as a .txt file
 # Input:
-#	mpath, str - path to the folder to save the file
-#	mname, str - name of the file to save
 #	matrix, (NxN) list - the values to save
-#		ASSUMPTION: values are integers
+#	mname, str - name of the file to save
+#	mpath, str - path to the folder to save the file
 #	integer, bool - True means save values as int()
 # Returns:
 #	nothing
@@ -1026,7 +1030,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 #	mpath = path + oname + "/"
 
 	# If folder doesn't exist, create it
-	if os.path.exists(mpath) :
+	if not os.path.exists(mpath) :
 		os.makedirs(mpath)
 	#end if
 
@@ -1066,6 +1070,89 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 	#end loop
 
 	fout.close()
+
+	return
+
+#end def ######## ######## ########
+
+######## ######## ######## ########
+# Function: save the given matrix as a .npy file
+# Input:
+#	matrix, (NxN) list - the values to save
+#	mname, str - name of the file to save
+#	mpath, str - path to the folder to save the file
+#	integer, bool - True means save values as int()
+# Returns:
+#	nothing
+def saveMatrixNumpy(matrix, mname, mpath) :
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# Write to the file
+	np.save(mpath+mname, matrix)
+
+	return
+
+#end def ######## ######## ######## 
+
+######## ######## ######## ########
+# Function: save a list of matrices
+# Input:
+#	mList, list of NxN matrices - the matrices to save
+#	mNames, list of str - names of the paths in matrix
+#	mGenes, list of str - names of genes in the matrix
+#	mpath, str - path to the folder to save the file
+# Returns:
+#	nothing
+# Creates:
+#	
+def saveMatrixList(mList, mNames, mGenes, mpath) :
+
+	# Number of digits to zero-pad the file name/number
+	zpad = 5
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# This file gives the corresponding gene names for
+	#	each row/col of the matrix (rows & cols are same)
+	fgene = open(mpath+"genes.txt", "wb")
+	firstline = True
+	for gene in mGenes :
+		if firstline :
+			firstline = False
+		else :
+			fgene.write("\n")
+		#end if
+		fgene.write("{}".format(gene))
+	#end if
+
+	# This file tells which matrix corresponds to which path
+	fkey = open(mpath+"key.txt", "wb")
+
+	num = 0
+	firstline = True
+	for i in range(0, len(mNames)) :
+
+		# Write to the legend file
+		if firstline :
+			firstline = False
+		else :
+			fkey.write("\n")
+		#end if
+		fkey.write("{:05d}\t{}".format(num, mNames[i]))
+
+		# Save each matrix as the corresponding number
+		saveMatrixNumpy(mList[i], str(num).zfill(zpad),
+			mpath)
+
+		num += 1
+	#end loop
 
 	return
 
