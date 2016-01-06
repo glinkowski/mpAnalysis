@@ -9,7 +9,7 @@ import numpy as np
 ####### ####### ####### ####### 
 # PARAMETERS
 
-ename = 'fakeNtwk01'
+ename = 'fakeNtwk00'
 epath = '../networks/'
 
 kfile = ename + '.keep.txt'
@@ -139,28 +139,51 @@ pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 
 # create matrices (? and network)
 # save path types to file
-
 mpPath = epath + outname + "_MetaPaths/"
 # Create the 1-step paths
 #primNames = matrixNames #NOPE! This just makes a pointer
 primNames = list()
+mDict = dict()	# map indices to the paths
+mNum = 0
 for name in matrixNames :
 	primNames.append(name)
+	mDict[name] = mNum
+	mNum += 1
 #end loop
 # Create the 2-step paths
 for i in range(0, len(primNames)) :
-	for j in range(0, len(primNames)) :
-		newM = np.multiply(matrixList[i], matrixList[j])
-		name = primNames[i] + "-" + primNames[j]
-		matrixList.append(newM)
-		matrixNames.append(name)
+	for j in range(i, len(primNames)) :
+		newM = np.dot(matrixList[i], matrixList[j])
+		name1 = primNames[i] + "-" + primNames[j]
+		name2 = primNames[j] + "-" + primNames[i]
+		if name1 == name2 :
+			matrixList.append(newM)
+			matrixNames.append(name1)
+			mDict[name1] = mNum
+		else :
+			matrixList.append(newM)
+			matrixNames.append(name1)
+			mDict[name1] = mNum
+			mDict[name2] = mNum
+		#end if
+
+#		newM = np.multiply(matrixList[i], matrixList[j])
+#		name = primNames[i] + "-" + primNames[j]
+#		matrixList.append(newM)
+#		matrixNames.append(name)
+
+		mNum += 1
 	#end loop
 #end loop
+
+#pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
+pp.saveMatrixListPlus(matrixList, mDict, geneList, mpPath)
+
 # Create the 3-step paths
 # Create the 4-step paths
 
-pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
-
+#pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
+#pp.saveMatrixListPlus(matrixList, mDict, geneList, mpPath)
 
 
 print "\nDone.\n"

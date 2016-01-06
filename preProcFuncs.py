@@ -1155,8 +1155,104 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 		saveMatrixNumpy(mList[i], str(num).zfill(zpad),
 			mpath)
 
+		# VERIFICATION: save as a text-readable file
+		saveMatrixText(mList[i], "t"+str(num).zfill(zpad),
+			mpath, True)
+
 		num += 1
 	#end loop
+
+	return
+
+#end def ######## ######## ######## 
+
+######## ######## ######## ########
+# Function: save a list of matrices
+# Input:
+#	mList, list of NxN matrices - the matrices to save
+#	mNames, dict
+#		key, str: metapath names
+#		value, int: corresponding index number for mList
+#	mGenes, list of str - names of genes in the matrix
+#	mpath, str - path to the folder to save the file
+# Returns:
+#	nothing
+# Creates:
+#	
+def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
+
+	# Number of digits to zero-pad the file name/number
+	zpad = 5
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# This file gives the corresponding gene names for
+	#	each row/col of the matrix (rows & cols are same)
+	fgene = open(mpath+"genes.txt", "wb")
+	firstline = True
+	for gene in mGenes :
+		if firstline :
+			firstline = False
+		else :
+			fgene.write("\n")
+		#end if
+		fgene.write("{}".format(gene))
+	#end if
+	fgene.close()
+
+
+	# Get the sorted list of all paths
+	nameList = list(mNames.keys())
+	nameList.sort()
+
+	# This file tells which matrix corresponds to which path
+	fkey = open(mpath+"key.txt", "wb")
+	firstline = True
+	for name in nameList :
+		if firstline :
+			firstline = False
+		else :
+			fkey.write("\n")
+		#end if
+		fkey.write("{:05d}\t{}".format(mNames[name], name))
+	#end loop
+	fkey.close()
+
+	for i in range(0, len(mList)) :
+		# Save each matrix as the corresponding number
+		saveMatrixNumpy(mList[i], str(i).zfill(zpad),
+			mpath)
+
+		# VERIFICATION: save as a text-readable file
+		saveMatrixText(mList[i], "t"+str(i).zfill(zpad),
+			mpath, True)
+	#end loop
+
+#	num = 0
+#	firstline = True
+#	for i in range(0, len(mNames)) :
+#
+#		# Write to the legend file
+#		if firstline :
+#			firstline = False
+#		else :
+#			fkey.write("\n")
+#		#end if
+#		fkey.write("{:05d}\t{}".format(num, mNames[i]))
+#
+#		# Save each matrix as the corresponding number
+#		saveMatrixNumpy(mList[i], str(num).zfill(zpad),
+#			mpath)
+#
+#		# VERIFICATION: save as a text-readable file
+#		saveMatrixText(mList[i], "t"+str(num).zfill(zpad),
+#			mpath, True)
+#
+#		num += 1
+#	#end loop
 
 	return
 
