@@ -7,6 +7,7 @@ import re
 
 
 nodeDT = np.dtype('a30')
+keyZPad = 5
 
 
 
@@ -1039,7 +1040,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 	#end if
 
 	# Open the file
-	fout = open(mpath + mname, "wb")
+	fout = open(mpath + mname + ".txt", "wb")
 
 	# Write to the file
 	firstR = True
@@ -1116,7 +1117,8 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 def saveMatrixList(mList, mNames, mGenes, mpath) :
 
 	# Number of digits to zero-pad the file name/number
-	zpad = 5
+#	zpad = 5
+	zpad = keyZPad
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1182,7 +1184,8 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 
 	# Number of digits to zero-pad the file name/number
-	zpad = 5
+#	zpad = 5
+	zpad = keyZPad
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1210,6 +1213,7 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 
 	# This file tells which matrix corresponds to which path
 	fkey = open(mpath+"key.txt", "wb")
+	fkey.write("NOTE: 't' - use matrix transpose\n")
 	firstline = True
 	for name in nameList :
 		if firstline :
@@ -1217,7 +1221,14 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 		else :
 			fkey.write("\n")
 		#end if
-		fkey.write("{:05d}\t{}".format(mNames[name], name))
+#		fkey.write("{:05d}\t{}".format(mNames[name], name))
+#		fkey.write("{:05d}".format(mNames[name][0]))
+		fkey.write("{}".format( str(mNames[name][0]).zfill(zpad) ))
+		if mNames[name][1] == True :
+			fkey.write(",t")
+		else :
+			fkey.write(", ")
+		fkey.write("\t{}".format(name))
 	#end loop
 	fkey.close()
 

@@ -147,7 +147,7 @@ mDict = dict()	# map indices to the paths
 mNum = 0
 for name in matrixNames :
 	primNames.append(name)
-	mDict[name] = mNum
+	mDict[name] = [mNum, False]
 	mNum += 1
 #end loop
 # Create the 2-step paths
@@ -159,12 +159,13 @@ for i in range(0, len(primNames)) :
 		if name1 == name2 :
 			matrixList.append(newM)
 			matrixNames.append(name1)
-			mDict[name1] = mNum
+			mDict[name1] = [mNum, False]
 		else :
 			matrixList.append(newM)
 			matrixNames.append(name1)
-			mDict[name1] = mNum
-			mDict[name2] = mNum
+			# NOTE: True indicates use transpose
+			mDict[name1] = [mNum, False]
+			mDict[name2] = [mNum, True]
 		#end if
 
 #		newM = np.multiply(matrixList[i], matrixList[j])
