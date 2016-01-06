@@ -1,6 +1,7 @@
 
 
 import os.path
+import os
 import sys
 import numpy as np
 import re
@@ -1098,6 +1099,30 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 
 	# Write to the file
 	np.save(mpath+mname, matrix)
+
+	return
+
+#end def ######## ######## ######## 
+
+######## ######## ######## ########
+# Function: delete the files within a directory
+# Input:
+#	path, str - the directory to delete
+# Returns:
+#	nothing
+# NOTE: This only works if no sub-folders
+def clearFilesInDirectory(path) :
+
+	# Get the list of files in the directory
+	filelist = ([f for f in os.listdir(path)
+		if os.path.isfile(os.path.join(path, f))])
+
+	# Remove all the files in that folder
+	for f in filelist :
+		os.remove(os.path.join(path, f))
+
+	# Delete the folder
+#	os.rmdir(path)
 
 	return
 
