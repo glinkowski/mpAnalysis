@@ -1306,8 +1306,10 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 #		value, [int, : corresponding index number for mList
 #				bool] : True means use matrix transpose
 #	path, str - path to the folder to save the file
-# Returns:
-#	nothing
+# Returns: nothing
+# Creates: a legend, mapping the path type on the right
+#	to the path matrix file on the left, where 't'
+#	indicates the transpose of that matrix should be used
 def saveKeyFile(mDict, path) :
 
 	# The length to pad the file name / matrix number
@@ -1348,6 +1350,38 @@ def saveKeyFile(mDict, path) :
 ######## ######## ######## ########
 # Function: save a list of matrices
 # Input:
+#	mGenes, list of str - list of genes in matrix
+#		ASSUMPTION: list is already properly ordered
+#	path, str - path to the folder to save the file
+# Returns: nothing
+# Creates: file containing ordered list of genes to
+#	use as the row/col headers for path matrices
+def saveGeneFile(mGenes, path) :
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(path) :
+		os.makedirs(path)
+	#end if
+
+	# This file gives the corresponding gene names for
+	#	each row/col of the matrix (rows & cols are same)
+	fgene = open(path+"genes.txt", "wb")
+	firstline = True
+	for gene in mGenes :
+		if firstline :
+			firstline = False
+		else :
+			fgene.write("\n")
+		#end if
+		fgene.write("{}".format(gene))
+	#end if
+	fgene.close()
+
+	return
+#end def ######## ######## ######## 	
+######## ######## ######## ########
+# Function: save a list of matrices
+# Input:
 #	pList, list of NxN matrices - the primary matrices
 #		ie: the 1-level path matrices
 #	pNames, dict
@@ -1355,13 +1389,12 @@ def saveKeyFile(mDict, path) :
 #		value, int: corresponding index number for mList
 #	mGenes, list of str - names of genes in the matrix
 #	mpath, str - path to the folder to save the file
-# Returns:
-#	mList, list of NxN matrices - 
-#	mDict, dict
-#		key, str: metapath names
-#		value, [int, bool]: [corresponding index for mList,
-#			indicator to use matrix transpose (if True)]
-def createMetaPaths(pList, pNames, depth, path) :
+# Returns: nothing
+# Creates: The set of path matrices in the appropriate
+#	folder. These are simply named numerically, with a
+#	key/legend file provided. The list of genes used as
+#	row/col headers is also saved to that folder.	
+def createMetaPaths(pList, pNames, gList, depth, path) :
 
 	maxDepth = 4
 	if depth > maxDepth :
@@ -1392,12 +1425,23 @@ def createMetaPaths(pList, pNames, depth, path) :
 	# The length to pad the file name / matrix number
 	zpad = keyZPad
 
+	#ERROR CHECK: verify gene list & matrix dimensions
+	if len(gList) != pList[0].shape[0] :
+		print ( "ERROR: The provided list of genes" +
+			" does not match the matrix. No paths created.")
+		return
+	elif pList[0].shape[0] != pList[0].shape[1] :
+		print ( "ERROR: The primary path matrix passed" +
+			" is not square.")
+		return
+	#end if
+
 	#-------------------------------
 	# Create the 1-step paths
 #	for name in pNames :
 #		mDict[name] = [mNum, False]
 	for i in range(0, len(pNames)) :
-#TODO: instead of storing in memory,
+#done: instead of storing in memory,
 #	These can be saved immediately.
 #		mList.append(pList[i])
 		saveMatrixNumpy(pList[i], str(mNum).zfill(zpad), path)
@@ -1411,6 +1455,9 @@ def createMetaPaths(pList, pNames, depth, path) :
 #		return mList, mDict
 		return
 	#end if
+
+#TODO: ? Omit multiple steps of same edge type
+#	(ie: i==j, or i==j==k)
 
 	#-------------------------------
 	# Create the 2-step paths
@@ -1488,6 +1535,7 @@ def createMetaPaths(pList, pNames, depth, path) :
 			#end loop
 		#end loop
 	#end loop
+	del temp
 
 	if depth < 4 :
 		saveKeyFile(mDict, path)
@@ -1496,7 +1544,55 @@ def createMetaPaths(pList, pNames, depth, path) :
 	#end if
 
 
+	#-------------------------------
+	# Create the 4-step paths
+	checkSet = set()
+	for h in range(0, len(pNames)) :
+		for i in range(0, len(pNames)) :
+			for j in range(0, len(pNames)) :
+				for k in range(0, len(pNames)) :
+
+					# The name of this path
+					name = ( pNames[h] + "-" + pNames[i] +
+						"-" + pNames[j] + "-" + pNames[k] )
+					# The name of the reversed path
+					nameRev = ( pNames[k] + "-" + pNames[j] +
+						"-" + pNames[i] + "-" + pNames[h] )
+
+					# Verify this path wasn't yet calculated
+					#	if it has been, skip it
+					if name not in checkSet :
+						checkSet.add(name)
+						# Calculate the matrix
+						temp1 = np.dot(pList[h], pList[i])
+						temp2 = np.dot(temp1, pList[j])
+						newM = np.dot(temp2, pList[k])
+						# Save the data
+						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+						mDict[name] = [mNum, False]
+
+						# Check the reverse path (the transpose)
+						if nameRev not in checkSet :
+							checkSet.add(nameRev)
+							# Save the data
+							saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+							mDict[nameRev] = [mNum, True]
+						#end if
+					#end if
+
+					mNum += 1
+				#end loop
+			#end loop
+		#end loop
+	#end loop
+	del temp1
+	del temp2
+
+
+
+
 	saveKeyFile(mDict, path)
-#TODO: save the gene file
+	saveGeneFile(gList, path)
+
 	return
 #end def ######## ######## ######## 

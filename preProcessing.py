@@ -141,9 +141,8 @@ pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 # create matrices (? and network)
 # save path types to file
 mpPath = epath + outname + "_MetaPaths/"
-pp.clearFilesInDirectory(mpPath)
-
-pp.createMetaPaths(matrixList, matrixNames, 8, mpPath)
+#pp.clearFilesInDirectory(mpPath)
+pp.createMetaPaths(matrixList, matrixNames, geneList, 4, mpPath)
 
 #
 ## Create the 1-step paths
