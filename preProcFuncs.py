@@ -1195,6 +1195,9 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
 		os.makedirs(mpath)
+	# otherwise, delete files in the directory
+	else :
+		clearFilesInDirectory(mpath)
 	#end if
 
 	# This file gives the corresponding gene names for
@@ -1457,7 +1460,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 		clearFilesInDirectory(path)
 	# Else, create the folder
 	else :
-		os.makedirs(mpath)
+		os.makedirs(path)
 	#end if
 
 	# The items to return
