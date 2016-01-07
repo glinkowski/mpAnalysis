@@ -142,91 +142,95 @@ pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 # save path types to file
 mpPath = epath + outname + "_MetaPaths/"
 pp.clearFilesInDirectory(mpPath)
-# Create the 1-step paths
-#primNames = matrixNames #NOPE! This just makes a pointer
-primNames = list()
-mDict = dict()	# map indices to the paths
-mNum = 0
-for name in matrixNames :
-	primNames.append(name)
-	mDict[name] = [mNum, False]
-	mNum += 1
-#end loop
-# Create the 2-step paths
-for i in range(0, len(primNames)) :
-	for j in range(i, len(primNames)) :
-		newM = np.dot(matrixList[i], matrixList[j])
-		name1 = primNames[i] + "-" + primNames[j]
-		name2 = primNames[j] + "-" + primNames[i]
-		if name1 == name2 :
-			matrixList.append(newM)
-			matrixNames.append(name1)
-			mDict[name1] = [mNum, False]
-		else :
-			matrixList.append(newM)
-			matrixNames.append(name1)
-			# NOTE: True indicates use transpose
-			mDict[name1] = [mNum, False]
-			mDict[name2] = [mNum, True]
-		#end if
 
-#		newM = np.multiply(matrixList[i], matrixList[j])
-#		name = primNames[i] + "-" + primNames[j]
-#		matrixList.append(newM)
-#		matrixNames.append(name)
+pp.createMetaPaths(matrixList, matrixNames, 8, mpPath)
 
-		mNum += 1
-	#end loop
-#end loop
-#pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
+#
+## Create the 1-step paths
+##primNames = matrixNames #NOPE! This just makes a pointer
+#primNames = list()
+#mDict = dict()	# map indices to the paths
+#mNum = 0
+#for name in matrixNames :
+#	primNames.append(name)
+#	mDict[name] = [mNum, False]
+#	mNum += 1
+##end loop
+## Create the 2-step paths
+#for i in range(0, len(primNames)) :
+#	for j in range(i, len(primNames)) :
+#		newM = np.dot(matrixList[i], matrixList[j])
+#		name1 = primNames[i] + "-" + primNames[j]
+#		name2 = primNames[j] + "-" + primNames[i]
+#		if name1 == name2 :
+#			matrixList.append(newM)
+#			matrixNames.append(name1)
+#			mDict[name1] = [mNum, False]
+#		else :
+#			matrixList.append(newM)
+#			matrixNames.append(name1)
+#			# NOTE: True indicates use transpose
+#			mDict[name1] = [mNum, False]
+#			mDict[name2] = [mNum, True]
+#		#end if
+#
+##		newM = np.multiply(matrixList[i], matrixList[j])
+##		name = primNames[i] + "-" + primNames[j]
+##		matrixList.append(newM)
+##		matrixNames.append(name)
+#
+#		mNum += 1
+#	#end loop
+##end loop
+##pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
+##pp.saveMatrixListPlus(matrixList, mDict, geneList, mpPath)
+#
+## Create the 3-step paths
+#for i in range(0, len(primNames)) :
+#	for j in range(i, len(primNames)) :
+#		for k in range(j, len(primNames)) :
+#
+#			# Create the matrix
+#			temp = np.dot(matrixList[i], matrixList[j])
+#			newM = np.dot(temp, matrixList[k])
+#
+#			# Get the matrix name
+#			name1 = (primNames[i] + '-' + primNames[j]
+#				+ '-' + primNames[k])
+#			# Define the transpose
+#			name2 = (primNames[k] + '-' + primNames[j]
+#				+ '-' + primNames[i])
+#
+#			# ERROR CHECK
+#			if name1 in mDict.keys() :
+#				print "name 1: {} already in list".format(name1)
+#			if name2 in mDict.keys() :
+#				print "name 2: {} already in list".format(name2)
+#
+#			# Add them to the lists
+#			if name1 == name2 :
+#				matrixList.append(newM)
+#				matrixNames.append(name1)
+#				mDict[name1] = [mNum, False]
+#			else :
+#				matrixList.append(newM)
+#				matrixNames.append(name1)
+#				# NOTE: True indicates use transpose
+#				if name1 not in mDict.keys() :
+#					mDict[name1] = [mNum, False]
+#				if name2 not in mDict.keys() :
+#					mDict[name2] = [mNum, True]
+#			#end if
+#			mNum += 1
+#			
+#		#end loop
+#	#end loop
+##end loop
+#
+## Create the 4-step paths
+#
+##pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
 #pp.saveMatrixListPlus(matrixList, mDict, geneList, mpPath)
-
-# Create the 3-step paths
-for i in range(0, len(primNames)) :
-	for j in range(i, len(primNames)) :
-		for k in range(j, len(primNames)) :
-
-			# Create the matrix
-			temp = np.dot(matrixList[i], matrixList[j])
-			newM = np.dot(temp, matrixList[k])
-
-			# Get the matrix name
-			name1 = (primNames[i] + '-' + primNames[j]
-				+ '-' + primNames[k])
-			# Define the transpose
-			name2 = (primNames[k] + '-' + primNames[j]
-				+ '-' + primNames[i])
-
-			# ERROR CHECK
-			if name1 in mDict.keys() :
-				print "name 1: {} already in list".format(name1)
-			if name2 in mDict.keys() :
-				print "name 2: {} already in list".format(name2)
-
-			# Add them to the lists
-			if name1 == name2 :
-				matrixList.append(newM)
-				matrixNames.append(name1)
-				mDict[name1] = [mNum, False]
-			else :
-				matrixList.append(newM)
-				matrixNames.append(name1)
-				# NOTE: True indicates use transpose
-				if name1 not in mDict.keys() :
-					mDict[name1] = [mNum, False]
-				if name2 not in mDict.keys() :
-					mDict[name2] = [mNum, True]
-			#end if
-			mNum += 1
-			
-		#end loop
-	#end loop
-#end loop
-
-# Create the 4-step paths
-
-#pp.saveMatrixList(matrixList, matrixNames, geneList, mpPath)
-pp.saveMatrixListPlus(matrixList, mDict, geneList, mpPath)
 
 
 print "\nDone.\n"

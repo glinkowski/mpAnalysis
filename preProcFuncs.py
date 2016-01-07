@@ -1100,6 +1100,9 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	# Write to the file
 	np.save(mpath+mname, matrix)
 
+	#ERROR CHECK: also save a text version of the matrix
+	saveMatrixText(matrix, mname, mpath, True)
+
 	return
 
 #end def ######## ######## ######## 
@@ -1292,4 +1295,208 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 
 	return
 
+#end def ######## ######## ######## 
+
+
+######## ######## ######## ########
+# Function: save a list of matrices
+# Input:
+#	mDict, dict
+#		key, str: metapath names
+#		value, [int, : corresponding index number for mList
+#				bool] : True means use matrix transpose
+#	path, str - path to the folder to save the file
+# Returns:
+#	nothing
+def saveKeyFile(mDict, path) :
+
+	# The length to pad the file name / matrix number
+	zpad = keyZPad
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(path) :
+		os.makedirs(path)
+	#end if
+
+	# Get the sorted list of all paths
+	nameList = list(mDict.keys())
+	nameList.sort()
+
+	# This file tells which matrix corresponds to which path
+	fkey = open(path+"key.txt", "wb")
+	fkey.write("NOTE: 't' means use matrix transpose\n")
+	firstline = True
+	for name in nameList :
+		if firstline :
+			firstline = False
+		else :
+			fkey.write("\n")
+		#end if
+#		fkey.write("{:05d}\t{}".format(mNames[name], name))
+#		fkey.write("{:05d}".format(mNames[name][0]))
+		fkey.write("{}".format( str(mDict[name][0]).zfill(zpad) ))
+		if mDict[name][1] == True :
+			fkey.write(",t")
+		else :
+			fkey.write(", ")
+		fkey.write("\t{}".format(name))
+	#end loop
+	fkey.close()
+
+	return
+#end def ######## ######## ######## 
+######## ######## ######## ########
+# Function: save a list of matrices
+# Input:
+#	pList, list of NxN matrices - the primary matrices
+#		ie: the 1-level path matrices
+#	pNames, dict
+#		key, str: metapath names
+#		value, int: corresponding index number for mList
+#	mGenes, list of str - names of genes in the matrix
+#	mpath, str - path to the folder to save the file
+# Returns:
+#	mList, list of NxN matrices - 
+#	mDict, dict
+#		key, str: metapath names
+#		value, [int, bool]: [corresponding index for mList,
+#			indicator to use matrix transpose (if True)]
+def createMetaPaths(pList, pNames, depth, path) :
+
+	maxDepth = 4
+	if depth > maxDepth :
+		print ( "WARNING: Can only calculate up to " +
+			"{}-step metapaths.".format(maxDepth) )
+	elif depth < 1 :
+		print ( "WARNING: Requested metapaths of length" +
+			" {};".format(depth) +
+			" Will return only 1-step paths.")
+		depth = 1
+	#end if
+
+	# Check if folder at specified path exists
+	# If directory exists, emtpy it
+	if os.path.exists(path) :
+		clearFilesInDirectory(path)
+	# Else, create the folder
+	else :
+		os.makedirs(mpath)
+	#end if
+
+	# The items to return
+#	mList = list()
+	mDict = dict()
+
+	# The number of matrices created
+	mNum = 0
+	# The length to pad the file name / matrix number
+	zpad = keyZPad
+
+	#-------------------------------
+	# Create the 1-step paths
+#	for name in pNames :
+#		mDict[name] = [mNum, False]
+	for i in range(0, len(pNames)) :
+#TODO: instead of storing in memory,
+#	These can be saved immediately.
+#		mList.append(pList[i])
+		saveMatrixNumpy(pList[i], str(mNum).zfill(zpad), path)
+#		saveMatrixText(pList[i],  str(mNum).zfill(zpad), path, True)
+		mDict[pNames[i]] = [mNum, False]
+		mNum += 1
+	#end loop
+
+	if depth < 2 :
+		saveKeyFile(mDict, path)
+#		return mList, mDict
+		return
+	#end if
+
+	#-------------------------------
+	# Create the 2-step paths
+	for i in range(0, len(pNames)) :
+		for j in range(i, len(pNames)) :
+
+			# The name of this path
+			name = pNames[i] + "-" + pNames[j]
+			# The name of the reversed path
+			nameRev = pNames[j] + "-" + pNames[i]
+
+			# The new matrix
+			newM = np.dot(pList[i], pList[j])
+
+			# If name == nameRev (ie: typeA-typeA)
+			if i == j :
+				# Then add this matrix to the list
+#				mList.append(newM)
+				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+				mDict[name] = [mNum, False]
+			else :
+				# Add this path & note the reverse path
+#				mList.append(newM)
+				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+				mDict[name] = [mNum, False]
+				#	Reverse path uses transpose
+				mDict[nameRev] = [mNum, True]
+			#end if
+
+			mNum += 1
+		#end loop
+	#end loop
+
+	if depth < 3 :
+		saveKeyFile(mDict, path)
+#		return mList, mDict
+		return
+	#end if
+
+	#-------------------------------
+	# Create the 3-step paths
+	checkSet = set()
+	for i in range(0, len(pNames)) :
+		for j in range(0, len(pNames)) :
+			for k in range(0, len(pNames)) :
+
+				# The name of this path
+				name = ( pNames[i] + "-" +
+					pNames[j] + "-" + pNames[k] )
+				# The name of the reversed path
+				nameRev = ( pNames[k] + "-" +
+					pNames[j] + "-" + pNames[i] )
+
+				# Verify this path wasn't yet calculated
+				#	if it has been, skip it
+				if name not in checkSet :
+					checkSet.add(name)
+					# Calculate the matrix
+					temp = np.dot(pList[i], pList[j])
+					newM = np.dot(temp, pList[k])
+					# Save the data
+					saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+					mDict[name] = [mNum, False]
+
+					# Check the reverse path (the transpose)
+					if nameRev not in checkSet :
+						checkSet.add(nameRev)
+						# Save the data
+						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+						mDict[nameRev] = [mNum, True]
+					#end if
+				#end if
+
+				mNum += 1
+			#end loop
+		#end loop
+	#end loop
+
+	if depth < 4 :
+		saveKeyFile(mDict, path)
+#		return mList, mDict
+		return
+	#end if
+
+
+	saveKeyFile(mDict, path)
+#TODO: save the gene file
+	return
 #end def ######## ######## ######## 
