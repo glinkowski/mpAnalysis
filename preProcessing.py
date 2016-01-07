@@ -1,9 +1,28 @@
-
-
+# ---------------------------------------------------------
+# author: Greg Linkowski
+# project: Metapath Analysis
+#		for the KnowEnG big data center at UIUC
+#		funded by the NIH
+# 
+# Pre-Processing of the network
+#
+# To speed the calculation of metapaths, this script
+#	applies some pre-processing steps to the network.
+# The end result is a set of 2-D matrices, each indicating
+#	the number of paths of a certain type from one gene to
+#	another, where each file corresponds to a specific
+#	metapath.
+# Outline:
+#	1) Load the given network and fix known typos, extract
+#		desired nodes & edges, and threshhold edge weights
+#	2) Save the modified network (w/ node-index dict)
+#	3) Find the primary (single-step) path matrices
+#	4) Use those to calculate the rest of the metapaths
+# ---------------------------------------------------------
 
 import preProcFuncs as pp
 
-import numpy as np
+# import numpy as np
 
 
 ####### ####### ####### ####### 

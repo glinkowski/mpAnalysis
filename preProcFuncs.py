@@ -1,14 +1,58 @@
-
+# ---------------------------------------------------------
+# author: Greg Linkowski
+# project: Metapath Analysis
+#		for the KnowEnG big data center at UIUC
+#		funded by the NIH
+# 
+# functions used in Pre-Processing of the network
+#
+# These functions were created to aid in the
+#	pre-processing of a network, prior to calculated the
+#	contained metapaths.
+#
+# Functions provided:
+#	readKeepFile(fname)
+#	readEdgeFile(datafile)
+#	applyCorrections(edges, fname)
+#	applyNormalization(edges, lowBound)
+#	applyThreshold(edges, threshold)
+#	applyKeepEdges(edges, kEdges)
+#	applyKeepLists(edges, lGenes, kEdges, iEdges)
+#	createNodeLists(edges, aGenes)
+#	createModEdgeFileName(name, kEdges, kGenes, tHold)
+#	writeModEdgeFilePlus(path, oname, nDict, gList, eArray)
+#	createGeneMapping(gList)
+#	createCountDict(aList)
+#	createMatrixList(eArray, kEdges, iEdges, gList,	nDict)
+#	saveMatrixText(matrix, mname, mpath, integer)
+#	saveMatrixNumpy(matrix, mname, mpath)
+#	clearFilesInDirectory(path)
+#	saveMatrixList(mList, mNames, mGenes, mpath)
+#	saveMatrixListPlus(mList, mNames, mGenes, mpath)
+#	saveKeyFile(mDict, path)
+#	saveGeneFile(mGenes, path)
+#	createMetaPaths(pList, pNames, gList, depth, path)
+# ---------------------------------------------------------
 
 import os.path
-import os
+#import os
 import sys
 import numpy as np
 import re
 
 
+
+####### ####### ####### ####### 
+# PARAMETERS
+
+# Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
+# Length to pad the matrix file names:
 keyZPad = 5
+# Whether to save uncompressed text version of matrix:
+saveText = True		# (useful for error-checking)
+
+####### ####### ####### ####### 
 
 
 
@@ -404,9 +448,7 @@ def applyKeepEdges(edges, kEdges) :
 
 
 ######## ######## ######## ########
-# Function: Examine the edge weights. Throw out edges
-#	that are below the threshold value. (Only keep
-#	those that are at or above.)
+# Function: 
 # Input:
 #	edges, str array (N,4) - edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
@@ -1101,7 +1143,9 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	np.save(mpath+mname, matrix)
 
 	#ERROR CHECK: also save a text version of the matrix
-	saveMatrixText(matrix, mname, mpath, True)
+	if saveText :
+		saveMatrixText(matrix, mname, mpath, True)
+	#end if
 
 	return
 
