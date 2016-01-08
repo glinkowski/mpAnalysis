@@ -23,7 +23,7 @@ import time
 
 # The network to use and directory path
 ename = 'fakeNtwk00_g2t3h10'
-epath = '../networks/'
+epath = 'networks/'
 
 # Where to store the output
 oname = "test00_" + ename
@@ -49,7 +49,7 @@ mpPath = epath + ename + "_MetaPaths/"
 gfile = "genes.txt"
 
 # Create mapping from gene name to row/col index
-geneDict = ff.readGeneFile(mpPath + gfile)
+geneDict = ff.readFileAsIndex(mpPath + gfile)
 #print geneDict
 
 # output file
