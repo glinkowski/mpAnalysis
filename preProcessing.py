@@ -30,7 +30,7 @@ import time
 
 # The network to use and directory path
 ename = 'fakeNtwk01'
-epath = '../networks/'
+epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
 mpDepth = 4
