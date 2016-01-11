@@ -29,7 +29,7 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk01'
+ename = 'fakeNtwk00'
 epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths

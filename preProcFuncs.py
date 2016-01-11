@@ -599,7 +599,7 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 #		oname = oname + et[0]
 #	#end loop
 
-	oname = name + "_g{}t{}h{}".format( len(kGenes),
+	oname = name + "_g{}e{}t{}".format( len(kGenes),
 		len(kEdges), int(tHold*100) )
 	return oname
 
