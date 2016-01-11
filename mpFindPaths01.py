@@ -59,18 +59,39 @@ tstart = time.time()
 
 print "Finding metapaths in sample: {}".format(sname)
 sampGenes = ff.readSampleFiles(spath + sname, True, True)
-print sampGenes
+#print sampGenes
 
 
 # 2) Identify the paths available
 
 print "Checking what paths are available ..."
-mpDict = ff.readKeyFile(epath, ename)
+pathDict = ff.readKeyFile(epath, ename)
 #print mpDict
 #
-mpList = mpDict.keys()
-mpList.sort()
+pathList = pathDict.keys()
+pathList.sort()
 #print mpList
+
+
+# 3) Create an array of random samples
+
+# Check which genes are actually in the network
+inGenes, outGenes = ff.checkGenesInNetwork(epath,
+	ename, sampGenes)
+print ("Of the sample genes, {}".format(len(inGenes)) +
+	" are in the network.")
+#print inGenes
+#print outGenes
+
+# Load the gene-index dict
+geneIndex = ff.readGenesFile(epath, ename)
+#print geneIndex
+
+# Create N random samples
+print ("Choosing {} random samples of".format(numRand) +
+	" length {} ...".format(len(inGenes)) )
+#randSamps = ff.createRandomSamplesArray(numRand,
+#	len(inGenes), len(geneIndex))
 
 
 

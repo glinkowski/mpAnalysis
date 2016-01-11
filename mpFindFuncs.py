@@ -14,6 +14,8 @@
 #	readFileAsIndexDict(fname)
 #	readSampleFiles(fname, up, down)
 #	readKeyFile(path, name)
+#	readGenesFile(path, name)
+#	checkGenesInNetwork(path, name, geneList)
 # ---------------------------------------------------------
 
 import os.path
@@ -62,7 +64,7 @@ def readFileAsList(fname) :
 # Input:
 #	fname, str - path & name to keep file
 # Returns:
-#	gDict, dict - 
+#	iDict, dict - 
 #		key, str: gene name as read from file
 #		value, int: index to corresponding array
 def readFileAsIndexDict(fname) :
@@ -75,16 +77,16 @@ def readFileAsIndexDict(fname) :
 	#end if
 
 	# Build the dictionary from the text file
-	gDict = dict()
+	iDict = dict()
 	gf = open(fname, "rb")
 	index = 0
 	for line in gf :
 		gene = line.rstrip()	# remove "\n"
-		gDict[gene] = index
+		iDict[gene] = int(index)
 		index += 1
 	#end loop
 
-	return gDict
+	return iDict
 #end def ######## ######## ######## 
 
 
@@ -143,7 +145,7 @@ def readSampleFiles(fname, up, down) :
 #	path, str - path to the network files
 #	name, str - name of the network to use
 # Returns:
-#	mpDict, dict
+#	keyDict, dict
 #		key, str: name of metapath
 #		value, tuple: matrix/file ID number
 #			bool where True means use matrix transpose
@@ -162,9 +164,9 @@ def readKeyFile(path, name) :
 	keyDict = dict()
 
 	# Read in the file
-	fn = open(fname, "rb")
+	fk = open(fname, "rb")
 	firstline = True
-	for line in fn :
+	for line in fk :
 
 		# skip the first line
 		if firstline :
@@ -185,8 +187,81 @@ def readKeyFile(path, name) :
 		# add to the dict
 		keyDict[lk[1]] = [int(lv[0]), transpose]
 	#end loop
+	fk.close()
 
 	return keyDict
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Read in the genes.txt file containing the 
+#	gene-name headers to the metapath matrices
+# Input:
+#	path, str - path to the network files
+#	name, str - name of the network to use
+# Returns:
+#	gDict, dict
+#		key, str: name of gene
+#		value, int: row/col index for that gene
+def readGenesFile(path, name) :
+
+	fname = path + name + "_MetaPaths/genes.txt"
+
+	# The item to return
+	gDict = readFileAsIndexDict(fname)
+
+	return gDict
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Take the list of genes from the sample, return
+#	a list of genes in the network, and left-out genes
+# Input:
+#	path, str - path to the network files
+#	name, str - name of the network to use
+#	geneList, list of str - genes in the sample
+# Returns:
+#	inList & outList, list of str - which genes from the
+#		given list are found in network & which aren't
+def checkGenesInNetwork(path, name, geneList) :
+
+	fname = path + name + "_MetaPaths/genes.txt"
+
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	# Read in the genes from the file
+	geneSet = set()
+	fg = open(fname, "rb")
+	for line in fg :
+		line = line.rstrip()
+		geneSet.add(line)
+	#end loop
+	fg.close()
+
+	# The items to return
+	inList = list()
+	outList = list()
+
+	# Sift through the sample
+	for gene in geneList :
+		if gene in geneSet :
+			inList.append(gene)
+		else :
+			outList.append(gene)
+		#end if
+	#end loop
+
+	inList.sort()
+	outList.sort()
+	return inList, outList
 #end def ######## ######## ######## 
 
 
