@@ -23,7 +23,7 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk00_g2t3h10'
+ename = 'fakeNtwk00_g2e3t10'
 epath = 'networks/'
 
 # The sample to test and path
@@ -60,6 +60,20 @@ tstart = time.time()
 print "Finding metapaths in sample: {}".format(sname)
 sampGenes = ff.readSampleFiles(spath + sname, True, True)
 print sampGenes
+
+
+# 2) Identify the paths available
+
+print "Checking what paths are available ..."
+mpDict = ff.readKeyFile(epath, ename)
+#print mpDict
+#
+mpList = mpDict.keys()
+mpList.sort()
+#print mpList
+
+
+
 
 # FOR REFERENCE: copied from mpFindPaths00
 ## path to the metapath matrices

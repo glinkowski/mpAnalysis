@@ -12,6 +12,8 @@
 # Functions provided:
 #	readFileAsList(fname)
 #	readFileAsIndexDict(fname)
+#	readSampleFiles(fname, up, down)
+#	readKeyFile(path, name)
 # ---------------------------------------------------------
 
 import os.path
@@ -131,3 +133,61 @@ def readSampleFiles(fname, up, down) :
 	uNodes = np.unique(sNodes) # sorted list of unique items
 	return uNodes
 #end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Read in the key.txt file regarding the 
+#	metapath matrices
+# Input:
+#	path, str - path to the network files
+#	name, str - name of the network to use
+# Returns:
+#	mpDict, dict
+#		key, str: name of metapath
+#		value, tuple: matrix/file ID number
+#			bool where True means use matrix transpose
+def readKeyFile(path, name) :
+
+	fname = path + name + "_MetaPaths/key.txt"
+
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	# The item to return
+	keyDict = dict()
+
+	# Read in the file
+	fn = open(fname, "rb")
+	firstline = True
+	for line in fn :
+
+		# skip the first line
+		if firstline :
+			firstline = False
+			continue
+		#end if
+
+		# separate the values
+		line = line.rstrip()
+		lk = line.split('\t')
+		lv = lk[0].split(',')
+
+		transpose = False
+		if lv[1] == "t" :
+			transpose = True
+		#end if
+
+		# add to the dict
+		keyDict[lk[1]] = [int(lv[0]), transpose]
+	#end loop
+
+	return keyDict
+#end def ######## ######## ######## 
+
+
+
