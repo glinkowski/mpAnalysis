@@ -46,7 +46,7 @@ numRand = 13
 
 tstart = time.time()
 
-
+print ""
 # open the sample file
 # get the list of paths available
 # for each path, store:
@@ -78,8 +78,8 @@ pathList.sort()
 # Check which genes are actually in the network
 inGenes, outGenes = ff.checkGenesInNetwork(epath,
 	ename, sampGenes)
-print ("Of the sample genes, {}".format(len(inGenes)) +
-	" are in the network.")
+print ("Of the {} sample genes,".format(len(sampGenes)) +
+	" {} are in the network.".format(len(inGenes)) )
 #print inGenes
 #print outGenes
 
@@ -90,9 +90,12 @@ geneIndex = ff.readGenesFile(epath, ename)
 # Create N random samples
 print ("Choosing {} random samples of".format(numRand) +
 	" length {} ...".format(len(inGenes)) )
-#randSamps = ff.createRandomSamplesArray(numRand,
-#	len(inGenes), len(geneIndex))
+randSamps = ff.createRandomSamplesArray(numRand,
+	len(inGenes), len(geneIndex))
+#print randSamps
 
+
+# 4) Calculate the statistics
 
 
 
@@ -106,3 +109,7 @@ print ("Choosing {} random samples of".format(numRand) +
 ##print geneDict
 ## output file
 #ofile = opath + oname + ".txt"
+
+
+
+print "\nDone.\n"

@@ -21,16 +21,17 @@
 import os.path
 import sys
 import numpy as np
+import random
 
 
 
 
 ######## ######## ######## ######## 
 # Function: Read in a file as a line-by-line list of items
-# Input:
-#   fname, str - path + name of the the sample files
-# Returns:
-#	fItems, list of str - ordered list of items from file
+# Input ----
+#   fname, str: path + name of the the sample files
+# Returns ----
+#	fItems, str list: ordered list of items from file
 def readFileAsList(fname) :
 
 	# ERROR CHECK: verify file exists
@@ -61,10 +62,10 @@ def readFileAsList(fname) :
 #	of genes, where the row number (starting at zero)
 #	corresonds to the index in the matrix/list/etc where
 #	the gene can be found.
-# Input:
-#	fname, str - path & name to keep file
-# Returns:
-#	iDict, dict - 
+# Input ----
+#	fname, str: path & name to keep file
+# Returns ----
+#	iDict, dict: 
 #		key, str: gene name as read from file
 #		value, int: index to corresponding array
 def readFileAsIndexDict(fname) :
@@ -94,11 +95,11 @@ def readFileAsIndexDict(fname) :
 ######## ######## ######## ######## 
 # Function: Read in the dataset from a samplename
 #	Check for variants: ".txt", "_UP.txt", "_DN.txt"
-# Input:
-#   fname, str - path + name of the the sample files
+# Input ----
+#   fname, str: path + name of the the sample files
 #   up, down: boolean -- only read the _UP or _DN file if true
-# Returns:
-#	sNodes, list of str - ordered list of names from file(s)
+# Returns ----
+#	sNodes, str list: ordered list of names from file(s)
 def readSampleFiles(fname, up, down) :
 
 	# The list of items to return
@@ -141,13 +142,13 @@ def readSampleFiles(fname, up, down) :
 ######## ######## ######## ######## 
 # Function: Read in the key.txt file regarding the 
 #	metapath matrices
-# Input:
-#	path, str - path to the network files
-#	name, str - name of the network to use
-# Returns:
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
 #	keyDict, dict
 #		key, str: name of metapath
-#		value, tuple: matrix/file ID number
+#		value, tuple: int is matrix/file ID number
 #			bool where True means use matrix transpose
 def readKeyFile(path, name) :
 
@@ -197,10 +198,10 @@ def readKeyFile(path, name) :
 ######## ######## ######## ######## 
 # Function: Read in the genes.txt file containing the 
 #	gene-name headers to the metapath matrices
-# Input:
-#	path, str - path to the network files
-#	name, str - name of the network to use
-# Returns:
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
 #	gDict, dict
 #		key, str: name of gene
 #		value, int: row/col index for that gene
@@ -219,12 +220,12 @@ def readGenesFile(path, name) :
 ######## ######## ######## ######## 
 # Function: Take the list of genes from the sample, return
 #	a list of genes in the network, and left-out genes
-# Input:
-#	path, str - path to the network files
-#	name, str - name of the network to use
-#	geneList, list of str - genes in the sample
-# Returns:
-#	inList & outList, list of str - which genes from the
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+#	geneList, str list: genes in the sample
+# Returns ----
+#	inList & outList, str list: which genes from the
 #		given list are found in network & which aren't
 def checkGenesInNetwork(path, name, geneList) :
 
@@ -266,3 +267,29 @@ def checkGenesInNetwork(path, name, geneList) :
 
 
 
+######## ######## ######## ######## 
+# Function: Take the list of genes from the sample, return
+#	a list of genes in the network, and left-out genes
+# Input ----
+#	numRows, int: number of random samples to create
+#	numCols, int: number of items in each random sample
+#	numItems, int: number of items in the source
+#		(ie: the list from which the rand sample is pulled)
+# Returns ----
+#	rSamples, int array: 
+def createRandomSamplesArray(numRows, numCols, numItems) :
+
+#	# maxVal is maximum index value to return
+#	maxVal = numItems - 1
+
+	# The item to return
+	rSamples = np.empty([numRows, numCols], dtype=np.int32)
+
+	# Choose the random samples
+	for r in range(0, numRows) :
+		rSamples[r,:] = random.sample(xrange(numItems),
+			numCols)
+	#end loop
+
+	return rSamples
+#end def ######## ######## ######## 
