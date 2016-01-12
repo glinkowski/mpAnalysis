@@ -17,6 +17,11 @@
 #	readGenesFile(path, name)
 #	checkGenesInNetwork(path, name, geneList)
 #	convertToIndices(names, iDict)
+#	getPathMatrix(mpTuple, path, name)
+#	getPathCountOne(sample, matrix)
+#	getPathCountList(samples, matrix)
+#	getPathMeans(rSamples, matrix)
+#	calculateStatistics(sample, rSamples, mpDict, path, name)
 # ---------------------------------------------------------
 
 import os.path
@@ -293,9 +298,6 @@ def checkGenesInNetwork(path, name, geneList) :
 #	rSamples, int array: 
 def createRandomSamplesArray(numRows, numCols, numItems) :
 
-#	# maxVal is maximum index value to return
-#	maxVal = numItems - 1
-
 	# The item to return
 	rSamples = np.empty([numRows, numCols], dtype=np.int32)
 
@@ -338,13 +340,11 @@ def convertToIndices(names, iDict) :
 # Function: Find the number of paths of this type joining
 #	the nodes in the sample
 # Input ----
-#	samples, int 2D array: indices of the nodes in the sample
-#		rows: individual samples
 #	mpTuple [int, bool]: indicates which matrix file to use
 #	path, str: path to the network files
 #	name, str: name of the network to use
 # Returns ----
-#	count, int: num paths of this type in this sample
+#	matrix, int array: num paths between node pairs
 def getPathMatrix(mpTuple, path, name) :
 
 	zpad = keyZPad
@@ -375,53 +375,16 @@ def getPathMatrix(mpTuple, path, name) :
 #	the nodes in the sample
 # Input ----
 #	sample, int list: indices of the nodes in the sample
-#	mpTuple [int, bool]: indicates which matrix file to use
-#	path, str: path to the network files
-#	name, str: name of the network to use
+#	matrix, int array: num paths between node pairs
 # Returns ----
 #	count, int: num paths of this type in this sample
 def getPathCountOne(sample, matrix) :
-
-#	zpad = keyZPad
-#	fname = (path + name + "_MetaPaths/" +
-#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
-#
-#	# ERROR CHECK: verify file exists
-#	if not os.path.isfile(fname) :
-#		print ( "ERROR: Specified file doesn't exist:" +
-#			" {}".format(fname) )
-#		sys.exit()
-#	#end if
-#
-#	# Load the matrix
-#	matrix = np.load(fname)
-##	print matrix
-
-#	# Load the matrix
-#	matrix = getPathMatrix(mpTuple, path, name)
-#
-#	# Count the paths in the sample
-#	count = 0
-#	# If flag==True, use the matrix transpose
-##TODO: Verify this: the path counts should be the same.
-#	if mpTuple[1] == False :
-#		for a in sample :
-#			for b in sample :
-#				if a != b :		# skip if a==b
-#					count += matrix[a,b]
-#	else :
-#		for a in sample :
-#			for b in sample :
-#				if a != b :		# skip if a==b
-#					count += matrix[b,a]
-#	#end loop
 
 #TODO: If there is no difference in counts between a path
 #	and it's inverse, then the inverse path need not be
 #	calculated.
 #NOTE: If a particular path is chosen for prediction, then
-#	its inverse should be evaluated as well.
-
+#	its inverse should be evaluated as well. (simulaneously)
 
 	# Count the paths in the sample
 	count = 0
@@ -442,30 +405,10 @@ def getPathCountOne(sample, matrix) :
 # Input ----
 #	samples, int 2D array: indices of the nodes in the sample
 #		rows: individual samples
-#	mpTuple [int, bool]: indicates which matrix file to use
-#	path, str: path to the network files
-#	name, str: name of the network to use
+#	matrix, int array: num paths between node pairs
 # Returns ----
-#	count, int: num paths of this type in this sample
+#	counts, int list: num paths of this type in each sample
 def getPathCountList(samples, matrix) :
-
-#	zpad = keyZPad
-#	fname = (path + name + "_MetaPaths/" +
-#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
-#
-#	# ERROR CHECK: verify file exists
-#	if not os.path.isfile(fname) :
-#		print ( "ERROR: Specified file doesn't exist:" +
-#			" {}".format(fname) )
-#		sys.exit()
-#	#end if
-#
-#	# Load the matrix
-#	matrix = np.load(fname)
-##	print matrix
-
-#	# Load the matrix
-#	matrix = getPathMatrix(mpTuple, path, name)
 
 	counts = list()
 	for i in range(0, samples.shape[0]) :
@@ -490,9 +433,7 @@ def getPathCountList(samples, matrix) :
 # Input ----
 #	samples, int 2D array: indices of the nodes in the sample
 #		rows: individual samples
-#	mpTuple [int, bool]: indicates which matrix file to use
-#	path, str: path to the network files
-#	name, str: name of the network to use
+#	matrix, int array: num paths between node pairs
 # Returns ----
 #	mean, float list: mean count of paths for each sample
 #	stdev, float list: standard deviation of counts per samp
@@ -519,7 +460,10 @@ def getPathMeans(rSamples, matrix) :
 #	path, str: path to the network files
 #	name, str: name of the network to use
 # Returns ----
-#	count, int: num paths of this type in this sample
+#	sCount, int list: num paths of this type in this sample
+#	rMeans, float list: mean count of path in rand samples
+#	rStDev, float list: standard deviation of rand samples
+#	zScore, float list: z-Score for each path type
 def calculateStatistics(sample, rSamples, mpDict,
 	path, name) :
 
