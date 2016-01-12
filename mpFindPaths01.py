@@ -19,6 +19,12 @@ import time
 
 
 
+# REMOVE: The following is for verification.
+import random
+random.seed(42)
+
+
+
 ####### ####### ####### ####### 
 # PARAMETERS
 
@@ -27,7 +33,7 @@ ename = 'fakeNtwk00_g2e3t10'
 epath = 'networks/'
 
 # The sample to test and path
-sname = 'Fake00_sample01'
+sname = 'Fake00_sample02'
 spath = 'samplesFake/'
 
 # Where to store the output
@@ -97,6 +103,49 @@ randSamps = ff.createRandomSamplesArray(numRand,
 
 # 4) Calculate the statistics
 
+## TEST
+#sampIndex = ff.convertToIndices(geneIndex.keys(), geneIndex)
+#tCount = ff.getPathCountOne(sampIndex, pathDict["typeA-typeC"], epath, ename)
+#print sampIndex
+#print metapath, pathDict["typeA-typeC"], tCount
+
+# Convert the sample into a list of indices
+sampIndex = ff.convertToIndices(inGenes, geneIndex)
+print sampIndex
+
+## Calculate stats for each metapath
+#sCount = list()		# num of each path in given sample
+#rMeans = list()		# mean count of e. p. in rand samples
+#rStDev = list()		# stand dev of e. p. in rand samples
+#zScore = list()		# z-Score of e. p. in rand samples
+#
+#for metapath in pathList :
+#
+#	tCount = ff.getPathCountOne(sampIndex,
+#		pathDict[metapath], epath, ename)
+#	sCount.append(tCount)
+#
+#	tMeans, tStDev = ff.getPathMeans(randSamps,
+#		pathDict[metapath], epath, ename)
+#	rMeans.append(tMeans)
+#	rStDev.append(tStDev)
+#
+#	tScore = (tCount - tMeans) / tStDev
+#	zScore.append(tScore)
+#
+#	break
+##end loop
+#
+#print sCount, rMeans, rStDev, zScore
+#print randSamps.shape[0]
+
+#print metapath, pathDict[metapath], sCount, rMeans, rStDev, zScore
+
+
+# Calculate stats for each metapath
+sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
+	sampIndex, randSamps, pathDict, epath, ename)
+print sCount[0], rMeans[0], rStDev[0], zScore[0]
 
 
 # FOR REFERENCE: copied from mpFindPaths00
