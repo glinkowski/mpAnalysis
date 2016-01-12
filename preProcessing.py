@@ -105,12 +105,12 @@ print "Creating the primary gene-gene matrices ..."
 matrixList, matrixNames = pp.createMatrixList(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
 
-# Save the primary matrices
-primpath = epath + outname + "_Primaries/"
-print "    ... saving to: {}".format(primpath)
-pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
-
-print "    --elapsed time: {}".format(time.time()-tstart)
+## Save the primary matrices
+#primpath = epath + outname + "_Primaries/"
+#print "    ... saving to: {}".format(primpath)
+#pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
+#
+#print "    --elapsed time: {}".format(time.time()-tstart)
 
 
 # 4) Calculate the specified metapaths
