@@ -80,7 +80,7 @@ edgeArray = pp.applyThreshold(edgeArray, thresh)
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 	keepEdges, indirEdges)
 
-print "    --elapsed time: {}".format(time.time()-tstart)
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 # 2) Save the modified network
@@ -96,7 +96,8 @@ print "Saving modified network to {}.edge.txt".format(outname)
 pp.writeModEdgeFilePlus(epath+"modified/", outname,
 	nodeDict, geneList, edgeArray)
 
-print "    --elapsed time: {}".format(time.time()-tstart)
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 # 3) Find the primary path matrices
 
@@ -109,8 +110,8 @@ matrixList, matrixNames = pp.createMatrixList(edgeArray,
 #primpath = epath + outname + "_Primaries/"
 #print "    ... saving to: {}".format(primpath)
 #pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
-#
-#print "    --elapsed time: {}".format(time.time()-tstart)
+
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 # 4) Calculate the specified metapaths
@@ -122,7 +123,7 @@ print "    ... and saving to: {}".format(mpPath)
 # Find paths up to length = mDepth
 pp.createMetaPaths(matrixList, matrixNames, geneList, mpDepth, mpPath)
 
-print "    --elapsed time: {}".format(time.time()-tstart)
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 print "\nDone.\n"
