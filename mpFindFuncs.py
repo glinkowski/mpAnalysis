@@ -25,6 +25,7 @@
 # ---------------------------------------------------------
 
 import os.path
+from os import listdir
 import sys
 import numpy as np
 import random
@@ -38,6 +39,8 @@ import random
 #nodeDT = np.dtype('a30')
 # Length to pad the matrix file names:
 keyZPad = 5
+# Length to pad the output file names:
+fnZPad = 3
 # Whether to save uncompressed text version of matrix:
 #saveText = True		# (useful for error-checking)
 
@@ -493,4 +496,38 @@ def calculateStatistics(sample, rSamples, mpDict,
 	#end loop
 
 	return sCount, rMeans, rStDev, zScore
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: choose an unused name for the output file
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
+#	fname, str: name of output file (without path)
+def nameOutputFile(path, name) :
+
+	# ERROR CHECK: verify directory exists
+	if not os.path.isdir(path) :
+		print ( "ERROR: Specified path doesn't exist:" +
+			" {}".format(path) )
+		sys.exit()
+	#end if
+
+	zpad = fnZPad
+
+	# Set of all files in the directory
+	fileSet = set(os.listdir(path))
+
+	# increment file name until an unused one is found
+	num = int(0)
+	fname = name + "-{}.txt".format(str(num).zfill(zpad))
+	while fname in fileSet :
+		num += 1
+		fname = name + "-{}.txt".format(str(num).zfill(zpad))
+	#end loop
+
+	return fname
 #end def ######## ######## ######## 

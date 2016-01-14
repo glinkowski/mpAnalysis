@@ -120,6 +120,12 @@ sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
 print sCount[0], rMeans[0], rStDev[0], zScore[0]
 
 
+# 5) Output the collected data
+
+# name the output file
+outFile = ff.nameOutputFile(opath, oname)
+print "Saving data to: {}".format(outFile)
+
 
 
 
