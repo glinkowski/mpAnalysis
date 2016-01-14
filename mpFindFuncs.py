@@ -6,7 +6,9 @@
 # 
 # functions used to Find Paths in the processed network
 #
-# These functions were created to aid in the
+# These functions were created to aid in the reading of a
+#	sample, creation of random samples, and calculation
+#	of statistics pertaining to the metapaths for a sample.
 #   
 #
 # Functions provided:
@@ -21,7 +23,11 @@
 #	getPathCountOne(sample, matrix)
 #	getPathCountList(samples, matrix)
 #	getPathMeans(rSamples, matrix)
-#	calculateStatistics(sample, rSamples, mpDict, path, name)
+#	calculateStatistics(sample, rSamples, mpDict,
+#			path, name)
+#	nameOutputFile(path, name)
+#	writeOutputOneSample(path, name, nName, sName,
+#			mpDict, counts, means, stdevs, scores, leftout)
 # ---------------------------------------------------------
 
 import os.path
@@ -461,7 +467,10 @@ def getPathMeans(rSamples, matrix) :
 # Input ----
 #	samples, int 2D array: indices of the nodes in the sample
 #		rows: individual samples
-#	mpTuple [int, bool]: indicates which matrix file to use
+#	mpDict, {str: [int, bool]} dict:
+#		key, str - name of the metapath
+#		value, [int, bool] - which matrix file to use, and 
+#			whether to use the transpose (inverse path)
 #	path, str: path to the network files
 #	name, str: name of the network to use
 # Returns ----
@@ -539,8 +548,20 @@ def nameOutputFile(path, name) :
 ######## ######## ######## ######## 
 # Function: For a single sample, write the data to a file
 # Input ----
-#	path, str: path to the network files
-#	name, str: name of the network to use
+#	path, str: path to the output files
+#	name, str: name to use in creating output file
+#	nName, str: name of the network used
+#	sName, str: name of the sample used
+#	mpDict, {str: [int, bool]} dict:
+#		key, str - name of the metapath
+#		value, [int, bool] - which matrix file to use, and 
+#			whether to use the transpose (inverse path)
+#	counts, int list: num paths of this type in this sample
+#	means, float list: mean count of path in rand samples
+#	stdevs, float list: standard deviation of rand samples
+#	scores, float list: z-Score for each path type
+#	leftout, str list: list of genes in original sample
+#		which don't appear in the network
 # Returns ----
 #	fname, str: name of output file (without path)
 def writeOutputOneSample(path, name, nName, sName,
