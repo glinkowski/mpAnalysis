@@ -14,6 +14,7 @@
 # Functions provided:
 #	readFileAsList(fname)
 #	readFileAsIndexDict(fname)
+#	getSampleList(path)
 #	readSampleFiles(fname, up, down)
 #	readKeyFile(path, name)
 #	readGenesFile(path, name)
@@ -119,6 +120,59 @@ def readFileAsIndexDict(fname) :
 
 	return iDict
 #end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Get the list of samples (by name) in given dir
+# Input ----
+#	path, str: path to the samples folder
+# Returns ----
+#	sNames, str list: ordered list of sample names
+def getSampleList(path) :
+
+	# ERROR CHECK: verify directory exists
+	if not os.path.isdir(path) :
+		print ( "ERROR: Specified path doesn't exist:" +
+			" {}".format(path) )
+		sys.exit()
+	#end if
+
+	# Set of of all items in the directory
+	dirSet = set(os.listdir(path))
+
+	# Identify & create list of sample names in folder
+	sNames = list()
+	for item in dirSet :
+		# skip any non-files
+		if not os.path.isfile(path+item) :
+			print "skipping {}".format(item)
+			continue
+		#end if
+
+		# only look at .txt files
+		extension = item[-4:len(item)]
+#		print extension
+		if extension == ".txt" :
+#			print item
+			newItem = item.rstrip(".txt")
+			newItem = newItem.rstrip("_UP")
+			newItem = newItem.rstrip("_DN")
+#			print newItem
+
+			if newItem not in sNames :
+				sNames.append(newItem)
+		#end if
+	#end loop
+
+#TODO: Which is faster: "if newItem not in sNames" or
+#	np.unique(sNames); NOTE: len(sNames) ~ 100
+
+#	sNames = np.unique(sNames)
+	sNames.sort()
+	return sNames
+#end def ######## ######## ######## 
+
 
 
 
@@ -604,4 +658,63 @@ def writeOutputOneSample(path, name, nName, sName,
 	fn.close()
 
 	return fname
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: choose an unused name for the output file
+# Input ----
+#	nPath, str: path to the network files
+#	nName, str: name of the network to use
+#	mpDict, {str: [int, bool]} dict:
+#		key, str - name of the metapath
+#		value, [int, bool] - which matrix file to use, and 
+#			whether to use the transpose (inverse path)
+#	sPath, str: path to the sample files
+#	sNames, str list: ordered names of samples in path
+#	nRand, int: number of random samples to test
+# Returns ----
+#	scores, float list: z-Score for each path type
+def createZScoreMatrix(nPath, nName, mpDict,
+	sPath, sNames, nRand) :
+
+	# The item to return
+	# rows = metapaths; cols = samples
+	scores = np.empty([len(mpDict), len(sNames)])
+
+	# Load the gene-index dictionary
+	gDict = readGenesFile(nPath, nName)
+
+	# Collect stats on each sample
+	col = 0
+	for samp in sNames :
+
+		# Get the genes in the sample
+		sGenes = readSampleFiles(sPath + samp, True, True)
+		inGenes, temp0 = checkGenesInNetwork(nPath,
+			nName, sGenes)
+		del temp0
+
+		# Convert the sample into a list of indices
+		sIndex = convertToIndices(inGenes, gDict)
+		del sGenes
+
+		# Create a random sample set
+		rSamps = createRandomSamplesArray(nRand,
+			len(inGenes), len(gDict))
+
+		# Gather statistics
+		temp0, temp1, temp2, zScore = calculateStatistics(
+			sIndex,  rSamps, mpDict, nPath, nName)
+
+		# Add scores to the array
+		scores[:,col]
+		col += 1
+	#end loop
+
+#TODO: Can this be made more efficient?
+#	Right now I load the matrices multiple times.
+
+	return scores
 #end def ######## ######## ######## 
