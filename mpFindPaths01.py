@@ -4,24 +4,26 @@
 #       for the KnowEnG big data center at UIUC
 #       funded by the NIH
 # 
-# Find all the metapaths in the network
+# Find all the metapaths present in a specific sample
 #
 # This is a basic demo. Load a sample file and rank all the
 #   paths found between the genes in that sample. Do this
 #   by comparing against random samples of the same size to
 #   see which paths are more pronounced in the sample.
 # Outline:
-#   
+#	1) Read in the sample file
+#	2) Identify the path matricies from the network
+#	3) Create a number of random samples
+#	4) Calculate the statistics for this sample
+#	5) Output the results to a file
 # ---------------------------------------------------------
 
 import mpFindFuncs as ff
 import time
 
-
-
-# REMOVE: The following is for verification.
-import random
-random.seed(42)
+## REMOVE: The following is for verification.
+#import random
+#random.seed(42)
 
 
 
@@ -41,7 +43,7 @@ oname = 'find01-' + ename + "-" + sname
 opath = 'outputFake/'
 
 # How many random samples to examine
-numRand = 13
+numRand = 100
 
 ####### ####### ####### ####### 
 
@@ -49,16 +51,10 @@ numRand = 13
 
 ####### ####### ####### ####### 
 # BEGIN MAIN FUNCTION
+print ""
 
 tstart = time.time()
 
-print ""
-# open the sample file
-# get the list of paths available
-# for each path, store:
-#   this sample count (return left-out genes)
-#   rand: mean, std dev, z-score
-# output to file
 
 
 # 1) Read in the sample file
@@ -66,6 +62,8 @@ print ""
 print "Finding metapaths in sample: {}".format(sname)
 sampGenes = ff.readSampleFiles(spath + sname, True, True)
 #print sampGenes
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 # 2) Identify the paths available
@@ -73,10 +71,8 @@ sampGenes = ff.readSampleFiles(spath + sname, True, True)
 print "Checking what paths are available ..."
 pathDict = ff.readKeyFile(epath, ename)
 #print mpDict
-#
-#pathList = pathDict.keys()
-#pathList.sort()
-#print mpList
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 # 3) Create an array of random samples
@@ -88,10 +84,13 @@ print ("Of the {} sample genes,".format(len(sampGenes)) +
 	" {} are in the network.".format(len(inGenes)) )
 #print inGenes
 #print outGenes
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Load the gene-index dict
+print "Creating the gene-index dictionary."
 geneIndex = ff.readGenesFile(epath, ename)
 #print geneIndex
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Create N random samples
 print ("Choosing {} random samples of".format(numRand) +
@@ -99,38 +98,33 @@ print ("Choosing {} random samples of".format(numRand) +
 randSamps = ff.createRandomSamplesArray(numRand,
 	len(inGenes), len(geneIndex))
 #print randSamps
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 # 4) Calculate the statistics
 
-## TEST
-#sampIndex = ff.convertToIndices(geneIndex.keys(), geneIndex)
-#tCount = ff.getPathCountOne(sampIndex, pathDict["typeA-typeC"], epath, ename)
-#print sampIndex
-#print metapath, pathDict["typeA-typeC"], tCount
-
 # Convert the sample into a list of indices
 sampIndex = ff.convertToIndices(inGenes, geneIndex)
 #print sampIndex
-
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Calculate stats for each metapath
 sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
 	sampIndex, randSamps, pathDict, epath, ename)
 #print sCount[0], rMeans[0], rStDev[0], zScore[0]
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 # 5) Output the collected data
-
-## Name the output file
-#outFile = ff.nameOutputFile(opath, oname)
-#print "Saving data to: {}".format(outFile)
 
 # Write to the output file
 print "Saving data to ..."
 outFile = ff.writeOutputOneSample(opath, oname, ename, sname,
 	pathDict, sCount, rMeans, rStDev, zScore, outGenes)
 print "    ... {}".format(outFile)
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 
