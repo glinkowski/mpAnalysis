@@ -74,8 +74,8 @@ print "Checking what paths are available ..."
 pathDict = ff.readKeyFile(epath, ename)
 #print mpDict
 #
-pathList = pathDict.keys()
-pathList.sort()
+#pathList = pathDict.keys()
+#pathList.sort()
 #print mpList
 
 
@@ -111,21 +111,26 @@ randSamps = ff.createRandomSamplesArray(numRand,
 
 # Convert the sample into a list of indices
 sampIndex = ff.convertToIndices(inGenes, geneIndex)
-print sampIndex
+#print sampIndex
 
 
 # Calculate stats for each metapath
 sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
 	sampIndex, randSamps, pathDict, epath, ename)
-print sCount[0], rMeans[0], rStDev[0], zScore[0]
+#print sCount[0], rMeans[0], rStDev[0], zScore[0]
 
 
 # 5) Output the collected data
 
-# name the output file
-outFile = ff.nameOutputFile(opath, oname)
-print "Saving data to: {}".format(outFile)
+## Name the output file
+#outFile = ff.nameOutputFile(opath, oname)
+#print "Saving data to: {}".format(outFile)
 
+# Write to the output file
+print "Saving data to ..."
+outFile = ff.writeOutputOneSample(opath, oname, ename, sname,
+	pathDict, sCount, rMeans, rStDev, zScore, outGenes)
+print "    ... {}".format(outFile)
 
 
 

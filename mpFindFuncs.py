@@ -41,6 +41,8 @@ import random
 keyZPad = 5
 # Length to pad the output file names:
 fnZPad = 3
+# Data delimiter to use in the output file:
+textDelim = '\t'
 # Whether to save uncompressed text version of matrix:
 #saveText = True		# (useful for error-checking)
 
@@ -528,6 +530,57 @@ def nameOutputFile(path, name) :
 		num += 1
 		fname = name + "-{}.txt".format(str(num).zfill(zpad))
 	#end loop
+
+	return fname
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: For a single sample, write the data to a file
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
+#	fname, str: name of output file (without path)
+def writeOutputOneSample(path, name, nName, sName,
+	mpDict, counts, means, stdevs, scores, leftout) :
+
+	delim = textDelim
+
+	# Name the output file
+	fname = nameOutputFile(path, name)
+
+	# Get the ordered list of metapaths
+	mpList = mpDict.keys()
+	mpList.sort()
+
+	# Write the file header
+	fn = open(path+fname, "wb")
+	fn.write("The occurrence of metapaths with in a sample ...\n")
+	fn.write("network:{}{}\n".format(delim, nName))
+	fn.write("sample:{}{}\n".format(delim, sName))
+	fn.write("\n")
+
+	# Write the body of the file
+	fn.write("sample{}random samples\n".format(delim))
+	fn.write("count{0}mean{0}std dev{0}".format(delim) +
+		"z-score{0}path name\n".format(delim))
+	i = 0
+	for mp in mpList :
+		fn.write("{1}{0}{2}{0}{3}{0}{4}{0}{5}\n".format(delim,
+			counts[i], means[i], stdevs[i], scores[i], mp) )
+		i += 1
+	#end loop
+
+	# Write the file footer
+	fn.write("\n")
+	fn.write("Sample genes not found in the network:" +
+		" {}".format(len(leftout)) )
+	for gene in leftout :
+		fn.write("\n{}".format(gene) )
+	#end loop
+	fn.close()
 
 	return fname
 #end def ######## ######## ######## 
