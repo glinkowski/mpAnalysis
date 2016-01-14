@@ -282,6 +282,10 @@ def applyCorrections(edges, fname) :
 #	Makes in-place corrections to the array
 def applyNormalization(edges, lowBound) :
 
+#TODO: check & fix lower bound condition. Don't want edges
+#	to be given a weight of 0. There should be a small
+#	weight applied even to the lowest-weighted edge
+
 	# get the unique edge types in the network
 	eTypes = list( np.unique(edges[:,3]) )
 	eTypes.sort()
@@ -396,6 +400,8 @@ def applyThreshold(edges, threshold) :
 #	edges = newEdges
 #	return
 
+#TODO: If desired threshold value is 0, don't throw
+# out any edges. 
 	return newEdges
 
 #end def ######## ######## ########
