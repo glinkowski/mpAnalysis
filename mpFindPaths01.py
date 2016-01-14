@@ -113,34 +113,6 @@ randSamps = ff.createRandomSamplesArray(numRand,
 sampIndex = ff.convertToIndices(inGenes, geneIndex)
 print sampIndex
 
-## Calculate stats for each metapath
-#sCount = list()		# num of each path in given sample
-#rMeans = list()		# mean count of e. p. in rand samples
-#rStDev = list()		# stand dev of e. p. in rand samples
-#zScore = list()		# z-Score of e. p. in rand samples
-#
-#for metapath in pathList :
-#
-#	tCount = ff.getPathCountOne(sampIndex,
-#		pathDict[metapath], epath, ename)
-#	sCount.append(tCount)
-#
-#	tMeans, tStDev = ff.getPathMeans(randSamps,
-#		pathDict[metapath], epath, ename)
-#	rMeans.append(tMeans)
-#	rStDev.append(tStDev)
-#
-#	tScore = (tCount - tMeans) / tStDev
-#	zScore.append(tScore)
-#
-#	break
-##end loop
-#
-#print sCount, rMeans, rStDev, zScore
-#print randSamps.shape[0]
-
-#print metapath, pathDict[metapath], sCount, rMeans, rStDev, zScore
-
 
 # Calculate stats for each metapath
 sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
@@ -148,16 +120,6 @@ sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
 print sCount[0], rMeans[0], rStDev[0], zScore[0]
 
 
-# FOR REFERENCE: copied from mpFindPaths00
-## path to the metapath matrices
-#mpPath = epath + ename + "_MetaPaths/"
-## file containing the genes
-#gfile = "genes.txt"
-## Create mapping from gene name to row/col index
-#geneDict = ff.readGeneFile(mpPath + gfile)
-##print geneDict
-## output file
-#ofile = opath + oname + ".txt"
 
 
 
