@@ -1,0 +1,2 @@
+typeAf	typeA
+G01002	G00002

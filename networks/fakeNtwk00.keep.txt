@@ -1,0 +1,10 @@
+Type	Alias	Keep?
+GENE TYPES	--	2
+human1	G000	yes
+human2	GA00	yes
+EDGE TYPES	--	3
+A	typeA	yes
+B	typeB	yes
+C	typeC	yes
+INDIRECT	--	0
+THRESHOLD	--	0.1

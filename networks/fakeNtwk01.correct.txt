@@ -1,0 +1,2 @@
+G01010	G00010
+typyC	typeC
