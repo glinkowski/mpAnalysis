@@ -413,8 +413,10 @@ def convertToIndices(names, iDict) :
 def getPathMatrix(mpTuple, path, name) :
 
 	zpad = keyZPad
+#	fname = (path + name + "_MetaPaths/" +
+#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
 	fname = (path + name + "_MetaPaths/" +
-		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
 
 	# ERROR CHECK: verify file exists
 	if not os.path.isfile(fname) :
@@ -424,7 +426,8 @@ def getPathMatrix(mpTuple, path, name) :
 	#end if
 
 	# Load the matrix
-	matrix = np.load(fname)
+#	matrix = np.load(fname)
+	matrix = np.loadtxt(fname)
 
 	# Convert to transpose if flag==True
 	if mpTuple[1] :

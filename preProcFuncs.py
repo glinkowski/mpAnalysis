@@ -50,7 +50,7 @@ nodeDT = np.dtype('a30')
 # Length to pad the matrix file names:
 keyZPad = 5
 # Whether to save uncompressed text version of matrix:
-saveText = True		# (useful for error-checking)
+saveText = False		# (useful for error-checking)
 
 ####### ####### ####### ####### 
 
@@ -1146,7 +1146,8 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	#end if
 
 	# Write to the file
-	np.save(mpath+mname, matrix)
+#	np.save(mpath+mname, matrix)
+	np.savetxt(mpath+mname+".gz", matrix, fmt='%u')
 
 	#ERROR CHECK: also save a text version of the matrix
 	if saveText :
