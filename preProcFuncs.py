@@ -47,6 +47,9 @@ import re
 
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
+# Data-type for the path matrices:
+matrixDT = np.uint16
+warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
 # Whether to save uncompressed text version of matrix:
@@ -745,6 +748,10 @@ def createCountDict(aList) :
 def createMatrixList(eArray, kEdges, iEdges, gList,
 	nDict): #, path, oname) :
 
+	# data-type for the path matrices
+	dt = matrixDT
+	warnVal = warnDTvalue
+
 	# How far from Std Dev will be kept as "Medium"
 	stdGap = 0.75
 
@@ -915,7 +922,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 			# Create the first (small) matrix
 #			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][1]))
-			thisM = np.zeros([numG,numG])
+			thisM = np.zeros([numG,numG], dtype=dt)
 			count = 0
 			for term in term_sm :
 				# list of all edges with this term
@@ -945,13 +952,20 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 #				fet.write("{}\t{}\n".format(et+'_sm', count))
 #				fet.close()
 
+				# ERROR CHECK: verify counts fit within
+				#	specified data type
+				if np.amax(thisM) > warnVal :
+					print ("WARNING: Path counts exceed" +
+						"{}, change data-type.".format(warnVal))
+				#end if
+
 				mList.append(thisM)
 				mNames.append(et+"_sm")
 			#end if
 
 			# Create the second (medium) matrix
 #			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][2]))
-			thisM = np.zeros([numG,numG])
+			thisM = np.zeros([numG,numG], dtype=dt)
 			count = 0
 			for term in term_md :
 				# list of all edges with this term
@@ -981,13 +995,20 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 #				fet.write("{}\t{}\n".format(et+'_md', count))
 #				fet.close()
 
+				# ERROR CHECK: verify counts fit within
+				#	specified data type
+				if np.amax(thisM) > warnVal :
+					print ("WARNING: Path counts exceed" +
+						"{}, change data-type.".format(warnVal))
+				#end if
+
 				mList.append(thisM)
 				mNames.append(et+"_md")
 			#end if
 			
 			# Create the third (large) matrix
 #			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][3]))
-			thisM = np.zeros([numG,numG])
+			thisM = np.zeros([numG,numG], dtype=dt)
 			count = 0
 			for term in term_lg :
 				# list of all edges with this term
@@ -1017,6 +1038,13 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 #				fet.write("{}\t{}\n".format(et+'_lg', count))
 #				fet.close()
 
+				# ERROR CHECK: verify counts fit within
+				#	specified data type
+				if np.amax(thisM) > warnVal :
+					print ("WARNING: Path counts exceed" +
+						"{}, change data-type.".format(warnVal))
+				#end if
+				
 				mList.append(thisM)
 				mNames.append(et+"_lg")
 			#end if
@@ -1026,7 +1054,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 		# If already direct, create the matrix
 		else :
-			thisM = np.zeros([numG,numG])
+			thisM = np.zeros([numG,numG], dtype=dt)
 			count = 0
 
 	#		print "Creating matrix from edge type: {}".format(et)
@@ -1054,7 +1082,13 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 #			fet.write("{}\t{}\n".format(et, count))
 #			fet.close()
 
-
+			# ERROR CHECK: verify counts fit within
+			#	specified data type
+			if np.amax(thisM) > warnVal :
+				print ("WARNING: Path counts exceed" +
+					"{}, change data-type.".format(warnVal))
+			#end if
+				
 			mList.append(thisM)
 			mNames.append(et)
 			
