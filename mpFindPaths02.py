@@ -36,8 +36,8 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'fakeNtwk01_g2e3t10'
-ename = 'fakeNtwk01_g3e4t1'
+ename = 'fakeNtwk00_g2e3t10'
+#ename = 'fakeNtwk01_g3e4t1'
 epath = 'networks/'
 
 # The path to the sample files

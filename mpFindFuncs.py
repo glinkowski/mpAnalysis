@@ -21,6 +21,7 @@
 #	checkGenesInNetwork(path, name, geneList)
 #	convertToIndices(names, iDict)
 #	getPathMatrix(mpTuple, path, name)
+#	removeInvertedPaths(mpDict)
 #	getPathCountOne(sample, matrix)
 #	getPathCountList(samples, matrix)
 #	getPathMeans(rSamples, matrix)
@@ -442,6 +443,36 @@ def getPathMatrix(mpTuple, path, name) :
 # Function: Find the number of paths of this type joining
 #	the nodes in the sample
 # Input ----
+#	mpDict, {str: [int, bool]} dict:
+#		key, str - name of the metapath
+#		value, [int, bool] - which matrix file to use, and 
+#			whether to use the transpose (inverse path)
+# Returns ----
+#	mpList, str list: ordered names of paths available,
+#		less paths that are mirror-images of another
+def removeInvertedPaths(mpDict) :
+
+	# The item to return
+	mpList = list()
+
+	# Check the keys in the dict
+	for key in mpDict.keys() :
+		# If the boolean is True, then the path is an
+		#	inverse of another; only append if false
+		if mpDict[key][1]==False :
+			mpList.append(key)
+	#end loop
+
+	mpList.sort()
+	return mpList
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Find the number of paths of this type joining
+#	the nodes in the sample
+# Input ----
 #	sample, int list: indices of the nodes in the sample
 #	matrix, int array: num paths between node pairs
 # Returns ----
@@ -545,8 +576,9 @@ def calculateStatistics(sample, rSamples, mpDict,
 	zScore = list()		# z-Score of e. p. in rand samples
 
 	# An iterable list of metapaths
-	mpList = mpDict.keys()
-	mpList.sort()
+#	mpList = mpDict.keys()
+#	mpList.sort()
+	mpList = removeInvertedPaths(mpDict)
 
 	for mp in mpList :
 
@@ -621,7 +653,9 @@ def createZScoreMatrix(nPath, nName, mpDict,
 
 	# The item to return
 	# rows = metapaths; cols = samples
-	scores = np.empty([len(mpDict), len(sNames)])
+#	scores = np.empty([len(mpDict), len(sNames)])
+	mpList = removeInvertedPaths(mpDict)
+	scores = np.empty([len(mpList), len(sNames)])
 
 	# Load the gene-index dictionary
 	gDict = readGenesFile(nPath, nName)
@@ -689,8 +723,9 @@ def writeOutputOneSample(path, name, nName, sName,
 	fname = nameOutputFile(path, name)
 
 	# Get the ordered list of metapaths
-	mpList = mpDict.keys()
-	mpList.sort()
+#	mpList = mpDict.keys()
+#	mpList.sort()
+	mpList = removeInvertedPaths(mpDict)
 
 	# Write the file header
 	fn = open(path+fname, "wb")
@@ -752,8 +787,9 @@ def writeOutputMultSamples(path, name, nName, sNames,
 	fname = nameOutputFile(path, name)
 
 	# Get the ordered list of metapaths
-	mpList = mpDict.keys()
-	mpList.sort()
+#	mpList = mpDict.keys()
+#	mpList.sort()
+	mpList = removeInvertedPaths(mpDict)
 
 	# Write the file header
 	fn = open(path+fname, "wb")
@@ -774,13 +810,11 @@ def writeOutputMultSamples(path, name, nName, sNames,
 	fn.write("\n")
 
 	# Then, the data
-	mpNames = mpDict.keys()
-	mpNames.sort()
-	for i in range(0, len(mpNames)) :
+	for i in range(0, len(mpList)) :
 		for j in range(0, len(sNames)) :
 			fn.write("{}{}".format(scores[i,j], delim))
 		#end loop
-		fn.write("{}\n".format(mpNames[i]))
+		fn.write("{}\n".format(mpList[i]))
 	#end loop
 
 	# Write the file footer
