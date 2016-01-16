@@ -1592,6 +1592,11 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 		for j in range(0, len(pNames)) :
 			for k in range(0, len(pNames)) :
 
+				# Skip if i=j=k (three in a row)
+				if (i==j) and (j==k) :
+					continue
+				#end if
+
 				# The name of this path
 				name = ( pNames[i] + "-" +
 					pNames[j] + "-" + pNames[k] )
@@ -1638,7 +1643,18 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	for h in range(0, len(pNames)) :
 		for i in range(0, len(pNames)) :
 			for j in range(0, len(pNames)) :
+
+				# Skip if h=i=j (three in a row)
+				if (h==i) and (i==j) :
+					continue
+				#end if
+
 				for k in range(0, len(pNames)) :
+
+					# Skip if i=j=k (three in a row)
+					if (i==j) and (j==k) :
+						continue
+					#end if
 
 					# The name of this path
 					name = ( pNames[h] + "-" + pNames[i] +
