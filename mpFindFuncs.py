@@ -559,7 +559,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 		rMeans.append(tMeans)
 		rStDev.append(tStDev)
 
-		tScore = (tCount - tMeans) / tStDev
+		tScore = (tCount - tMeans) / (tStDev + 0.0001)
 		zScore.append(tScore)
 	#end loop
 
@@ -598,6 +598,65 @@ def nameOutputFile(path, name) :
 	#end loop
 
 	return fname
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: choose an unused name for the output file
+# Input ----
+#	nPath, str: path to the network files
+#	nName, str: name of the network to use
+#	mpDict, {str: [int, bool]} dict:
+#		key, str - name of the metapath
+#		value, [int, bool] - which matrix file to use, and 
+#			whether to use the transpose (inverse path)
+#	sPath, str: path to the sample files
+#	sNames, str list: ordered names of samples in path
+#	nRand, int: number of random samples to test
+# Returns ----
+#	scores, float list: z-Score for each path type
+def createZScoreMatrix(nPath, nName, mpDict,
+	sPath, sNames, nRand) :
+
+	# The item to return
+	# rows = metapaths; cols = samples
+	scores = np.empty([len(mpDict), len(sNames)])
+
+	# Load the gene-index dictionary
+	gDict = readGenesFile(nPath, nName)
+
+	# Collect stats on each sample
+	col = 0
+	for samp in sNames :
+
+		# Get the genes in the sample
+		sGenes = readSampleFiles(sPath + samp, True, True)
+		inGenes, temp0 = checkGenesInNetwork(nPath,
+			nName, sGenes)
+		del temp0
+
+		# Convert the sample into a list of indices
+		sIndex = convertToIndices(inGenes, gDict)
+		del sGenes
+
+		# Create a random sample set
+		rSamps = createRandomSamplesArray(nRand,
+			len(inGenes), len(gDict))
+
+		# Gather statistics
+		temp0, temp1, temp2, zScore = calculateStatistics(
+			sIndex,  rSamps, mpDict, nPath, nName)
+
+		# Add scores to the array
+		scores[:,col] = zScore
+		col += 1
+	#end loop
+
+#TODO: Can this be made more efficient?
+#	Right now I load the matrices multiple times.
+
+	return scores
 #end def ######## ######## ######## 
 
 
@@ -666,58 +725,67 @@ def writeOutputOneSample(path, name, nName, sName,
 
 
 ######## ######## ######## ######## 
-# Function: choose an unused name for the output file
+# Function: For a set of samples, write the output file
 # Input ----
-#	nPath, str: path to the network files
-#	nName, str: name of the network to use
+#	path, str: path to the output files
+#	name, str: name to use in creating output file
+#	nName, str: name of the network used
+#	sNames, str list: ordered names of the samples used
 #	mpDict, {str: [int, bool]} dict:
 #		key, str - name of the metapath
 #		value, [int, bool] - which matrix file to use, and 
 #			whether to use the transpose (inverse path)
-#	sPath, str: path to the sample files
-#	sNames, str list: ordered names of samples in path
-#	nRand, int: number of random samples to test
-# Returns ----
+#	counts, int list: num paths of this type in this sample
+#	means, float list: mean count of path in rand samples
+#	stdevs, float list: standard deviation of rand samples
 #	scores, float list: z-Score for each path type
-def createZScoreMatrix(nPath, nName, mpDict,
-	sPath, sNames, nRand) :
+#	leftout, str list: list of genes in original sample
+#		which don't appear in the network
+# Returns ----
+#	fname, str: name of output file (without path)
+def writeOutputMultSamples(path, name, nName, sNames,
+	mpDict, scores) :
 
-	# The item to return
-	# rows = metapaths; cols = samples
-	scores = np.empty([len(mpDict), len(sNames)])
+	delim = textDelim
 
-	# Load the gene-index dictionary
-	gDict = readGenesFile(nPath, nName)
+	# Name the output file
+	fname = nameOutputFile(path, name)
 
-	# Collect stats on each sample
-	col = 0
-	for samp in sNames :
+	# Get the ordered list of metapaths
+	mpList = mpDict.keys()
+	mpList.sort()
 
-		# Get the genes in the sample
-		sGenes = readSampleFiles(sPath + samp, True, True)
-		inGenes, temp0 = checkGenesInNetwork(nPath,
-			nName, sGenes)
-		del temp0
+	# Write the file header
+	fn = open(path+fname, "wb")
+	fn.write("The z-Scores for metapaths for multiple samples ...\n")
+	fn.write("network:{}{}\n".format(delim, nName))
+	fn.write("\n")
 
-		# Convert the sample into a list of indices
-		sIndex = convertToIndices(inGenes, gDict)
-		del sGenes
+	# Write the body of the file
+	# First, the column names
+	firstRow = True
+	for name in sNames :
+		if firstRow :
+			fn.write("{}".format(name))
+			firstRow = False
+		else :
+			fn.write("{}{}".format(delim, name))
+	#end loop
+	fn.write("\n")
 
-		# Create a random sample set
-		rSamps = createRandomSamplesArray(nRand,
-			len(inGenes), len(gDict))
-
-		# Gather statistics
-		temp0, temp1, temp2, zScore = calculateStatistics(
-			sIndex,  rSamps, mpDict, nPath, nName)
-
-		# Add scores to the array
-		scores[:,col]
-		col += 1
+	# Then, the data
+	mpNames = mpDict.keys()
+	mpNames.sort()
+	for i in range(0, len(mpNames)) :
+		for j in range(0, len(sNames)) :
+			fn.write("{}{}".format(scores[i,j], delim))
+		#end loop
+		fn.write("{}\n".format(mpNames[i]))
 	#end loop
 
-#TODO: Can this be made more efficient?
-#	Right now I load the matrices multiple times.
+	# Write the file footer
+	fn.write("\n")
+#TODO: Anything else?
 
-	return scores
+	return fname
 #end def ######## ######## ######## 

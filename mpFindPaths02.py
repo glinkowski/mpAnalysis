@@ -36,7 +36,8 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk00_g2e3t10'
+#ename = 'fakeNtwk01_g2e3t10'
+ename = 'fakeNtwk01_g3e4t1'
 epath = 'networks/'
 
 # The path to the sample files
@@ -71,18 +72,31 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 print "Checking what samples are in {}".format(spath)
 sampList = ff.getSampleList(spath)
-print sampList
+#print sampList
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 # 3) Collect the statistics
 
 # Calculate the z-Scores
+print "Calculating the statistics"
 zScores = ff.createZScoreMatrix(epath, ename,
     pathDict, spath, sampList, numRand)
-print zScores
+#print zScores
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
+
+# 4) Output the data to a file
+print "Saving data to ..."
+outFile = ff.writeOutputMultSamples(opath, oname, ename,
+    sampList, pathDict, zScores)
+print "    ... {}".format(outFile)
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 #TODO: output the left-out genes?
 #   This could be done as a separate script
 #   with less overhead
+
+
+print "\nDone.\n"
