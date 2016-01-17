@@ -1543,6 +1543,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 #		return mList, mDict
 		return
 	#end if
+	print "    finished creating paths of length 1"
 
 #TODO: ? Omit multiple steps of same edge type
 #	(ie: i==j, or i==j==k)
@@ -1578,6 +1579,8 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 			mNum += 1
 		#end loop
 	#end loop
+	print "    finished creating paths of length 2"
+	
 
 	if depth < 3 :
 		saveKeyFile(mDict, path)
@@ -1629,6 +1632,8 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 		#end loop
 	#end loop
 	del temp
+	print "    finished creating paths of length 3"
+	
 
 	if depth < 4 :
 		saveKeyFile(mDict, path)
@@ -1691,6 +1696,8 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	#end loop
 	del temp1
 	del temp2
+	print "    finished creating paths of length 4"
+	
 
 
 

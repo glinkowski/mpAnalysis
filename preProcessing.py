@@ -29,11 +29,13 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk00'
-epath = 'networks/'
+ename = 'toy2_hsa'
+epath = '../networks/'
+#ename = 'fakeNtwk00'
+#epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 4
+mpDepth = 3
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
