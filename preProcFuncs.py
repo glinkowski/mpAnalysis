@@ -1548,10 +1548,13 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 #TODO: ? Omit multiple steps of same edge type
 #	(ie: i==j, or i==j==k)
 
+	print "    starting paths of length 2"
 	#-------------------------------
 	# Create the 2-step paths
 	for i in range(0, len(pNames)) :
 		for j in range(i, len(pNames)) :
+
+			print "        creating {}, {}-{}".format((mNum+1), i,j)
 
 			# The name of this path
 			name = pNames[i] + "-" + pNames[j]
@@ -1588,6 +1591,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 		return
 	#end if
 
+	print "    starting paths of length 3"
 	#-------------------------------
 	# Create the 3-step paths
 	checkSet = set()
@@ -1599,6 +1603,8 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 				if (i==j) and (j==k) :
 					continue
 				#end if
+
+				print "        creating {}, {}-{}-{}".format((mNum+1), i,j,k)
 
 				# The name of this path
 				name = ( pNames[i] + "-" +
