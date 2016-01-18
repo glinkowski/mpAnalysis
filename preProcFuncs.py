@@ -1436,7 +1436,7 @@ def saveKeyFile(mDict, path) :
 	return
 #end def ######## ######## ######## 
 ######## ######## ######## ########
-# Function: save a list of matrices
+# Function: save the list of genes
 # Input:
 #	mGenes, list of str - list of genes in matrix
 #		ASSUMPTION: list is already properly ordered
@@ -1466,134 +1466,110 @@ def saveGeneFile(mGenes, path) :
 	fgene.close()
 
 	return
-#end def ######## ######## ######## 	
-######## ######## ######## ########
-# Function: save a list of matrices
-# Input:
-#	pList, list of NxN matrices - the primary matrices
-#		ie: the 1-level path matrices
-#	pNames, dict
-#		key, str: metapath names
-#		value, int: corresponding index number for mList
-#	mGenes, list of str - names of genes in the matrix
-#	mpath, str - path to the folder to save the file
-# Returns: nothing
-# Creates: The set of path matrices in the appropriate
-#	folder. These are simply named numerically, with a
-#	key/legend file provided. The list of genes used as
-#	row/col headers is also saved to that folder.	
-def createMetaPaths(pList, pNames, gList, depth, path) :
+#end def ######## ######## ######## 
 
-	maxDepth = 4
-	if depth > maxDepth :
-		print ( "WARNING: Can only calculate up to " +
-			"{}-step metapaths.".format(maxDepth) )
-	elif depth < 1 :
-		print ( "WARNING: Requested metapaths of length" +
-			" {};".format(depth) +
-			" Will return only 1-step paths.")
-		depth = 1
+
+
+######## ######## ######## ######## 
+# Function: Read in the key.txt file regarding the 
+#	metapath matrices
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
+#	keyDict, dict
+#		key, str: name of metapath
+#		value, tuple: int is matrix/file ID number
+#			bool where True means use matrix transpose
+def readKeyFilePP(path) :
+
+	fname = path + "key.txt"
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
 	#end if
 
-	# Check if folder at specified path exists
-	# If directory exists, emtpy it
-	if os.path.exists(path) :
-		clearFilesInDirectory(path)
-	# Else, create the folder
-	else :
-		os.makedirs(path)
-	#end if
+	# The item to return
+	keyDict = dict()
 
-	# The items to return
-#	mList = list()
-	mDict = dict()
+	# Read in the file
+	fk = open(fname, "rb")
+	firstline = True
+	for line in fk :
+		# skip the first line
+		if firstline :
+			firstline = False
+			continue
+		#end if
 
-	# The number of matrices created
+		# separate the values
+		line = line.rstrip()
+		lk = line.split('\t')
+		lv = lk[0].split(',')
+
+		transpose = False
+		if lv[1] == "t" :
+			transpose = True
+		#end if
+
+		# add to the dict
+		keyDict[lk[1]] = [int(lv[0]), transpose]
+	#end loop
+	fk.close()
+
+	return keyDict
+#end def ######## ######## ######## 
+def createMPLengthOne(pList, pNames, path) :
 	mNum = 0
-	# The length to pad the file name / matrix number
 	zpad = keyZPad
-
-	#ERROR CHECK: verify gene list & matrix dimensions
-	if len(gList) != pList[0].shape[0] :
-		print ( "ERROR: The provided list of genes" +
-			" does not match the matrix. No paths created.")
-		return
-	elif pList[0].shape[0] != pList[0].shape[1] :
-		print ( "ERROR: The primary path matrix passed" +
-			" is not square.")
-		return
-	#end if
-
-	#-------------------------------
-	# Create the 1-step paths
-#	for name in pNames :
-#		mDict[name] = [mNum, False]
+	mDict = dict()
 	for i in range(0, len(pNames)) :
-#done: instead of storing in memory,
-#	These can be saved immediately.
-#		mList.append(pList[i])
 		saveMatrixNumpy(pList[i], str(mNum).zfill(zpad), path)
-#		saveMatrixText(pList[i],  str(mNum).zfill(zpad), path, True)
 		mDict[pNames[i]] = [mNum, False]
 		mNum += 1
 	#end loop
+	saveKeyFile(mDict, path)
+	return
+#end def ######## ######## ######## 
+def createMPLengthTwo(pList, pNames, path) :
+	mDict = readKeyFilePP(path)
+	mNum = len(mDict)+1
+	zpad = keyZPad
 
-	if depth < 2 :
-		saveKeyFile(mDict, path)
-#		return mList, mDict
-		return
-	#end if
-	print "    finished creating paths of length 1"
-
-#TODO: ? Omit multiple steps of same edge type
-#	(ie: i==j, or i==j==k)
-
-	print "    starting paths of length 2"
-	#-------------------------------
-	# Create the 2-step paths
 	for i in range(0, len(pNames)) :
 		for j in range(i, len(pNames)) :
-
-			print "        creating {}, {}-{}".format((mNum+1), i,j)
-
 			# The name of this path
 			name = pNames[i] + "-" + pNames[j]
 			# The name of the reversed path
 			nameRev = pNames[j] + "-" + pNames[i]
-
 			# The new matrix
 			newM = np.dot(pList[i], pList[j])
-
 			# If name == nameRev (ie: typeA-typeA)
 			if i == j :
 				# Then add this matrix to the list
-#				mList.append(newM)
 				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 			else :
 				# Add this path & note the reverse path
-#				mList.append(newM)
 				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 				#	Reverse path uses transpose
 				mDict[nameRev] = [mNum, True]
 			#end if
-
 			mNum += 1
 		#end loop
 	#end loop
-	print "    finished creating paths of length 2"
-	
 
-	if depth < 3 :
-		saveKeyFile(mDict, path)
-#		return mList, mDict
-		return
-	#end if
+	saveKeyFile(mDict, path)
+	return
+#end def ######## ######## ######## 
+def createMPLengthThree(pList, pNames, path) :
+	mDict = readKeyFilePP(path)
+	mNum = len(mDict)+1
+	zpad = keyZPad
 
-	print "    starting paths of length 3"
-	#-------------------------------
-	# Create the 3-step paths
 	checkSet = set()
 	for i in range(0, len(pNames)) :
 		for j in range(0, len(pNames)) :
@@ -1637,19 +1613,15 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 			#end loop
 		#end loop
 	#end loop
-	del temp
-	print "    finished creating paths of length 3"
-	
 
-	if depth < 4 :
-		saveKeyFile(mDict, path)
-#		return mList, mDict
-		return
-	#end if
+	saveKeyFile(mDict, path)
+	return
+#end def ######## ######## ######## 
+def createMPLengthFour(pList, pNames, path) :
+	mDict = readKeyFilePP(path)
+	mNum = len(mDict)+1
+	zpad = keyZPad
 
-
-	#-------------------------------
-	# Create the 4-step paths
 	checkSet = set()
 	for h in range(0, len(pNames)) :
 		for i in range(0, len(pNames)) :
@@ -1700,16 +1672,147 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 			#end loop
 		#end loop
 	#end loop
-	del temp1
-	del temp2
-	print "    finished creating paths of length 4"
-	
-
-
-
 
 	saveKeyFile(mDict, path)
+	return
+#end def ######## ######## ######## 
+######## ######## ######## ########
+# Function: save a list of matrices
+# Input:
+#	pList, list of NxN matrices - the primary matrices
+#		ie: the 1-level path matrices
+#	pNames, dict
+#		key, str: metapath names
+#		value, int: corresponding index number for mList
+#	mGenes, list of str - names of genes in the matrix
+#	mpath, str - path to the folder to save the file
+# Returns: nothing
+# Creates: The set of path matrices in the appropriate
+#	folder. These are simply named numerically, with a
+#	key/legend file provided. The list of genes used as
+#	row/col headers is also saved to that folder.	
+def createMetaPaths(pList, pNames, gList, depth, path) :
+
+	maxDepth = 4
+	if depth > maxDepth :
+		print ( "WARNING: Can only calculate up to " +
+			"{}-step metapaths.".format(maxDepth) )
+	elif depth < 1 :
+		print ( "WARNING: Requested metapaths of length" +
+			" {};".format(depth) +
+			" Will return only 1-step paths.")
+		depth = 1
+	#end if
+
+	# Check if folder at specified path exists
+	# If directory exists, emtpy it
+	if os.path.exists(path) :
+		clearFilesInDirectory(path)
+	# Else, create the folder
+	else :
+		os.makedirs(path)
+	#end if
+
+	# The items to return
+	mDict = dict()
+
+	# The number of matrices created
+	mNum = 0
+	# The length to pad the file name / matrix number
+	zpad = keyZPad
+
+	#ERROR CHECK: verify gene list & matrix dimensions
+	if len(gList) != pList[0].shape[0] :
+		print ( "ERROR: The provided list of genes" +
+			" does not match the matrix. No paths created.")
+		return
+	elif pList[0].shape[0] != pList[0].shape[1] :
+		print ( "ERROR: The primary path matrix passed" +
+			" is not square.")
+		return
+	#end if
+
+	# Save the list of genes to file
 	saveGeneFile(gList, path)
 
+	#-------------------------------
+	# Create the 1-step paths
+	createMPLengthOne(pList, pNames, path)
+
+	if depth < 2 :
+#		saveKeyFile(mDict, path)
+#		return mList, mDict
+		return
+	#end if
+	print "    finished creating paths of length 1"
+
+	#-------------------------------
+	## Create the 2-step paths
+	createMPLengthTwo(pList, pNames, path)
+	print "    finished creating paths of length 2"
+	
+	if depth < 3 :
+#		saveKeyFile(mDict, path)
+#		return mList, mDict
+		return
+	#end if
+
+	#-------------------------------
+	# Create the 3-step paths
+	createMPLengthThree(pList, pNames, path)
+	print "    finished creating paths of length 3"
+
+	if depth < 4 :
+#		saveKeyFile(mDict, path)
+#		return mList, mDict
+		return
+	#end if
+
+	#-------------------------------
+	# Create the 4-step paths
+	createMPLengthFour(pList, pNames, path)
+	print "    finished creating paths of length 4"
+
+#	return mList, mDict
 	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: read in the primary matrices
+# Input: 
+#	nName, str - name of the network
+#	nPath, str - path to the network
+# Returns: 
+#	pList, list of NxN matrices - the primary matrices
+#		ie: the 1-level path matrices
+#	pNames, dict
+#		key, str: metapath names
+#		value, int: corresponding index number for mList
+def readPrimaryMatrices(nName, nPath) :
+
+	# Check for folder existence
+	path = nPath + nName + "_Primaries/"
+	if not os.path.exists(path) :
+		print "ERROR: path doesn't exist: {}".format(path)
+		sys.exit()
+	#end if
+
+	# Items to return
+	pNames = list()
+	pList = list()
+
+	# Read in the key file
+	fn = open(path + "key.txt", "rb")
+	for line in fn :
+		line = line.rstrip()
+		lv = line.split('\t')
+
+		pNames.append(lv[1])
+		pList.append( np.loadtxt(path+lv[0]+".gz",
+			dtype=matrixDT) )
+	#end loop
+
+	return pNames, pList
 #end def ######## ######## ######## 
