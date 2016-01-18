@@ -1738,7 +1738,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	createMPLengthOne(pList, pNames, path)
 
 	if depth < 2 :
-		saveKeyFile(mDict, path)
+#		saveKeyFile(mDict, path)
 #		return mList, mDict
 		return
 	#end if
@@ -1750,7 +1750,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	print "    finished creating paths of length 2"
 	
 	if depth < 3 :
-		saveKeyFile(mDict, path)
+#		saveKeyFile(mDict, path)
 #		return mList, mDict
 		return
 	#end if
@@ -1761,7 +1761,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	print "    finished creating paths of length 3"
 
 	if depth < 4 :
-		saveKeyFile(mDict, path)
+#		saveKeyFile(mDict, path)
 #		return mList, mDict
 		return
 	#end if
@@ -1773,4 +1773,44 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 
 #	return mList, mDict
 	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: read in the primary matrices
+# Input: 
+#	nName, str - name of the network
+#	nPath, str - path to the network
+# Returns: 
+#	pList, list of NxN matrices - the primary matrices
+#		ie: the 1-level path matrices
+#	pNames, dict
+#		key, str: metapath names
+#		value, int: corresponding index number for mList
+def readPrimaryMatrices(nName, nPath) :
+
+	# Check for folder existence
+	path = nPath + nName + "_Primaries/"
+	if not os.path.exists(path) :
+		print "ERROR: path doesn't exist: {}".format(path)
+		sys.exit()
+	#end if
+
+	# Items to return
+	pNames = list()
+	pList = list()
+
+	# Read in the key file
+	fn = open(path + "key.txt", "rb")
+	for line in fn :
+		line = line.rstrip()
+		lv = line.split('\t')
+
+		pNames.append(lv[1])
+		pList.append( np.loadtxt(path+lv[0]+".gz",
+			dtype=matrixDT) )
+	#end loop
+
+	return pNames, pList
 #end def ######## ######## ######## 

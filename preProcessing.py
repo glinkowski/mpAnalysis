@@ -35,7 +35,7 @@ ename = 'fakeNtwk00'
 epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 4
+mpDepth = 1
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -108,10 +108,10 @@ print "Creating the primary gene-gene matrices ..."
 matrixList, matrixNames = pp.createMatrixList(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
 
-## Save the primary matrices
-#primpath = epath + outname + "_Primaries/"
-#print "    ... saving to: {}".format(primpath)
-#pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
+# Save the primary matrices
+primpath = epath + outname + "_Primaries/"
+print "    ... saving to: {}".format(primpath)
+pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
