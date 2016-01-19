@@ -1541,25 +1541,32 @@ def createMPLengthOne(pList, pNames, path) :
 #end def ######## ######## ######## 
 def createMPLengthTwo(pList, pNames, path) :
 	mDict = readKeyFilePP(path)
-	mNum = len(mDict)+1
+	mNum = len(pList)+1
 	zpad = keyZPad
 
 	for i in range(0, len(pNames)) :
 		for j in range(i, len(pNames)) :
+
 			# The name of this path
 			name = pNames[i] + "-" + pNames[j]
 			# The name of the reversed path
 			nameRev = pNames[j] + "-" + pNames[i]
-			# The new matrix
-			newM = np.dot(pList[i], pList[j])
+
+			# Create new matrix if not already done
+			if not os.path.isfile(path +
+				str(mNum).zfill(zpad) + ".gz") :
+				newM = np.dot(pList[i], pList[j])
+				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+			#end if
+
 			# If name == nameRev (ie: typeA-typeA)
 			if i == j :
 				# Then add this matrix to the list
-				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+#				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 			else :
 				# Add this path & note the reverse path
-				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+#				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 				#	Reverse path uses transpose
 				mDict[nameRev] = [mNum, True]
