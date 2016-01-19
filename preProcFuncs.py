@@ -31,7 +31,12 @@
 #	saveMatrixListPlus(mList, mNames, mGenes, mpath)
 #	saveKeyFile(mDict, path)
 #	saveGeneFile(mGenes, path)
+#	createMPLengthOne(pList, pNames, path)
+#	createMPLengthTwo(pList, pNames, path)
+#	createMPLengthThree(pList, pNames, path)
+#	createMPLengthFour(pList, pNames, path)
 #	createMetaPaths(pList, pNames, gList, depth, path)
+#	readPrimaryMatrices(nName, nPath)
 # ---------------------------------------------------------
 
 import os.path
@@ -48,7 +53,8 @@ import re
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
 # Data-type for the path matrices:
-matrixDT = np.uint16
+matrixDT = np.int
+#matrixDT = np.uint16
 warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5

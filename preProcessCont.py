@@ -26,7 +26,7 @@ ename = 'fakeNtwk00_g2e3t10'
 epath = 'networks/'
 
 # The metapath level to calculate
-calcStep = 3
+calcStep = 2
 
 ####### ####### ####### ####### 
 
