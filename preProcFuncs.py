@@ -1486,21 +1486,20 @@ def createMPLengthTwo(pList, pNames, path) :
 			# The name of the reversed path
 			nameRev = pNames[j] + "-" + pNames[i]
 
-			# Create new matrix if not already done
+			# Create new matrix if file doesn't already exist
 			if not os.path.isfile(path +
 				str(mNum).zfill(zpad) + ".gz") :
 				newM = np.dot(pList[i], pList[j])
 				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 			#end if
 
-			# If name == nameRev (ie: typeA-typeA)
+			# Add the matrix name & number to mDict
 			if i == j :
+				# If name == nameRev (ie: typeA-typeA)
 				# Then add this matrix to the list
-#				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 			else :
 				# Add this path & note the reverse path
-#				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 				#	Reverse path uses transpose
 				mDict[nameRev] = [mNum, True]
@@ -1538,11 +1537,22 @@ def createMPLengthThree(pList, pNames, path) :
 				#	if it has been, skip it
 				if name not in checkSet :
 					checkSet.add(name)
-					# Calculate the matrix
-					temp = np.dot(pList[i], pList[j])
-					newM = np.dot(temp, pList[k])
-					# Save the data
-					saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
+					# Create new matrix if file doesn't already exist
+					if not os.path.isfile(path + str(mNum).zfill(zpad) + ".gz") :
+						# Calculate the matrix
+						temp = np.dot(pList[i], pList[j])
+						newM = np.dot(temp, pList[k])
+						# Save the data
+						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+					#end if
+
+#					# Calculate the matrix
+#					temp = np.dot(pList[i], pList[j])
+#					newM = np.dot(temp, pList[k])
+#					# Save the data
+#					saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
 					mDict[name] = [mNum, False]
 
 					# Check the reverse path (the transpose)
@@ -1595,12 +1605,24 @@ def createMPLengthFour(pList, pNames, path) :
 					#	if it has been, skip it
 					if name not in checkSet :
 						checkSet.add(name)
-						# Calculate the matrix
-						temp1 = np.dot(pList[h], pList[i])
-						temp2 = np.dot(temp1, pList[j])
-						newM = np.dot(temp2, pList[k])
-						# Save the data
-						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
+						# Create new matrix if file doesn't already exist
+						if not os.path.isfile(path + str(mNum).zfill(zpad) + ".gz") :
+							# Calculate the matrix
+							temp1 = np.dot(pList[h], pList[i])
+							temp2 = np.dot(temp1, pList[j])
+							newM = np.dot(temp2, pList[k])
+							# Save the data
+							saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+						#end if
+
+#						# Calculate the matrix
+#						temp1 = np.dot(pList[h], pList[i])
+#						temp2 = np.dot(temp1, pList[j])
+#						newM = np.dot(temp2, pList[k])
+#						# Save the data
+#						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
 						mDict[name] = [mNum, False]
 
 						# Check the reverse path (the transpose)
