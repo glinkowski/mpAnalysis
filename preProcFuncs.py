@@ -52,16 +52,18 @@ import re
 
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
-# Data-type for the path matrices:
-matrixDT = np.int
-#matrixDT = np.uint16
-warnDTvalue = 65000
 # Whether to use the data-type for the matrices:
 speedVsMemory = True	# True favors speed, disables dtype
+# Data-type for the path matrices:
+matrixDT = np.uint16
+warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
 # Whether to save uncompressed text version of matrix:
 saveText = False
+# Considering consecutive edges of same type
+keepDouble = True
+keepTriple = True
 
 ####### ####### ####### ####### 
 
@@ -1461,6 +1463,8 @@ def readKeyFilePP(path) :
 
 	return keyDict
 #end def ######## ######## ######## 
+
+
 def createMPLengthOne(pList, pNames, path) :
 	mNum = 0
 	zpad = keyZPad
@@ -1475,11 +1479,16 @@ def createMPLengthOne(pList, pNames, path) :
 #end def ######## ######## ######## 
 def createMPLengthTwo(pList, pNames, path) :
 	mDict = readKeyFilePP(path)
-	mNum = len(pList)+1
+	mNum = len(mDict)
 	zpad = keyZPad
 
 	for i in range(0, len(pNames)) :
 		for j in range(i, len(pNames)) :
+			# Optionally skipping consecutive edges
+			if not keepDouble :
+				if i==j :
+					continue
+			#end if
 
 			# The name of this path
 			name = pNames[i] + "-" + pNames[j]
@@ -1519,14 +1528,24 @@ def createMPLengthThree(pList, pNames, path) :
 	checkSet = set()
 	for i in range(0, len(pNames)) :
 		for j in range(0, len(pNames)) :
-			for k in range(0, len(pNames)) :
-
-				# Skip if i=j=k (three in a row)
-				if (i==j) and (j==k) :
+			# Optionally skipping consecutive edges
+			if not keepDouble :
+				if i==j :
 					continue
+			#end if
+			for k in range(0, len(pNames)) :
+				# Optionally skipping consecutive edges
+				if not keepDouble :
+					if j==k :
+						continue
+				#end if
+				# Skip if i=j=k (three in a row)
+				if not keepTriple :
+					if (i==j) and (j==k) :
+						continue
 				#end if
 
-				print "        creating {}, {}-{}-{}".format((mNum+1), i,j,k)
+#				print "        creating {}, {}-{}-{}".format((mNum+1), i,j,k)
 
 				# The name of this path
 				name = ( pNames[i] + "-" +
@@ -1549,12 +1568,6 @@ def createMPLengthThree(pList, pNames, path) :
 						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 					#end if
 
-#					# Calculate the matrix
-#					temp = np.dot(pList[i], pList[j])
-#					newM = np.dot(temp, pList[k])
-#					# Save the data
-#					saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
-
 					mDict[name] = [mNum, False]
 
 					# Check the reverse path (the transpose)
@@ -1576,24 +1589,38 @@ def createMPLengthThree(pList, pNames, path) :
 #end def ######## ######## ######## 
 def createMPLengthFour(pList, pNames, path) :
 	mDict = readKeyFilePP(path)
-	mNum = len(mDict)+1
+	mNum = len(mDict)
 	zpad = keyZPad
 
 	checkSet = set()
 	for h in range(0, len(pNames)) :
 		for i in range(0, len(pNames)) :
-			for j in range(0, len(pNames)) :
-
-				# Skip if h=i=j (three in a row)
-				if (h==i) and (i==j) :
+			# Optionally skipping consecutive edges
+			if not keepDouble :
+				if h==i :
 					continue
-				#end if
-
-				for k in range(0, len(pNames)) :
-
-					# Skip if i=j=k (three in a row)
-					if (i==j) and (j==k) :
+			#end if
+			for j in range(0, len(pNames)) :
+				# Optionally skipping consecutive edges
+				if not keepDouble :
+					if i==j :
 						continue
+				#end if
+				# Skip if h=i=j (three in a row)
+				if not keepTriple :
+					if (h==i) and (i==j) :
+						continue
+				#end if
+				for k in range(0, len(pNames)) :
+					# Optionally skipping consecutive edges
+					if not keepDouble :
+						if j==k :
+							continue
+					#end if
+					# Skip if i=j=k (three in a row)
+					if not keepTriple :
+						if (i==j) and (j==k) :
+							continue
 					#end if
 
 					# The name of this path
@@ -1617,13 +1644,6 @@ def createMPLengthFour(pList, pNames, path) :
 							# Save the data
 							saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 						#end if
-
-#						# Calculate the matrix
-#						temp1 = np.dot(pList[h], pList[i])
-#						temp2 = np.dot(temp1, pList[j])
-#						newM = np.dot(temp2, pList[k])
-#						# Save the data
-#						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 
 						mDict[name] = [mNum, False]
 
