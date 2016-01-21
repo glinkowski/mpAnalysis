@@ -56,10 +56,12 @@ nodeDT = np.dtype('a30')
 matrixDT = np.int
 #matrixDT = np.uint16
 warnDTvalue = 65000
+# Whether to use the data-type for the matrices:
+speedVsMemory = True	# True favors speed, disables dtype
 # Length to pad the matrix file names:
 keyZPad = 5
 # Whether to save uncompressed text version of matrix:
-saveText = False		# (useful for error-checking)
+saveText = False
 
 ####### ####### ####### ####### 
 
@@ -343,7 +345,6 @@ def applyNormalization(edges, lowBound) :
 	#end loop
 
 	return
-
 #end def ######## ######## ########
 
 
@@ -412,10 +413,7 @@ def applyThreshold(edges, threshold) :
 #TODO: If desired threshold value is 0, don't throw
 # out any edges. 
 	return newEdges
-
 #end def ######## ######## ########
-
-
 
 
 
@@ -458,8 +456,8 @@ def applyKeepEdges(edges, kEdges) :
 
 	newEdges = edges[keepIndex, :]
 	return newEdges
-
 #end def ######## ######## ########
+
 
 
 ######## ######## ######## ########
@@ -524,8 +522,8 @@ def applyKeepLists(edges, lGenes, kEdges, iEdges) :
 
 	newEdges = edges[keepIndex, :]
 	return newEdges
-
 #end def ######## ######## ######## 
+
 
 
 ######## ######## ######## ########
@@ -588,8 +586,8 @@ def createNodeLists(edges, aGenes) :
 	geneList = list(geneSet)
 	geneList.sort()
 	return nodeDict, geneList
-
 #end def ######## ######## ######## 
+
 
 
 ######## ######## ######## ########
@@ -617,8 +615,9 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 	oname = name + "_g{}e{}t{}".format( len(kGenes),
 		len(kEdges), int(tHold*100) )
 	return oname
-
 #end def ######## ######## ######## 
+
+
 
 ######## ######## ######## ########
 # Function: write the modified network to a file
@@ -693,19 +692,20 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 	of.close()
 
 	return
-
 #end def ######## ######## ######## 
 
 
 
 ######## ######## ######## ########
 # Function: create a mapping of genes to matrix indices
+#	ASSUMPTION: gList is properly ordered to match matrix
 # Input:
+#	gList, str list: ordered list of gene names
 # Returns:
+#	gDict, dict
+#		key, str: gene names
+#		value, int: row/col where gene appears in matrix
 def createGeneMapping(gList) :
-	# From the list of genes in this network, dictionary
-	#	will indicate what index to use in matrix
-	# ASSUMPTION: file is sorted
 
 	gDict = dict()
 	numG = 0
@@ -715,8 +715,11 @@ def createGeneMapping(gList) :
 	#end loop
 
 	return gDict
+#end def ######## ######## ######## 
 
-#end def ######## ######## ######## ######## ######## ######## ########
+
+
+######## ######## ######## ########
 # Function: create a dict of node counts
 # Input:
 # Returns:
@@ -738,7 +741,6 @@ def createCountDict(aList) :
 	#end loop
 
 	return aDict
-
 #end def ######## ######## ######## 
 ######## ######## ######## ########
 # Function: create a list of the primary matrices
@@ -771,9 +773,6 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 	mList = list()
 	mNames = list()
-
-	# where to save the matrix files
-#	mpath = path + "matrices/"
 
 	iEdges.sort()
 	kEdges.sort()
@@ -808,42 +807,6 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 #	print iNames
 
-#	iNames = dict()
-#	for et in iEdges :
-#		valList = list()
-#
-##		eValStr = eArray[eArray[:,3] == et][:,2]
-#		eValStr = eArray[eArray[:,3] == et, 2]
-#
-#		print "-----inside createMatrixList----------"
-##		print eArray
-##		print eArray[eArray[:,3] == et, :]
-##		print et, eValStr
-#
-#		# Convert the strings to float
-#		eVals = list()
-#		eVals = [float(x) for x in eValStr]
-##		print eVals
-#
-#		mean = np.mean(eVals)
-#		std = np.std(eVals)
-#
-#		tSml = [max(0, mean-(2*std)), mean-(std*stdGap)]
-#		tMed = [tSml[1]+1, mean + (std*stdGap)]
-#		tLrg = [tMed[1]+1, mean+(2*std)]
-#
-##		iNames.append(e+"_sm", tSml)
-##		iNames.append(e+"_md", tMed)
-##		iNames.append(e+"_lg", tLrg)
-#
-#		iNames[et+"_sm"] = tSml
-#		iNames[et+"_md"] = tMed
-#		iNames[et+"_lg"] = tLrg
-#	#end loop
-#
-#	print iNames
-
-
 	# Initialize empty file
 	# This file stores what types were kept & how many edges
 #	fn = path + oname + 'types.txt'
@@ -854,12 +817,8 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 	# Start creating matrices
 	for et in kEdges :
 
-#		print et, kEdges, iEdges
-
 		# Remove indirect edges if needed
 		if et in iEdges :
-
-#			print et, iEdges
 
 			# Create lists corresponding to the new edge types
 			term_sm = list()
@@ -873,9 +832,6 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			checkSet = set()
 			termDict = dict()
 			for row in thisArray :
-
-#				print row
-#				print termDict
 
 				# Only add if the node is not a gene
 				if row[0] not in gSet :
@@ -919,16 +875,16 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				elif (tLrg[0] <= termDict[term] <= tLrg[1]) : 
 					term_lg.append(term)
 				#end if
-
-
 			#end loop
-
-#			print term_sm, term_md, term_lg
 
 
 			# Create the first (small) matrix
 #			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][1]))
-			thisM = np.zeros([numG,numG], dtype=dt)
+			if speedVsMemory :
+				thisM = np.zeros([numG, numG])
+			else :
+				thisM = np.zeros([numG,numG], dtype=dt)
+			#end if
 			count = 0
 			for term in term_sm :
 				# list of all edges with this term
@@ -971,7 +927,11 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 			# Create the second (medium) matrix
 #			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][2]))
-			thisM = np.zeros([numG,numG], dtype=dt)
+			if speedVsMemory :
+				thisM = np.zeros([numG, numG])
+			else :
+				thisM = np.zeros([numG,numG], dtype=dt)
+			#end if
 			count = 0
 			for term in term_md :
 				# list of all edges with this term
@@ -1014,7 +974,11 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			
 			# Create the third (large) matrix
 #			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][3]))
-			thisM = np.zeros([numG,numG], dtype=dt)
+			if speedVsMemory :
+				thisM = np.zeros([numG, numG])
+			else :
+				thisM = np.zeros([numG,numG], dtype=dt)
+			#end if
 			count = 0
 			for term in term_lg :
 				# list of all edges with this term
@@ -1060,7 +1024,11 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 		# If already direct, create the matrix
 		else :
-			thisM = np.zeros([numG,numG], dtype=dt)
+			if speedVsMemory :
+				thisM = np.zeros([numG, numG])
+			else :
+				thisM = np.zeros([numG,numG], dtype=dt)
+			#end if
 			count = 0
 
 	#		print "Creating matrix from edge type: {}".format(et)
@@ -1072,16 +1040,6 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				count += 1
 			#end loop
 
-			# save to a file
-#			fn = mpath + oname + "." + et
-#			print "    saving to {}".format(fn)
-#			np.save(fn, thisM)
-#
-			#ERROR CHECK: save to a text file
-#			fn = mpath + oname + "." + et + '.txt'
-#			print "    saving to {}".format(fn)
-#			np.savetxt(fn, thisM, delimiter='\t')
-#
 			# This file stores what types were kept & how many edges
 #			fn = mpath + oname + '.types.txt'
 #			fet = open(fn, 'ab')
@@ -1097,16 +1055,12 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				
 			mList.append(thisM)
 			mNames.append(et)
-			
 		#end if
-
-
 	#end loop
 
-
 	return mList, mNames
-
 #end def ######## ######## ######## 
+
 
 
 ######## ######## ######## ########
@@ -1119,9 +1073,6 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 # Returns:
 #	nothing
 def saveMatrixText(matrix, mname, mpath, integer) :
-
-#	# Where to save the matrices
-#	mpath = path + oname + "/"
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1166,8 +1117,9 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 	fout.close()
 
 	return
-
 #end def ######## ######## ########
+
+
 
 ######## ######## ######## ########
 # Function: save the given matrix as a .npy file
@@ -1188,6 +1140,8 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	# Write to the file
 #	np.save(mpath+mname, matrix)
 	np.savetxt(mpath+mname+".gz", matrix, fmt='%u')
+#NOTE: In this case, the text file from savetxt() is much
+#	smaller than the binary file from save()
 
 	#ERROR CHECK: also save a text version of the matrix
 	if saveText :
@@ -1195,8 +1149,9 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	#end if
 
 	return
-
 #end def ######## ######## ######## 
+
+
 
 ######## ######## ######## ########
 # Function: delete the files within a directory
@@ -1219,8 +1174,9 @@ def clearFilesInDirectory(path) :
 #	os.rmdir(path)
 
 	return
-
 #end def ######## ######## ######## 
+
+
 
 ######## ######## ######## ########
 # Function: save a list of matrices
@@ -1287,8 +1243,9 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 	#end loop
 
 	return
-
 #end def ######## ######## ######## 
+
+
 
 ######## ######## ######## ########
 # Function: save a list of matrices
@@ -1364,36 +1321,13 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 			mpath, True)
 	#end loop
 
-#	num = 0
-#	firstline = True
-#	for i in range(0, len(mNames)) :
-#
-#		# Write to the legend file
-#		if firstline :
-#			firstline = False
-#		else :
-#			fkey.write("\n")
-#		#end if
-#		fkey.write("{:05d}\t{}".format(num, mNames[i]))
-#
-#		# Save each matrix as the corresponding number
-#		saveMatrixNumpy(mList[i], str(num).zfill(zpad),
-#			mpath)
-#
-#		# VERIFICATION: save as a text-readable file
-#		saveMatrixText(mList[i], "t"+str(num).zfill(zpad),
-#			mpath, True)
-#
-#		num += 1
-#	#end loop
-
 	return
-
 #end def ######## ######## ######## 
 
 
+
 ######## ######## ######## ########
-# Function: save a list of matrices
+# Function: save the key file for the metapath matrices
 # Input:
 #	mDict, dict
 #		key, str: metapath names
@@ -1552,21 +1486,20 @@ def createMPLengthTwo(pList, pNames, path) :
 			# The name of the reversed path
 			nameRev = pNames[j] + "-" + pNames[i]
 
-			# Create new matrix if not already done
+			# Create new matrix if file doesn't already exist
 			if not os.path.isfile(path +
 				str(mNum).zfill(zpad) + ".gz") :
 				newM = np.dot(pList[i], pList[j])
 				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 			#end if
 
-			# If name == nameRev (ie: typeA-typeA)
+			# Add the matrix name & number to mDict
 			if i == j :
+				# If name == nameRev (ie: typeA-typeA)
 				# Then add this matrix to the list
-#				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 			else :
 				# Add this path & note the reverse path
-#				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 				mDict[name] = [mNum, False]
 				#	Reverse path uses transpose
 				mDict[nameRev] = [mNum, True]
@@ -1606,11 +1539,22 @@ def createMPLengthThree(pList, pNames, path) :
 				#	if it has been, skip it
 				if name not in checkSet :
 					checkSet.add(name)
-					# Calculate the matrix
-					temp = np.dot(pList[i], pList[j])
-					newM = np.dot(temp, pList[k])
-					# Save the data
-					saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
+					# Create new matrix if file doesn't already exist
+					if not os.path.isfile(path + str(mNum).zfill(zpad) + ".gz") :
+						# Calculate the matrix
+						temp = np.dot(pList[i], pList[j])
+						newM = np.dot(temp, pList[k])
+						# Save the data
+						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+					#end if
+
+#					# Calculate the matrix
+#					temp = np.dot(pList[i], pList[j])
+#					newM = np.dot(temp, pList[k])
+#					# Save the data
+#					saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
 					mDict[name] = [mNum, False]
 
 					# Check the reverse path (the transpose)
@@ -1663,12 +1607,24 @@ def createMPLengthFour(pList, pNames, path) :
 					#	if it has been, skip it
 					if name not in checkSet :
 						checkSet.add(name)
-						# Calculate the matrix
-						temp1 = np.dot(pList[h], pList[i])
-						temp2 = np.dot(temp1, pList[j])
-						newM = np.dot(temp2, pList[k])
-						# Save the data
-						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
+						# Create new matrix if file doesn't already exist
+						if not os.path.isfile(path + str(mNum).zfill(zpad) + ".gz") :
+							# Calculate the matrix
+							temp1 = np.dot(pList[h], pList[i])
+							temp2 = np.dot(temp1, pList[j])
+							newM = np.dot(temp2, pList[k])
+							# Save the data
+							saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+						#end if
+
+#						# Calculate the matrix
+#						temp1 = np.dot(pList[h], pList[i])
+#						temp2 = np.dot(temp1, pList[j])
+#						newM = np.dot(temp2, pList[k])
+#						# Save the data
+#						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+
 						mDict[name] = [mNum, False]
 
 						# Check the reverse path (the transpose)
@@ -1823,8 +1779,12 @@ def readPrimaryMatrices(nName, nPath) :
 		lv = line.split('\t')
 
 		pNames.append(lv[1])
-		pList.append( np.loadtxt(path+lv[0]+".gz",
-			dtype=matrixDT) )
+
+		if speedVsMemory :
+			pList.append( np.loadtxt(path+lv[0]+".gz") )
+		else :
+			pList.append( np.loadtxt(path+lv[0]+".gz", dtype=matrixDT) )
+		#end if
 	#end loop
 
 	return pNames, pList
