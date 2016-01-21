@@ -31,16 +31,22 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk00_g2e3t10'
-epath = 'networks/'
+#ename = 'fakeNtwk00_g2e3t10'
+#epath = 'networks/'
+ename = 'toy2_hsa_g1e4t0'
+epath = '../networks/'
 
 # The sample to test and path
-sname = 'Fake00_sample02'
-spath = 'samplesFake/'
+#sname = 'Fake00_sample02'
+#spath = 'samplesFake/'
+sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
+spath = '../samples/'
 
 # Where to store the output
-oname = 'find01-' + ename + "-" + sname
-opath = 'outputFake/'
+#oname = 'find01-' + ename + "-" + sname
+#opath = 'outputFake/'
+oname = 'mpf01-' + ename + '-' + sname
+opath = '../output/'
 
 # How many random samples to examine
 numRand = 100
@@ -110,6 +116,7 @@ sampIndex = ff.convertToIndices(inGenes, geneIndex)
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Calculate stats for each metapath
+print "Calculating statistics ..."
 sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
 	sampIndex, randSamps, pathDict, epath, ename)
 #print sCount[0], rMeans[0], rStDev[0], zScore[0]

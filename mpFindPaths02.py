@@ -36,19 +36,24 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk00_g2e3t10'
+#ename = 'fakeNtwk00_g2e3t10'
 #ename = 'fakeNtwk01_g3e4t1'
-epath = 'networks/'
+#epath = 'networks/'
+ename = 'toy2_hsa_g1e4t0'
+epath = '../networks/'
 
 # The path to the sample files
 spath = 'samplesFake/'
+spath = '../samples-subset/'
 
 # Where to store the output
-oname = 'find02-' + ename
-opath = 'outputFake/'
+#oname = 'find02-' + ename
+#opath = 'outputFake/'
+oname = 'mpf01-' + ename
+opath = '../output/'
 
 # How many random samples to examine
-numRand = 100
+numRand = 50
 
 ####### ####### ####### ####### 
 

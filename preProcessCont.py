@@ -20,13 +20,13 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'toy2_hsa'
-#epath = '../networks/'
-ename = 'fakeNtwk00_g2e3t10'
-epath = 'networks/'
+ename = 'toy2_hsa_g1e4t0'
+epath = '../networks/'
+#ename = 'fakeNtwk00_g2e3t10'
+#epath = 'networks/'
 
 # The metapath level to calculate
-calcStep = 2
+calcStep = 3
 
 ####### ####### ####### ####### 
 
