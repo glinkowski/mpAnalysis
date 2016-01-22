@@ -5,14 +5,13 @@
 
 # Project Folders & Files #
 ###########################
-output/*
-outputFake/*
+output*/*
 networks/modified/*
 networks/*_MetaPaths/*
 networks/*_Primaries/*
 
 
-# Personal Folders & Files #
+# Related Folders & Files #
 ############################
 cytoscape/*
 keep/*
