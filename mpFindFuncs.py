@@ -530,7 +530,7 @@ def getPathCountList(samples, matrix) :
 # Function: For a set of samples, find the mean and standard
 #	devation of path counts for a specific path
 # Input ----
-#	samples, int 2D array: indices of the nodes in the sample
+#	rSamples, int 2D array: indices of the nodes in the sample
 #		rows: individual samples
 #	matrix, int array: num paths between node pairs
 # Returns ----
@@ -545,6 +545,36 @@ def getPathMeans(rSamples, matrix) :
 	mean = np.mean(counts)
 	stdev = np.std(counts)
 	return mean, stdev
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: For a set of samples, find the mean and standard
+#	devation of path counts for a specific path
+# Input ----
+#	oCount, int: number of times this path exists in test sample
+#	rSamples, int 2D array: indices of the nodes in the sample
+#		rows: individual samples
+#	matrix, int array: num paths between node pairs
+# Returns ----
+#	mean, float list: mean count of paths for each sample
+#	stdev, float list: standard deviation of counts per samp
+def getPercentile(oCount, rSamples, matrix) :
+
+	# Get the path counts for each random sample
+	rCounts = getPathCountList(rSamples, matrix)
+
+	# Count how many times the original sample is more
+	#	dense than a random sample
+	numBeat = 0
+	for c in rCounts :
+		if oCount > c :
+			numBeat += 1
+	#end loop
+	percentile = numBeat / float(len(rSamples)) * 100
+
+	return percentile
 #end def ######## ######## ######## 
 
 
@@ -574,6 +604,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 	rMeans = list()		# mean count of e. p. in rand samples
 	rStDev = list()		# stand dev of e. p. in rand samples
 	zScore = list()		# z-Score of e. p. in rand samples
+	percents = list()	# percentile rank of samp for e. p.
 
 	# An iterable list of metapaths
 #	mpList = mpDict.keys()
@@ -587,6 +618,9 @@ def calculateStatistics(sample, rSamples, mpDict,
 		tCount = getPathCountOne(sample, matrix)
 		sCount.append(tCount)
 
+		tPercent = getPercentile(tCount, rSamples, matrix)
+		percents.append(tPercent)
+
 		tMeans, tStDev = getPathMeans(rSamples, matrix)
 		rMeans.append(tMeans)
 		rStDev.append(tStDev)
@@ -595,7 +629,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 		zScore.append(tScore)
 	#end loop
 
-	return sCount, rMeans, rStDev, zScore
+	return sCount, rMeans, rStDev, zScore, percents
 #end def ######## ######## ######## 
 
 
@@ -714,8 +748,8 @@ def createZScoreMatrix(nPath, nName, mpDict,
 #		which don't appear in the network
 # Returns ----
 #	fname, str: name of output file (without path)
-def writeOutputOneSample(path, name, nName, sName,
-	mpDict, counts, means, stdevs, scores, leftout) :
+def writeOutputOneSample(path, name, nName, sName, mpDict, 
+	counts, means, stdevs, scores, percents, leftout) :
 
 	delim = textDelim
 
@@ -737,11 +771,12 @@ def writeOutputOneSample(path, name, nName, sName,
 	# Write the body of the file
 	fn.write("sample{}random samples\n".format(delim))
 	fn.write("count{0}mean{0}std dev{0}".format(delim) +
-		"z-score{0}path name\n".format(delim))
+		"z-score{0}percentile{0}path name\n".format(delim))
 	i = 0
 	for mp in mpList :
-		fn.write("{1}{0}{2}{0}{3}{0}{4}{0}{5}\n".format(delim,
-			counts[i], means[i], stdevs[i], scores[i], mp) )
+		fn.write("{1}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}\n".format(
+			delim, counts[i], means[i], stdevs[i], scores[i],
+			percents[i], mp) )
 		i += 1
 	#end loop
 

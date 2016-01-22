@@ -117,7 +117,7 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Calculate stats for each metapath
 print "Calculating statistics ..."
-sCount, rMeans, rStDev, zScore = ff.calculateStatistics(
+sCount, rMeans, rStDev, zScore, percList = ff.calculateStatistics(
 	sampIndex, randSamps, pathDict, epath, ename)
 #print sCount[0], rMeans[0], rStDev[0], zScore[0]
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
@@ -129,7 +129,7 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 # Write to the output file
 print "Saving data to ..."
 outFile = ff.writeOutputOneSample(opath, oname, ename, sname,
-	pathDict, sCount, rMeans, rStDev, zScore, outGenes)
+	pathDict, sCount, rMeans, rStDev, zScore, percList, outGenes)
 print "    ... {}".format(outFile)
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
