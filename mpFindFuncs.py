@@ -771,12 +771,13 @@ def writeOutputOneSample(path, name, nName, sName, mpDict,
 	# Write the body of the file
 	fn.write("sample{}random samples\n".format(delim))
 	fn.write("count{0}mean{0}std dev{0}".format(delim) +
-		"z-score{0}percentile{0}path name\n".format(delim))
+		"z-score{0}percentile{0}path name{0}length\n".format(delim))
 	i = 0
 	for mp in mpList :
-		fn.write("{1}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}\n".format(
-			delim, counts[i], means[i], stdevs[i], scores[i],
-			percents[i], mp) )
+		length = mp.count('-') + 1
+		fn.write("{1:d}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}{0}{7}\n".format(
+			delim, int(counts[i]), means[i], stdevs[i],
+			scores[i], percents[i], mp, length) )
 		i += 1
 	#end loop
 
