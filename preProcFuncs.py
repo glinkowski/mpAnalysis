@@ -64,6 +64,8 @@ saveText = False
 # Considering consecutive edges of same type
 keepDouble = True
 keepTriple = True
+# File extension to use when saving the matrix
+matrixExt = '.txt'	# '.txt' or '.gz' (gz is compressed)
 
 ####### ####### ####### ####### 
 
@@ -1141,7 +1143,7 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 
 	# Write to the file
 #	np.save(mpath+mname, matrix)
-	np.savetxt(mpath+mname+".gz", matrix, fmt='%u')
+	np.savetxt(mpath + mname + matrixExt, matrix, fmt='%u')
 #NOTE: In this case, the text file from savetxt() is much
 #	smaller than the binary file from save()
 
@@ -1496,8 +1498,7 @@ def createMPLengthTwo(pList, pNames, path) :
 			nameRev = pNames[j] + "-" + pNames[i]
 
 			# Create new matrix if file doesn't already exist
-			if not os.path.isfile(path +
-				str(mNum).zfill(zpad) + ".gz") :
+			if not os.path.isfile(path + str(mNum).zfill(zpad) + matrixExt) :
 				newM = np.dot(pList[i], pList[j])
 				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
 			#end if
@@ -1560,7 +1561,7 @@ def createMPLengthThree(pList, pNames, path) :
 					checkSet.add(name)
 
 					# Create new matrix if file doesn't already exist
-					if not os.path.isfile(path + str(mNum).zfill(zpad) + ".gz") :
+					if not os.path.isfile(path + str(mNum).zfill(zpad) + matrixExt) :
 						# Calculate the matrix
 						temp = np.dot(pList[i], pList[j])
 						newM = np.dot(temp, pList[k])
@@ -1636,7 +1637,7 @@ def createMPLengthFour(pList, pNames, path) :
 						checkSet.add(name)
 
 						# Create new matrix if file doesn't already exist
-						if not os.path.isfile(path + str(mNum).zfill(zpad) + ".gz") :
+						if not os.path.isfile(path + str(mNum).zfill(zpad) + matrixExt) :
 							# Calculate the matrix
 							temp1 = np.dot(pList[h], pList[i])
 							temp2 = np.dot(temp1, pList[j])
@@ -1800,10 +1801,11 @@ def readPrimaryMatrices(nName, nPath) :
 
 		pNames.append(lv[1])
 
+#TODO: check for existence of either '.txt' or '.gz'
 		if speedVsMemory :
-			pList.append( np.loadtxt(path+lv[0]+".gz") )
+			pList.append( np.loadtxt(path + lv[0] + matrixExt) )
 		else :
-			pList.append( np.loadtxt(path+lv[0]+".gz", dtype=matrixDT) )
+			pList.append( np.loadtxt(path + lv[0] + matrixExt, dtype=matrixDT) )
 		#end if
 	#end loop
 
