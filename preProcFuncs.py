@@ -1785,7 +1785,7 @@ def readPrimaryMatrices(nName, nPath) :
 	# Check for folder existence
 	path = nPath + nName + "_Primaries/"
 	if not os.path.exists(path) :
-		print "ERROR: path doesn't exist: {}".format(path)
+		print "ERROR: Path doesn't exist: {}".format(path)
 		sys.exit()
 	#end if
 
@@ -1801,11 +1801,26 @@ def readPrimaryMatrices(nName, nPath) :
 
 		pNames.append(lv[1])
 
-#TODO: check for existence of either '.txt' or '.gz'
 		if speedVsMemory :
-			pList.append( np.loadtxt(path + lv[0] + matrixExt) )
+			if os.path.isfile( path + lv[0] + '.gz' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.gz') )
+			elif os.path.isfile( path + lv[0] + '.txt' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.txt') )
+			else :
+				print ("ERROR: Unknown file name and extension" +
+					" for matrix {}.".format(lv[0]))
+				sys.exit()
+			#end if
 		else :
-			pList.append( np.loadtxt(path + lv[0] + matrixExt, dtype=matrixDT) )
+			if os.path.isfile( path + lv[0] + '.gz' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.gz', dtype=matrixDT) )
+			elif os.path.isfile( path + lv[0] + '.txt' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.txt', dtype=matrixDT) )
+			else :
+				print ("ERROR: Unknown file name and extension" +
+					" for matrix {}.".format(lv[0]))
+				sys.exit()
+			#end if
 		#end if
 	#end loop
 

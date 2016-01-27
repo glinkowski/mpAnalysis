@@ -403,8 +403,8 @@ def convertToIndices(names, iDict) :
 
 
 ######## ######## ######## ######## 
-# Function: Find the number of paths of this type joining
-#	the nodes in the sample
+# Function: Load the matrix containing the number of paths
+#	of this type which join the nodes in the network
 # Input ----
 #	mpTuple [int, bool]: indicates which matrix file to use
 #	path, str: path to the network files
@@ -416,11 +416,17 @@ def getPathMatrix(mpTuple, path, name) :
 	zpad = keyZPad
 #	fname = (path + name + "_MetaPaths/" +
 #		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
-	fname = (path + name + "_MetaPaths/" +
-		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
 
-	# ERROR CHECK: verify file exists
-	if not os.path.isfile(fname) :
+	prename = (path + name + "_MetaPaths/" +
+		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
 		print ( "ERROR: Specified file doesn't exist:" +
 			" {}".format(fname) )
 		sys.exit()
