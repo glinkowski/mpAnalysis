@@ -16,6 +16,7 @@ networks/*_Primaries/*
 cytoscape/*
 keep/*
 old_code/*
+sampleMatrix/*
 
 
 # Compiled source #
