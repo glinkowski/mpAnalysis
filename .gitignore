@@ -9,6 +9,7 @@ output*/*
 networks/modified/*
 networks/*_MetaPaths/*
 networks/*_Primaries/*
+samplesMSIG/*
 
 
 # Related Folders & Files #
