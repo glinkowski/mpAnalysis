@@ -151,26 +151,18 @@ def getSampleList(path) :
 			continue
 		#end if
 
-		# only look at .txt files
-		extension = item[-4:len(item)]
-#		print extension
-		if extension == ".txt" :
-#			print item
-			newItem = item.rstrip(".txt")
-			newItem = newItem.rstrip("_UP")
-			newItem = newItem.rstrip("_DN")
-#			print newItem
-
-			if newItem not in sNames :
-				sNames.append(newItem)
+		# Only look at .txt files
+		if item.endswith('.txt') :
+			# Strip the extension and any "_UP" or "_DN"
+			newItem = item[:-4]
+			if newItem.endswith('_UP') or newItem.endswith('_DN') :
+				newItem = newItem[:-3]
+			#end if
+			sNames.append(newItem)
 		#end if
 	#end loop
 
-#TODO: Which is faster: "if newItem not in sNames" or
-#	np.unique(sNames); NOTE: len(sNames) ~ 100
-
-#	sNames = np.unique(sNames)
-	sNames.sort()
+	sNames = np.unique(sNames)	# also sorts list
 	return sNames
 #end def ######## ######## ######## 
 
