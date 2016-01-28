@@ -16,6 +16,7 @@
 
 import mpFindFuncs as ff
 #import preProcFuncs as pp
+import mpLibrary as mp
 import time
 
 
@@ -32,9 +33,9 @@ numTopK = 100
 useNtwk = 0
 
 if useNtwk == 0 :
-	ename = 'fakeNtwk00'
+	ename = 'fakeNtwk00_g2e3t10'
 	epath = 'networks/'
-	sname = 'sample01'
+	sname = 'sample02'
 	spath = 'samplesFake/'
 else :
 	ename = 'toy2_hsa'
@@ -45,7 +46,7 @@ else :
 
 # The path & file name to save output (& temp)
 #oname = ''
-opath = 'pred01-' + sname[0:7]
+opath = 'outputFake/pred01-' + sname[0:8] + '/'
 
 ####### ####### ####### ####### 
 
@@ -65,10 +66,11 @@ fullSample = ff.readSampleFiles(spath + sname, True, True)
 # Remove any genes not in the network
 inGenes, outGenes = ff.checkGenesInNetwork(epath,
 	ename, fullSample)
-print ("Of the {} sample genes,".format(len(sampGenes)) +
+print ("Of the {} sample genes,".format(len(fullSample)) +
 	" {} are in the network.".format(len(inGenes)) )
 
-# select genes to test (function: opath, inGenes, outGenes, percHide)
-# save to files: known, concealed, ignored
-
-
+# Partition into known & concealed sets
+gKnown, gHidden = mp.partitionSample(epath, ename,
+	opath, fullSample, percHide)
+print gKnown
+print gHidden
