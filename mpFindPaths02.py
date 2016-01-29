@@ -1,5 +1,6 @@
 # ---------------------------------------------------------
 # author: Greg Linkowski
+# node binning by Shengliang Dai
 # project: Metapath Analysis
 #       for the KnowEnG big data center at UIUC
 #       funded by the NIH
