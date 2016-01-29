@@ -1,9 +1,31 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Dec 30 09:59:11 2015
 
-@author: shengliangdai
 """
+# ---------------------------------------------------------
+# author: Shengliang Dai
+# project: Metapath Analysis
+#       for the KnowEnG big data center at UIUC
+#       funded by the NIH
+# 
+# Creat degree matrices for original networks
+#
+#  Load a network and compare the genes in samples with the genes in original network. 
+#   Count the degree for each gene.
+#   Build a matrix to store the degree and the degree for each type of gene.
+#   
+#   
+# Outline:
+#   1) Read in a network, for example, toy2_hsa.
+#   2) Classify genes from the network
+#   3) Count how many genes in the given sample are high, median or low degree genes.
+#   4) Straitified sampling genes with the same distribution as 3) from original network.
+#   5) Map gene names into indices to save space.
+#   6) Output the results to a file
+# ---------------------------------------------------------
+
+"""
+
+
 import sys
 import pandas as pd
 
