@@ -65,7 +65,7 @@ saveText = False
 keepDouble = True
 keepTriple = True
 # File extension to use when saving the matrix
-matrixExt = '.txt'	# '.txt' or '.gz' (gz is compressed)
+matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
 
 ####### ####### ####### ####### 
 
