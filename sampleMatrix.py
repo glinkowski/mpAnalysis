@@ -31,6 +31,9 @@ import numpy as np
 import random
 
 
+
+
+# The sample to test and path
 def sampleMatrix(sname):
 
     spath = '../samples/'
@@ -81,7 +84,6 @@ def sampleMatrix(sname):
     randomSample = randomSample.reset_index(drop=True)
     SampleMatrix = randomSample
 
-    # do another 99 simulation and make a matrix 
     for i in range(99):
         i += 1
 
@@ -104,6 +106,7 @@ def sampleMatrix(sname):
         SampleMatrix = pd.concat((SampleMatrix,randomSample), axis = 1)
 
     #print SampleMatrix
+    SampleMatrix = SampleMatrix.T
     SampleMatrix.to_csv(opath + sname + '_sampleMatrix.txt', sep = '\t', index = False, header = False)
     
     
@@ -113,3 +116,5 @@ sampleList = ff.getSampleList('../samples/')
 
 for samples in sampleList:
     sampleMatrix(samples)
+
+
