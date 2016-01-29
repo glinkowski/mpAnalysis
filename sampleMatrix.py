@@ -107,14 +107,14 @@ def sampleMatrix(sname):
 
     #print SampleMatrix
     SampleMatrix = SampleMatrix.T
-    SampleMatrix.to_csv(opath + sname + '_sampleMatrix.txt', sep = '\t', index = False, header = False)
+    #SampleMatrix.to_csv(opath + sname + '_sampleMatrix.txt', sep = '\t', index = False, header = False)
+    return SampleMatrix.values
     
-    
-sampleNames = ff.getSampleList('../samples/')
+#sampleNames = ff.getSampleList('../samples/')
 # read a dictory, select out file names
-sampleList = ff.getSampleList('../samples/')
+#sampleList = ff.getSampleList('../samples/')
 
-for samples in sampleList:
-    sampleMatrix(samples)
+#for samples in sampleList:
+    #sampleMatrix(samples)
 
 
