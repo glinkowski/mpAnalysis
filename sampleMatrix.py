@@ -32,8 +32,6 @@ import random
 
 
 
-
-# The sample to test and path
 def sampleMatrix(sname):
 
     spath = '../samples/'
