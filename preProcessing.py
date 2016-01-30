@@ -21,6 +21,7 @@
 # ---------------------------------------------------------
 
 import preProcFuncs as pp
+import sampleMatrix as sm
 import time
 
 
@@ -100,6 +101,12 @@ outname = pp.createModEdgeFileName(ename, keepEdges,
 print "Saving modified network to {}.edge.txt".format(outname)
 pp.writeModEdgeFilePlus(epath, outname,
 	nodeDict, geneList, edgeArray)
+
+#TODO:
+######## ######## ######## ######## 
+# Save the node-binning stats for the network
+#sm.writeNodeBinFiles(epath, outname, geneList, edgeArray)
+######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
