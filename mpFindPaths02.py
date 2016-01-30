@@ -20,6 +20,7 @@
 # ---------------------------------------------------------
 
 import mpFindFuncs as ff
+import sampleMatrix as sm
 import time
 
 ## REMOVE: The following is for verification.
@@ -34,7 +35,7 @@ import time
 # The network to use and directory path
 #ename = 'fakeNtwk00_g2e3t10'
 #epath = 'networks/'
-ename = 'toy2_hsa_g1e4t0'
+ename = 'toy2_hsa.edge'
 epath = '../networks/'
 
 # The sample to test and path
@@ -44,13 +45,13 @@ sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
 spath = '../samples/'
 
 # Where to store the output
-#oname = 'find01-' + ename + "-" + sname
+#oname = 'find02-' + ename + "-" + sname
 #opath = 'outputFake/'
-oname = 'mpf01-' + ename + '-' + sname
+oname = 'mpf02-' + ename + '-' + sname
 opath = '../output/'
 
 # How many random samples to examine
-numRand = 100
+numRand = 100   
 
 ####### ####### ####### ####### 
 
@@ -85,8 +86,7 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 # 3) Create an array of random samples
 
 # Check which genes are actually in the network
-inGenes, outGenes = ff.checkGenesInNetwork(epath,
-	ename, sampGenes)
+inGenes, outGenes = ff.checkGenesInNetwork(epath, ename, sampGenes)
 print ("Of the {} sample genes,".format(len(sampGenes)) +
 	" {} are in the network.".format(len(inGenes)) )
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
@@ -103,8 +103,7 @@ print ("Choosing {} random samples of".format(numRand) +
 ######## ######## ######## ######## 
 #TODO: Replace the following line.
 #	Instead, use node binning to select the random samples.
-randSamps = ff.createRandomSamplesArray(numRand,
-	len(inGenes), len(geneIndex))
+randSamps = sm.sampleMatrix(sname)
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
