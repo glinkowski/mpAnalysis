@@ -637,15 +637,17 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 # Returns:
 def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 
+	newPath = path + oname + '/'
+
 	# If folder doesn't exist, create it
-	if not os.path.exists(path) :
-		os.makedirs(path)
+	if not os.path.exists(newPath) :
+		os.makedirs(newPath)
 	#end if
 
 	gfile = oname + ".genes.txt"
 	nfile = oname + ".indices.txt"
-	gf = open(path + gfile, "wb")
-	nf = open(path + nfile, "wb")
+	gf = open(newPath + gfile, "wb")
+	nf = open(newPath + nfile, "wb")
 	first = True
 	for gene in gList :
 
@@ -678,7 +680,7 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 	nf.close()
 
 	ofile = oname + ".edge.txt"
-	of = open(path + ofile, "wb")
+	of = open(newPath + ofile, "wb")
 
 	first = True
 	for i in range(0, eArray.shape[0]) :

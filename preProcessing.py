@@ -29,13 +29,13 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'toy2_hsa'
-epath = '../networks/'
-#ename = 'fakeNtwk00'
-#epath = 'networks/'
+#ename = 'toy2_hsa'
+#epath = '../networks/'
+ename = 'fakeNtwk00'
+epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 2
+mpDepth = 4
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -49,6 +49,7 @@ cfile = ename + '.correct.txt'
 # BEGIN MAIN FUNCTION
 
 tstart = time.time()
+
 
 
 # 1a) Read in the network from file(s)
@@ -69,6 +70,7 @@ print "Applying corrections to spelling ..."
 pp.applyCorrections(edgeArray, epath+cfile)
 
 
+
 # 1b) Apply normalization, thresholding, discard unwanteds
 
 # Normalize weights
@@ -85,6 +87,7 @@ edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
+
 # 2) Save the modified network
 
 # Create an updated nodeDict from modified edge list
@@ -95,10 +98,11 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
 outname = pp.createModEdgeFileName(ename, keepEdges,
 	keepGenes, thresh)
 print "Saving modified network to {}.edge.txt".format(outname)
-pp.writeModEdgeFilePlus(epath+"modified/", outname,
+pp.writeModEdgeFilePlus(epath, outname,
 	nodeDict, geneList, edgeArray)
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 # 3) Find the primary path matrices
@@ -116,6 +120,7 @@ pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
+
 # 4) Calculate the specified metapaths
 
 print "Determining metapaths, up to length {}".format(mpDepth)
@@ -126,6 +131,7 @@ print "    ... and saving to: {}".format(mpPath)
 pp.createMetaPaths(matrixList, matrixNames, geneList, mpDepth, mpPath)
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 print "\nDone.\n"
