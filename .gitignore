@@ -6,9 +6,7 @@
 # Project Folders & Files #
 ###########################
 output*/*
-networks/modified/*
-networks/*_MetaPaths/*
-networks/*_Primaries/*
+networks/*/*
 samplesMSIG/*
 
 
