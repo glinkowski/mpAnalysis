@@ -21,7 +21,11 @@
 # ---------------------------------------------------------
 
 import preProcFuncs as pp
-import sampleMatrix as sm
+#TODO:
+######## ######## ######## ######## 
+# Import the library containing node binning functions
+#import sampleMatrix as sm
+######## ######## ######## ######## 
 import time
 
 
@@ -41,6 +45,14 @@ mpDepth = 4
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
 cfile = ename + '.correct.txt'
+
+# Threshold percentages for binning the genes
+binThresholds = [.4, .9]
+
+# REGEX mask for genes to keep
+geneHead = ['ENSG', 'G000']
+#TODO: collect this from the keep file?
+# will only want human genes
 
 ####### ####### ####### ####### 
 
@@ -106,7 +118,7 @@ pp.writeModEdgeFilePlus(epath, outname,
 ######## ######## ######## ######## 
 # Save the node-binning stats for the network
 #sm.writeNodeBinFiles(epath, outname, geneList,
-#	edgeArray, geneHead, threshHi, threshMd)
+#	edgeArray, geneHead, binThresholds )
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
