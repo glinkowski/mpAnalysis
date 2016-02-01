@@ -55,24 +55,24 @@ textDelim = '\t'
 # Creates: file containing ordered list of items
 def saveListToText(path, name, theList) :
 
-    # If folder doesn't exist, create it
-    if not os.path.exists(path) :
-        os.makedirs(path)
-    #end if
+	# If folder doesn't exist, create it
+	if not os.path.exists(path) :
+		os.makedirs(path)
+	#end if
 
-    theFile = open(path + name, 'wb')
-    firstline = True
-    for item in theList :
-        if firstline :
-            firstline = False
-        else :
-            theFile.write("\n")
-        #end if
-        theFile.write("{}".format(item))
-    #end if
-    theFile.close()
+	theFile = open(path + name, 'wb')
+	firstline = True
+	for item in theList :
+		if firstline :
+			firstline = False
+		else :
+			theFile.write("\n")
+		#end if
+		theFile.write("{}".format(item))
+	#end if
+	theFile.close()
 
-    return
+	return
 #end def ######## ######## ######## 
 
 
@@ -89,40 +89,40 @@ def saveListToText(path, name, theList) :
 #       given list are found in network & which aren't
 def checkGenesInNetwork(path, name, geneList) :
 
-    fname = path + name + '_MetaPaths/genes.txt'
+	fname = path + name + '_MetaPaths/genes.txt'
 
-    # ERROR CHECK: verify file exists
-    if not os.path.isfile(fname) :
-        print ( "ERROR: Specified file doesn't exist:" +
-            " {}".format(fname) )
-        sys.exit()
-    #end if
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
 
-    # Read in the genes from the file
-    geneSet = set()
-    fg = open(fname, 'rb')
-    for line in fg :
-        line = line.rstrip()
-        geneSet.add(line)
-    #end loop
-    fg.close()
+	# Read in the genes from the file
+	geneSet = set()
+	fg = open(fname, 'rb')
+	for line in fg :
+		line = line.rstrip()
+		geneSet.add(line)
+	#end loop
+	fg.close()
 
-    # The items to return
-    inList = list()
-    outList = list()
+	# The items to return
+	inList = list()
+	outList = list()
 
-    # Sift through the sample
-    for gene in geneList :
-        if gene in geneSet :
-            inList.append(gene)
-        else :
-            outList.append(gene)
-        #end if
-    #end loop
+	# Sift through the sample
+	for gene in geneList :
+		if gene in geneSet :
+			inList.append(gene)
+		else :
+			outList.append(gene)
+		#end if
+	#end loop
 
-    inList.sort()
-    outList.sort()
-    return inList, outList
+	inList.sort()
+	outList.sort()
+	return inList, outList
 #end def ######## ######## ######## 
 
 
@@ -146,38 +146,38 @@ def checkGenesInNetwork(path, name, geneList) :
 #   outPath/ignored.txt: list of genes not in network
 def partitionSample(nPath, nName, oPath, sample, percent) :
 
-    # Convert percent to fraction, if needed
-    if (percent > 0) and (percent < 1) :
-        # Assume percent is given as float (0, 1)
-        pHide = percent
-    elif (percent < 100) :
-        # Assume percent is given as int [1, 100)
-        pHide = percent / float(100)
-    else :
-        print ("ERROR: Invalid value given as the percent" +
-            " of sample to hide.")
-    #end if
+	# Convert percent to fraction, if needed
+	if (percent > 0) and (percent < 1) :
+		# Assume percent is given as float (0, 1)
+		pHide = percent
+	elif (percent < 100) :
+		# Assume percent is given as int [1, 100)
+		pHide = percent / float(100)
+	else :
+		print ("ERROR: Invalid value given as the percent" +
+			" of sample to hide.")
+	#end if
 
-    # Remove any genes not in the network
-    inGenes, outGenes = checkGenesInNetwork(nPath, nName, sample)
+	# Remove any genes not in the network
+	inGenes, outGenes = checkGenesInNetwork(nPath, nName, sample)
 
-    # Number of genes to keep vs hide
-    numHide = int(len(inGenes) * pHide)
-    numKeep = len(inGenes) - numHide
+	# Number of genes to keep vs hide
+	numHide = int(len(inGenes) * pHide)
+	numKeep = len(inGenes) - numHide
 
-    # Separate the known and hidden genes
-    random.shuffle(inGenes)
-    kGenes = inGenes[0:numKeep]
-    hGenes = inGenes[numKeep:len(inGenes)]
+	# Separate the known and hidden genes
+	random.shuffle(inGenes)
+	kGenes = inGenes[0:numKeep]
+	hGenes = inGenes[numKeep:len(inGenes)]
 
-    # Save the gene lists to files
-    kGenes.sort()
-    saveListToText(oPath, fnKnownGenes, kGenes)
-    hGenes.sort()
-    saveListToText(oPath, fnConcealedGenes, hGenes)
-    saveListToText(oPath, fnLeftOutGenes, outGenes)
+	# Save the gene lists to files
+	kGenes.sort()
+	saveListToText(oPath, fnKnownGenes, kGenes)
+	hGenes.sort()
+	saveListToText(oPath, fnConcealedGenes, hGenes)
+	saveListToText(oPath, fnLeftOutGenes, outGenes)
 
-    return kGenes, hGenes
+	return kGenes, hGenes
 #end def ######## ######## ######## 
 
 
@@ -195,45 +195,45 @@ def partitionSample(nPath, nName, oPath, sample, percent) :
 #           bool where True means use matrix transpose
 def readKeyFile(path, name) :
 
-    fname = path + name + "_MetaPaths/key.txt"
+	fname = path + name + "_MetaPaths/key.txt"
 
-    # ERROR CHECK: verify file exists
-    if not os.path.isfile(fname) :
-        print ( "ERROR: Specified file doesn't exist:" +
-            " {}".format(fname) )
-        sys.exit()
-    #end if
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
 
-    # The item to return
-    keyDict = dict()
+	# The item to return
+	keyDict = dict()
 
-    # Read in the file
-    fk = open(fname, "rb")
-    firstline = True
-    for line in fk :
+	# Read in the file
+	fk = open(fname, "rb")
+	firstline = True
+	for line in fk :
 
-        # skip the first line
-        if firstline :
-            firstline = False
-            continue
-        #end if
+		# skip the first line
+		if firstline :
+			firstline = False
+			continue
+		#end if
 
-        # separate the values
-        line = line.rstrip()
-        lk = line.split('\t')
-        lv = lk[0].split(',')
+		# separate the values
+		line = line.rstrip()
+		lk = line.split('\t')
+		lv = lk[0].split(',')
 
-        transpose = False
-        if lv[1] == "t" :
-            transpose = True
-        #end if
+		transpose = False
+		if lv[1] == "t" :
+			transpose = True
+		#end if
 
-        # add to the dict
-        keyDict[lk[1]] = [int(lv[0]), transpose]
-    #end loop
-    fk.close()
+		# add to the dict
+		keyDict[lk[1]] = [int(lv[0]), transpose]
+	#end loop
+	fk.close()
 
-    return keyDict
+	return keyDict
 #end def ######## ######## ######## 
 
 
@@ -251,24 +251,24 @@ def readKeyFile(path, name) :
 #       value, int: index to corresponding array
 def readFileAsIndexDict(fname) :
 
-    # ERROR CHECK: verify file exists
-    if not os.path.isfile(fname) :
-        print ( "ERROR: Specified file doesn't exist:" +
-            " {}".format(fname) )
-        sys.exit()
-    #end if
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
 
-    # Build the dictionary from the text file
-    iDict = dict()
-    gf = open(fname, "rb")
-    index = 0
-    for line in gf :
-        gene = line.rstrip()    # remove "\n"
-        iDict[gene] = int(index)
-        index += 1
-    #end loop
+	# Build the dictionary from the text file
+	iDict = dict()
+	gf = open(fname, "rb")
+	index = 0
+	for line in gf :
+		gene = line.rstrip()    # remove "\n"
+		iDict[gene] = int(index)
+		index += 1
+	#end loop
 
-    return iDict
+	return iDict
 #end def ######## ######## ######## 
 
 
@@ -286,12 +286,12 @@ def readFileAsIndexDict(fname) :
 #       value, int: row/col index for that gene
 def readGenesFile(path, name) :
 
-    fname = path + name + "_MetaPaths/genes.txt"
+	fname = path + name + "_MetaPaths/genes.txt"
 
-    # The item to return
-    gDict = readFileAsIndexDict(fname)
+	# The item to return
+	gDict = readFileAsIndexDict(fname)
 
-    return gDict
+	return gDict
 #end def ######## ######## ######## 
 
 
@@ -308,16 +308,16 @@ def readGenesFile(path, name) :
 #   rSamples, int array: 
 def createRandomSamplesArray(numRows, numCols, numItems) :
 
-    # The item to return
-    rSamples = np.empty([numRows, numCols], dtype=np.int32)
+	# The item to return
+	rSamples = np.empty([numRows, numCols], dtype=np.int32)
 
-    # Choose the random samples
-    for r in range(0, numRows) :
-        rSamples[r,:] = random.sample(xrange(numItems),
-            numCols)
-    #end loop
+	# Choose the random samples
+	for r in range(0, numRows) :
+		rSamples[r,:] = random.sample(xrange(numItems),
+			numCols)
+	#end loop
 
-    return rSamples
+	return rSamples
 #end def ######## ######## ######## 
 
 
@@ -330,25 +330,25 @@ def createRandomSamplesArray(numRows, numCols, numItems) :
 #   fItems, str list: ordered list of items from file
 def readFileAsList(fname) :
 
-    # ERROR CHECK: verify file exists
-    if not os.path.isfile(fname) :
-        print ( "ERROR: Specified file doesn't exist:" +
-            " {}".format(fname) )
-        sys.exit()
-    #end if
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
 
-    # The list of items to return
-    fItems = list()
+	# The list of items to return
+	fItems = list()
 
-    # Read in from the file
-    fn = open(fname, "rb")
-    for line in fn :
-        fItems.append( line.rstrip() )
-    #end loop
-    fn.close()
+	# Read in from the file
+	fn = open(fname, "rb")
+	for line in fn :
+		fItems.append( line.rstrip() )
+	#end loop
+	fn.close()
 
-    fItems.sort()
-    return fItems
+	fItems.sort()
+	return fItems
 #end def ######## ######## ######## 
 
 
@@ -366,39 +366,39 @@ def readFileAsList(fname) :
 #   sNodes, str list: ordered list of names from file(s)
 def readSampleFiles(sfile, up, down) :
 
-    # The list of items to return
-    sNodes = list()
+	# The list of items to return
+	sNodes = list()
 
-    # Flag indicates a file existed and was read
-    exists = False
+	# Flag indicates a file existed and was read
+	exists = False
 
-    # First look for the file as named (no _UP or _DN)
-    if os.path.isfile(sfile + ".txt") :
-        temp = readFileAsList(sfile + ".txt")
-        sNodes.extend(temp)
-        exists = True
-    #end if
+	# First look for the file as named (no _UP or _DN)
+	if os.path.isfile(sfile + ".txt") :
+		temp = readFileAsList(sfile + ".txt")
+		sNodes.extend(temp)
+		exists = True
+	#end if
 
-    # Look for the _DN file
-    if down and os.path.isfile(sfile + "_DN.txt") :
-        temp = readFileAsList(sfile + "_DN.txt")
-        sNodes.extend(temp)
-        exists = True
-    #end if
+	# Look for the _DN file
+	if down and os.path.isfile(sfile + "_DN.txt") :
+		temp = readFileAsList(sfile + "_DN.txt")
+		sNodes.extend(temp)
+		exists = True
+	#end if
 
-    if up and os.path.isfile(sfile + "_UP.txt") :
-        temp = readFileAsList(sfile + "_UP.txt")
-        sNodes.extend(temp)
-        exists = True
-    #end if
+	if up and os.path.isfile(sfile + "_UP.txt") :
+		temp = readFileAsList(sfile + "_UP.txt")
+		sNodes.extend(temp)
+		exists = True
+	#end if
 
-    # Alert user if nothing was read in
-    if not exists :
-        print "WARNING: no file found: {}".format(sfile)
+	# Alert user if nothing was read in
+	if not exists :
+		print "WARNING: no file found: {}".format(sfile)
 
-    # Do NOT return duplicates
-    uNodes = np.unique(sNodes) # sorted list of unique items
-    return uNodes
+	# Do NOT return duplicates
+	uNodes = np.unique(sNodes) # sorted list of unique items
+	return uNodes
 #end def ######## ######## ######## 
 
 
@@ -415,14 +415,14 @@ def readSampleFiles(sfile, up, down) :
 #   indices, int list: index values of the input items
 def convertToIndices(names, iDict) :
 
-    # The item to return
-    indices = list()
+	# The item to return
+	indices = list()
 
-    for name in names :
-        indices.append(iDict[name])
-    #end loop
+	for name in names :
+		indices.append(iDict[name])
+	#end loop
 
-    return indices
+	return indices
 #end def ######## ######## ######## 
 
 
@@ -438,34 +438,34 @@ def convertToIndices(names, iDict) :
 #   matrix, int array: num paths between node pairs
 def getPathMatrix(mpTuple, path, name) :
 
-    zpad = keyZPad
+	zpad = keyZPad
 #   fname = (path + name + "_MetaPaths/" +
 #       "{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
 
-    prename = (path + name + "_MetaPaths/" +
-        "{}".format(str(mpTuple[0]).zfill(zpad)) )
-    if os.path.isfile(prename + '.gz') :
-        fname = (path + name + "_MetaPaths/" +
-        "{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
-    elif os.path.isfile(prename + '.txt') :
-        fname = (path + name + "_MetaPaths/" +
-        "{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
-    else :
-        # ERROR CHECK: verify file exists
-        print ( "ERROR: Specified file doesn't exist:" +
-            " {}".format(fname) )
-        sys.exit()
-    #end if
+	prename = (path + name + "_MetaPaths/" +
+		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
 
-    # Load the matrix
+	# Load the matrix
 #   matrix = np.load(fname)
-    matrix = np.loadtxt(fname)
+	matrix = np.loadtxt(fname)
 
-    # Convert to transpose if flag==True
-    if mpTuple[1] :
-        return np.transpose(matrix)
-    else :
-        return matrix
+	# Convert to transpose if flag==True
+	if mpTuple[1] :
+		return np.transpose(matrix)
+	else :
+		return matrix
 #end def ######## ######## ######## 
 
 
@@ -483,19 +483,19 @@ def getPathMatrix(mpTuple, path, name) :
 #       less paths that are mirror-images of another
 def removeInvertedPaths(mpDict) :
 
-    # The item to return
-    mpList = list()
+	# The item to return
+	mpList = list()
 
-    # Check the keys in the dict
-    for key in mpDict.keys() :
-        # If the boolean is True, then the path is an
-        #   inverse of another; only append if false
-        if mpDict[key][1]==False :
-            mpList.append(key)
-    #end loop
+	# Check the keys in the dict
+	for key in mpDict.keys() :
+		# If the boolean is True, then the path is an
+		#   inverse of another; only append if false
+		if mpDict[key][1]==False :
+			mpList.append(key)
+	#end loop
 
-    mpList.sort()
-    return mpList
+	mpList.sort()
+	return mpList
 #end def ######## ######## ######## 
 
 
@@ -516,15 +516,15 @@ def getPathCountOne(sample, matrix) :
 #NOTE: If a particular path is chosen for prediction, then
 #   its inverse should be evaluated as well. (simulaneously)
 
-    # Count the paths in the sample
-    count = 0
-    for a in sample :
-        for b in sample :
-            if a != b :     # skip if a==b
-                count += matrix[a,b]
-    #end loop
+	# Count the paths in the sample
+	count = 0
+	for a in sample :
+		for b in sample :
+			if a != b :     # skip if a==b
+				count += matrix[a,b]
+	#end loop
 
-    return count
+	return count
 #end def ######## ######## ######## 
 
 
@@ -540,19 +540,19 @@ def getPathCountOne(sample, matrix) :
 #   counts, int list: num paths of this type in each sample
 def getPathCountList(samples, matrix) :
 
-    counts = list()
-    for i in range(0, samples.shape[0]) :
-        # Count the paths in the sample
-        count = 0
-        for a in samples[i,:] :
-            for b in samples[i,:] :
-                if a != b :     # skip if a==b
-                    count += matrix[a,b]
-        #end loop
-        counts.append(count)
-    #end loop
+	counts = list()
+	for i in range(0, samples.shape[0]) :
+		# Count the paths in the sample
+		count = 0
+		for a in samples[i,:] :
+			for b in samples[i,:] :
+				if a != b :     # skip if a==b
+					count += matrix[a,b]
+		#end loop
+		counts.append(count)
+	#end loop
 
-    return counts
+	return counts
 #end def ######## ######## ######## 
 
 
@@ -569,13 +569,13 @@ def getPathCountList(samples, matrix) :
 #   stdev, float list: standard deviation of counts per samp
 def getPathMeans(rSamples, matrix) :
 
-    # Get the path counts for each random sample
-    counts = getPathCountList(rSamples, matrix)
+	# Get the path counts for each random sample
+	counts = getPathCountList(rSamples, matrix)
 
-    # Return the mean  and standard deviation
-    mean = np.mean(counts)
-    stdev = np.std(counts)
-    return mean, stdev
+	# Return the mean  and standard deviation
+	mean = np.mean(counts)
+	stdev = np.std(counts)
+	return mean, stdev
 #end def ######## ######## ######## 
 
 
@@ -593,19 +593,19 @@ def getPathMeans(rSamples, matrix) :
 #   stdev, float list: standard deviation of counts per samp
 def getPercentile(oCount, rSamples, matrix) :
 
-    # Get the path counts for each random sample
-    rCounts = getPathCountList(rSamples, matrix)
+	# Get the path counts for each random sample
+	rCounts = getPathCountList(rSamples, matrix)
 
-    # Count how many times the original sample is more
-    #   dense than a random sample
-    numBeat = 0
-    for c in rCounts :
-        if oCount > c :
-            numBeat += 1
-    #end loop
-    percentile = numBeat / float(len(rSamples)) * 100
+	# Count how many times the original sample is more
+	#   dense than a random sample
+	numBeat = 0
+	for c in rCounts :
+		if oCount > c :
+			numBeat += 1
+	#end loop
+	percentile = numBeat / float(len(rSamples)) * 100
 
-    return percentile
+	return percentile
 #end def ######## ######## ######## 
 
 
@@ -633,38 +633,74 @@ def getPercentile(oCount, rSamples, matrix) :
 #   rStDev, float list: standard deviation of rand samples
 #   zScore, float list: z-Score for each path type
 def calculateStatistics(sample, rSamples, mpDict,
-    path, name) :
+	path, name) :
 
-    # The items to return
-    sCount = list()     # num of each path in given sample
-    rMeans = list()     # mean count of e. p. in rand samples
-    rStDev = list()     # stand dev of e. p. in rand samples
-    zScore = list()     # z-Score of e. p. in rand samples
-    percents = list()   # percentile rank of samp for e. p.
+	# The items to return
+	sCount = list()     # num of each path in given sample
+	rMeans = list()     # mean count of e. p. in rand samples
+	rStDev = list()     # stand dev of e. p. in rand samples
+	zScore = list()     # z-Score of e. p. in rand samples
+	percents = list()   # percentile rank of samp for e. p.
 
-    # An iterable list of metapaths
-    mpList = removeInvertedPaths(mpDict)
+	# An iterable list of metapaths
+	mpList = removeInvertedPaths(mpDict)
 
-    # Calculate the stats for each metapath
-    for mp in mpList :
+	# Calculate the stats for each metapath
+	for mp in mpList :
 
-        matrix = getPathMatrix(mpDict[mp], path, name)
+		matrix = getPathMatrix(mpDict[mp], path, name)
 
-        tCount = getPathCountOne(sample, matrix)
-        sCount.append(tCount)
+		tCount = getPathCountOne(sample, matrix)
+		sCount.append(tCount)
 
-        tPercent = getPercentile(tCount, rSamples, matrix)
-        percents.append(tPercent)
+		tPercent = getPercentile(tCount, rSamples, matrix)
+		percents.append(tPercent)
 
-        tMeans, tStDev = getPathMeans(rSamples, matrix)
-        rMeans.append(tMeans)
-        rStDev.append(tStDev)
+		tMeans, tStDev = getPathMeans(rSamples, matrix)
+		rMeans.append(tMeans)
+		rStDev.append(tStDev)
 
-        tScore = (tCount - tMeans) / (tStDev + 0.0001)
-        zScore.append(tScore)
-    #end loop
+		tScore = (tCount - tMeans) / (tStDev + 0.0001)
+		zScore.append(tScore)
+	#end loop
 
-    return sCount, rMeans, rStDev, zScore, percents
+	return sCount, rMeans, rStDev, zScore, percents
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: choose an unused name for the output file
+# Input ----
+#   path, str: path to where output should be saved
+#   dirPre, str: prefix of the folder name to return
+# Returns ----
+#   dirFull, str: name of output file (without path)
+def nameOutputPath(path, dirPre) :
+
+	# ERROR CHECK: verify directory exists
+	if not os.path.isdir(path) :
+		print ( "ERROR: Specified path doesn't exist:" +
+			" {}".format(path) )
+		sys.exit()
+	#end if
+
+	zpad = fnZPad
+
+	# Set of all sub-folders in the path
+	dirSet = [name for name in os.listdir(path)
+		if os.path.isdir(path + name)]
+
+	# increment folder name until an unused one is found
+	num = int(0)
+	dirFull = dirPre + "-{}".format(str(num).zfill(zpad))
+	while dirFull in dirSet :
+		num += 1
+		dirFull = dirPre + "-{}".format(str(num).zfill(zpad))
+	#end loop
+	dirFull = dirFull + '/'
+
+	return dirFull
 #end def ######## ######## ######## 
 
 
@@ -678,27 +714,27 @@ def calculateStatistics(sample, rSamples, mpDict,
 #   fname, str: name of output file (without path)
 def nameOutputFile(path, name) :
 
-    # ERROR CHECK: verify directory exists
-    if not os.path.isdir(path) :
-        print ( "ERROR: Specified path doesn't exist:" +
-            " {}".format(path) )
-        sys.exit()
-    #end if
+	# ERROR CHECK: verify directory exists
+	if not os.path.isdir(path) :
+		print ( "ERROR: Specified path doesn't exist:" +
+			" {}".format(path) )
+		sys.exit()
+	#end if
 
-    zpad = fnZPad
+	zpad = fnZPad
 
-    # Set of all files in the directory
-    fileSet = set(os.listdir(path))
+	# Set of all files in the directory
+	fileSet = set(os.listdir(path))
 
-    # increment file name until an unused one is found
-    num = int(0)
-    fname = name + "-{}.txt".format(str(num).zfill(zpad))
-    while fname in fileSet :
-        num += 1
-        fname = name + "-{}.txt".format(str(num).zfill(zpad))
-    #end loop
+	# increment file name until an unused one is found
+	num = int(0)
+	fname = name + "-{}.txt".format(str(num).zfill(zpad))
+	while fname in fileSet :
+		num += 1
+		fname = name + "-{}.txt".format(str(num).zfill(zpad))
+	#end loop
 
-    return fname
+	return fname
 #end def ######## ######## ######## 
 
 
@@ -725,44 +761,88 @@ def nameOutputFile(path, name) :
 # Returns ----
 #   fname, str: name of output file (without path)
 def writeOutputOneSample(path, name, nName, sName, mpDict, 
-    counts, means, stdevs, scores, percents, leftout) :
+	counts, means, stdevs, scores, percents, leftout) :
 
-    delim = textDelim
+	delim = textDelim
 
-    # Name the output file
-    fname = nameOutputFile(path, name)
+	# Name the output file
+	fname = nameOutputFile(path, name)
 
-    # Get the ordered list of metapaths
-    mpList = removeInvertedPaths(mpDict)
+	# Get the ordered list of metapaths
+	mpList = removeInvertedPaths(mpDict)
 
-    # Write the file header
-    fn = open(path+fname, "wb")
-    fn.write("The occurrence of metapaths with in a sample ...\n")
-    fn.write("network:{}{}\n".format(delim, nName))
-    fn.write("sample:{}{}\n".format(delim, sName))
-    fn.write("\n")
+	# Write the file header
+	fn = open(path+fname, "wb")
+	fn.write("The occurrence of metapaths with in a sample ...\n")
+	fn.write("network:{}{}\n".format(delim, nName))
+	fn.write("sample:{}{}\n".format(delim, sName))
+	fn.write("\n")
 
-    # Write the body of the file
-    fn.write("sample{}random samples\n".format(delim))
-    fn.write("count{0}mean{0}std dev{0}".format(delim) +
-        "z-score{0}percentile{0}path name{0}length\n".format(delim))
-    i = 0
-    for mp in mpList :
-        length = mp.count('-') + 1
-        fn.write("{1:d}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}{0}{7}\n".format(
-            delim, int(counts[i]), means[i], stdevs[i],
-            scores[i], percents[i], mp, length) )
-        i += 1
-    #end loop
+	# Write the body of the file
+	fn.write("sample{}random samples\n".format(delim))
+	fn.write("count{0}mean{0}std dev{0}".format(delim) +
+		"z-score{0}percentile{0}path name{0}length\n".format(delim))
+	i = 0
+	for mp in mpList :
+		length = mp.count('-') + 1
+		fn.write("{1:d}{0}{2}{0}{3}{0}{4}{0}{5}{0}{6}{0}{7}\n".format(
+			delim, int(counts[i]), means[i], stdevs[i],
+			scores[i], percents[i], mp, length) )
+		i += 1
+	#end loop
 
-    # Write the file footer
-    fn.write("\n")
-    fn.write("Sample genes not found in the network:" +
-        " {}".format(len(leftout)) )
-    for gene in leftout :
-        fn.write("\n{}".format(gene) )
-    #end loop
-    fn.close()
+	# Write the file footer
+	fn.write("\n")
+	fn.write("Sample genes not found in the network:" +
+		" {}".format(len(leftout)) )
+	for gene in leftout :
+		fn.write("\n{}".format(gene) )
+	#end loop
+	fn.close()
 
-    return fname
+	return fname
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Use a chosen statistic to select the top K
+#   metapaths for use in making predictions
+# Input ----
+#   k, int: number of paths to return
+#   ranker, float list: stat ordered by mp name
+#   mpDict, {str: [int, bool]} dict:
+#       key, str - name of the metapath
+#       value, [int, bool] - which matrix file to use, and 
+#           whether to use the transpose (inverse path)
+# Returns ----
+#   kPaths, str list: the recommended top K paths
+def chooseTopKPathsSimple(k, ranker, mpDict) :
+
+	# The ordered list of metapaths
+	mpList = removeInvertedPaths(mpDict)
+
+	rankMax = np.amax(ranker)
+
+	# Create an array of the paths & stats to rank
+	pathArray = np.zeros( len(ranker), dtype=[('pIndex', 'i4'),
+		('stat', 'f2'), ('pLength', 'u1'), ('stat_inverse', 'f2')] )
+
+	for i in range(len(ranker)) :
+		length = mpList[i].count('-') + 1
+		invertRank = rankMax - ranker[i]
+		pathArray[i] = (i, ranker[i], length, invertRank)
+	#end loop
+
+#TODO: sort by ranker DESCENDING and by length ASCENDING
+# Can I do this, or do I need to invert ranker?
+
+	# Sort array DESCENDING by rank and ASCENDING by length
+	pathArray = np.sort(pathArray, order=['stat_inverse', 'pLength'])
+
+	# Convert to lists to return
+	topPaths = [mpList[idx] for idx in pathArray['pIndex'][0:k]]
+	topRanks = [value for value in pathArray['stat'][0:k]]
+
+	return topPaths, topRanks
 #end def ######## ######## ######## 
