@@ -146,10 +146,20 @@ outFile = mp.writeOutputOneSample(oPath, 'pathlist', eName,
 # 6) Choose the top K paths to examine
 
 print "Determining the top {} metapaths ...".format(topKPaths)
-bestPaths = mp.chooseTopKPathsSimple(topKPaths, percList, pathDict)
-print [item for item in bestPaths]
+bestPaths, bestRanks = mp.chooseTopKPathsSimple(topKPaths, percList, pathDict)
+
+print "Examining the following paths:"
+for i in range(len(bestRanks)) :
+	print "    {:>3.1f}  {}".format(bestRanks[i], bestPaths[i])
+#end loop
 
 
+
+# 7) Rank genes by similarity along selected metapaths
+
+# Get the indices for all genes not in the test sample
+sampOutdex = [n for n in range(len(geneIndex)) if n not in sampIndex]
+#print sampIndex, sampOutdex
 
 
 
