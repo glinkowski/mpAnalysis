@@ -105,7 +105,8 @@ pp.writeModEdgeFilePlus(epath, outname,
 #TODO:
 ######## ######## ######## ######## 
 # Save the node-binning stats for the network
-#sm.writeNodeBinFiles(epath, outname, geneList, edgeArray)
+#sm.writeNodeBinFiles(epath, outname, geneList,
+#	edgeArray, geneHead, threshHi, threshMd)
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
