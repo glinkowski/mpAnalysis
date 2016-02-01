@@ -21,18 +21,7 @@
 #	
 #	
 #	
-#	
-#	
-#	
-#	
-#	
-#	
-#	
-#	
-#			
-#	
-#	
-#			
+
 # ---------------------------------------------------------
 
 """
@@ -188,13 +177,14 @@ def nodeBining(thresholdHigh, thresholdLow, infile):
         High = degreeMatrix[[0, columnNumber]].sort(columnNumber, ascending = False).head(high) 
         Low = degreeMatrix[[0, columnNumber]].sort(columnNumber, ascending = False).tail(low)
         Med = degreeMatrix[[0, columnNumber]].sort(columnNumber, ascending = False).reset_index().loc[high:(len(degreeMatrix)-low-1), :]
-        High[0].to_csv(path + 'High' + str(columnNumber) + outname, sep = '\t', index = False, header = False) 
-        Low[0].to_csv(path + 'Low' + str(columnNumber) + outname, sep = '\t', index = False, header = False)
-        Med[0].to_csv(path + 'Med' + str(columnNumber) + outname, sep = '\t', index = False, header = False)
+        #High[0].to_csv(path + 'High' + str(columnNumber) + outname, sep = '\t', index = False, header = False) 
+        #Low[0].to_csv(path + 'Low' + str(columnNumber) + outname, sep = '\t', index = False, header = False)
+        #Med[0].to_csv(path + 'Med' + str(columnNumber) + outname, sep = '\t', index = False, header = False)
     #High = degreeMatrix[[0, 1]].sort(1, ascending = False).head(high) 
     #Low = degreeMatrix[[0, 1]].sort(1, ascending = False).tail(low)
     #Med = degreeMatrix[[0, 1]].sort(1, ascending = False).reset_index().loc[high:(len(degreeMatrix)-low-1), :]
     #print High[0], Low[0], Med[0]
+    return High[0].values
 
 '''
 # Creat sample index matrices for specific samples
@@ -289,3 +279,5 @@ def sampleMatrix(sname):
     SampleMatrix = SampleMatrix.T
     #SampleMatrix.to_csv(opath + sname + '_sampleMatrix.txt', sep = '\t', index = False, header = False)
     return SampleMatrix.values
+    
+
