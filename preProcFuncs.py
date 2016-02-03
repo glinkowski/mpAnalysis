@@ -644,8 +644,8 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 		os.makedirs(newPath)
 	#end if
 
-	gfile = oname + ".genes.txt"
-	nfile = oname + ".indices.txt"
+	gfile = "genes.txt"
+	nfile = "indices.txt"
 	gf = open(newPath + gfile, "wb")
 	nf = open(newPath + nfile, "wb")
 	first = True
@@ -679,7 +679,7 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 	gf.close()
 	nf.close()
 
-	ofile = oname + ".edge.txt"
+	ofile = "edge.txt"
 	of = open(newPath + ofile, "wb")
 
 	first = True
