@@ -40,9 +40,10 @@ topKGenes = 100		# number of genes to predict
 
 useNtwk = 0		# network & samples to use (0 means fake)
 if useNtwk == 0 :
-	eName = 'fakeNtwk00_g2e3t10'
+#	eName = 'fakeNtwk00_g2e3t10'
+	eName = 'fakeNtwk01_g3e4t1'
 	ePath = 'networks/'
-	sName = 'sample02'
+	sName = 'sample01'
 	sPath = 'samplesFake/'
 else :
 	eName = 'toy2_hsa'
@@ -172,14 +173,18 @@ for i in range(len(bestRanks)) :
 #print colRank
 
 
-simArray = np.empty([len(sampIndex), len(bestPaths)])
+# Get the indices for all genes not in the test sample
+sampOutdex = [n for n in range(len(geneIndex)) if n not in sampIndex]
+
+simArray = np.empty([len(sampOutdex), len(bestPaths)])
+#print simArray.shape
 for p in range(len(bestPaths)) :
 	simArray[:,p] = mp.applyGroupPathSim(ePath, eName, pathDict[bestPaths[p]], sampIndex)
 #end loop
 #print simArray
 
-simSum = np.sum(simArray, axis=0)
-simAvg = np.mean(simArray, axis=0)
+simSum = np.sum(simArray, axis=1)
+simAvg = np.mean(simArray, axis=1)
 
 delim = '\t'
 fs = open(oPath + 'scores.txt', 'wb')
@@ -198,18 +203,22 @@ geneList = geneIndex.keys()
 geneList.sort()
 geneList = [geneList[g] for g in sampOutdex]
 del sampOutdex
-print geneList
+#print geneList
 
 #fs.write('{}'.format(delim))
 for bp in bestPaths :
 	fs.write('{}{}'.format(delim, bp))
 #end loop
 fs.write('{}sum{}avg\n'.format(delim, delim))
+
+#print simArray.shape, len(simSum), len(simAvg)
+
 for i in range( simArray.shape[0] ) :
 	fs.write('{}'.format(delim))
 	for j in range( simArray.shape[1] ) :
 		fs.write( '{}{}'.format(simArray[i,j], delim) )
 	#end loop
+#	print i
 	fs.write( '{}{}{}{}{}\n'.format(simSum[i], delim,
 		simAvg[i], delim, geneList[i]) )
 #end loop
