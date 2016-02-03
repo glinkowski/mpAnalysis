@@ -50,6 +50,7 @@ import pandas as pd
 import mpFindFuncs as ff
 import numpy as np
 import random
+import os.path
 
 def degree():
     outname = 'toy_hsa_c'
@@ -281,3 +282,36 @@ def sampleMatrix(sname):
     return SampleMatrix.values
     
 
+
+
+
+
+
+
+def writeNodeBinFiles(ntwkPath, ntwkName, geneList, edgeArray, geneHead, thresholdHigh, thresholdLow):
+    ntwkPath = '../networks/'
+    ntwkName = 'fakeNtwk00_g2e3t10'
+    
+    outputFolder = ntwkPath + ntwkName + '/'
+    
+    # If folder doesn't exist, create it
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+ 
+    
+    degreeMatrix = edgeArray
+    #Fill missing values
+    degreeMatrix = degreeMatrix.fillna(0)
+    
+    high = int(len(degreeMatrix)*thresholdHigh)
+    low = int(len(degreeMatrix)*thresholdLow) 
+    
+    
+    # Extract each column of types of the matrix, in order to make code flexible to every matrix
+    for columnNumber in range(1, len(list(degreeMatrix))):
+        High = degreeMatrix[[0, columnNumber]].sort(columnNumber, ascending = False).head(high) 
+        Low = degreeMatrix[[0, columnNumber]].sort(columnNumber, ascending = False).tail(low)
+        Med = degreeMatrix[[0, columnNumber]].sort(columnNumber, ascending = False).reset_index().loc[high:(len(degreeMatrix)-low-1), :]
+        
+    
+    
