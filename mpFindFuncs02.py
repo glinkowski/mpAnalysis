@@ -52,6 +52,43 @@ import numpy as np
 import random
 import os.path
 
+
+
+def writeNodeBinFiles(ntwkPath, ntwkName, geneList, edgeArray, geneHead, binThresholds):
+    
+    
+    outputFolder = ntwkPath + ntwkName + '/'
+    
+    # If folder doesn't exist, create it
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+    
+    
+    degreeMatrix2, headers = degreeMatrix(edgeArray, geneHead)
+    
+    degreeMatrix2 = pd.DataFrame(degreeMatrix2)
+    thresholdHigh = binThresholds[0]
+    thresholdLow = 1 - binThresholds[1]
+    high = int(len(degreeMatrix2)*thresholdHigh)
+    
+    low = int(len(degreeMatrix2)*thresholdLow) 
+    
+    
+    # Extract each column of types of the matrix, in order to make code flexible to every matrix
+    for columnNumber in range(1, len(list(degreeMatrix2))):
+        High = degreeMatrix2[[0, columnNumber]].sort(columnNumber, ascending = False).head(high) 
+        Low = degreeMatrix2[[0, columnNumber]].sort(columnNumber, ascending = False).tail(low)
+        Med = degreeMatrix2[[0, columnNumber]].sort(columnNumber, ascending = False).reset_index().loc[high:(len(degreeMatrix2)-low-1), :]
+        #High[0].to_csv(path + 'High' + str(columnNumber) + outname, sep = '\t', index = False, header = False) 
+        #Low[0].to_csv(path + 'Low' + str(columnNumber) + outname, sep = '\t', index = False, header = False)
+        #Med[0].to_csv(path + 'Med' + str(columnNumber) + outname, sep = '\t', index = False, header = False)
+    #High = degreeMatrix[[0, 1]].sort(1, ascending = False).head(high) 
+    #Low = degreeMatrix[[0, 1]].sort(1, ascending = False).tail(low)
+    #Med = degreeMatrix[[0, 1]].sort(1, ascending = False).reset_index().loc[high:(len(degreeMatrix)-low-1), :]
+    return High.values
+    
+    
+
 def degreeMatrix(edgeArray, geneHead):
     edges = edgeArray
     edges = edges.rename(columns = {0:'nodes', 1:'genes', 2:'weight', 3:'type'})
