@@ -17,6 +17,7 @@
 import mpLibrary as mp
 import time
 
+import numpy as np
 
 
 # For testing & verification
@@ -157,11 +158,65 @@ for i in range(len(bestRanks)) :
 
 # 7) Rank genes by similarity along selected metapaths
 
+## Get the indices for all genes not in the test sample
+#sampOutdex = [n for n in range(len(geneIndex))if n not in sampIndex]
+##print sampIndex, sampOutdex
+
+#for mp in bestPaths :
+#end loop
+
+
+# test the approach
+#path = bestPaths[0]
+#colRank = mp.applyGroupPathSim(ePath, eName, pathDict[path], sampIndex)
+#print colRank
+
+
+simArray = np.empty([len(sampIndex), len(bestPaths)])
+for p in range(len(bestPaths)) :
+	simArray[:,p] = mp.applyGroupPathSim(ePath, eName, pathDict[bestPaths[p]], sampIndex)
+#end loop
+#print simArray
+
+simSum = np.sum(simArray, axis=0)
+simAvg = np.mean(simArray, axis=0)
+
+delim = '\t'
+fs = open(oPath + 'scores.txt', 'wb')
+fs.write('')
+fs.write('Genes scored by similarty to sample ...\n')
+fs.write('network:{}{}\n'.format(delim, eName))
+fs.write('sample:{}{}\n'.format(delim, sName))
+fs.write('known:{}{}\n'.format(delim, len(gKnown)))
+fs.write('concealed:{}{}\n'.format(delim, len(gHidden)))
+fs.write('\n')
+
 # Get the indices for all genes not in the test sample
 sampOutdex = [n for n in range(len(geneIndex)) if n not in sampIndex]
-#print sampIndex, sampOutdex
+#print sampOutdex
+geneList = geneIndex.keys()
+geneList.sort()
+geneList = [geneList[g] for g in sampOutdex]
+del sampOutdex
+print geneList
+
+#fs.write('{}'.format(delim))
+for bp in bestPaths :
+	fs.write('{}{}'.format(delim, bp))
+#end loop
+fs.write('{}sum{}avg\n'.format(delim, delim))
+for i in range( simArray.shape[0] ) :
+	fs.write('{}'.format(delim))
+	for j in range( simArray.shape[1] ) :
+		fs.write( '{}{}'.format(simArray[i,j], delim) )
+	#end loop
+	fs.write( '{}{}{}{}{}\n'.format(simSum[i], delim,
+		simAvg[i], delim, geneList[i]) )
+#end loop
+fs.write('\n')
 
 
+	
 
 
 print "\nDone.\n"

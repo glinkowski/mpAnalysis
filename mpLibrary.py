@@ -846,3 +846,103 @@ def chooseTopKPathsSimple(k, ranker, mpDict) :
 
 	return topPaths, topRanks
 #end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Load the matrix containing the number of paths
+#	of this type which join the nodes in the network
+# Input ----
+#	mpTuple [int, bool]: indicates which matrix file to use
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
+#	matrix, int array: num paths between node pairs
+def getPathMatrix(mpTuple, path, name) :
+
+	zpad = keyZPad
+#	fname = (path + name + "_MetaPaths/" +
+#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+
+	prename = (path + name + "_MetaPaths/" +
+		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	# Load the matrix
+#	matrix = np.load(fname)
+	matrix = np.loadtxt(fname)
+
+	# Convert to transpose if flag==True
+	if mpTuple[1] :
+		return np.transpose(matrix)
+	else :
+		return matrix
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Calculate the Group PathSim for all genes not
+#	in the test sample
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+#	mpTuple [int, bool]: indicates which matrix file to use
+#	sample, int list: indices of the genes in the sample
+# Returns ----
+#	scores, float list: G P S for each gene not in sample
+def applyGroupPathSim(path, name, mpTuple, sample) :
+
+	# Get the corresponding path matrix
+	matrix = getPathMatrix(mpTuple, path, name)
+
+	# Apply the modified Group PathSim
+
+	# Number of paths connecting sample to self:
+	temp1 = matrix[sample,:]
+	temp2 = temp1[:,sample]
+	pXX = np.sum(temp2)
+	del temp1, temp2
+
+	# The item to return
+	scores = list()
+
+	# Get the indices for all genes not in the test sample
+	notSample = ([n for n in range(matrix.shape[0])
+		if n not in sample])
+
+	for i in notSample :
+		# Number of paths connecting gene to self:
+		pYY = matrix[i,i]
+		# Number of paths from sample to gene:
+		pXY = np.sum(matrix[sample,i])
+		# Number of paths from gene to sample:
+		pYX = np.sum(matrix[i,sample])
+
+# TODO: If (pXX + pYY) == 0 ... set = 1 ?
+		scores.append( (pXY + pYX) / (pXX + pYY + 0.0001) )
+	#end if
+
+#	# For intermediate verification:
+#	geneList = geneIndex.keys()
+#	geneList.sort()
+#	print geneList
+#	print "  name  index   score"
+#	for i in range(len(sampOutdex)) :
+#		print "  {}, {}  :  {}".format(geneList[sampOutdex[i]],
+#			sampOutdex[i], geneRanks[i])
+#	#end if
+
+	return scores
+#end def ######## ######## ######## 
