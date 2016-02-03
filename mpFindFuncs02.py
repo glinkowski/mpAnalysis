@@ -52,6 +52,52 @@ import numpy as np
 import random
 import os.path
 
+def degreeMatrix(edgeArray, geneHead):
+    edges = edgeArray
+    edges = edges.rename(columns = {0:'nodes', 1:'genes', 2:'weight', 3:'type'})
+    types = np.unique(edges.type) #['typeA' 'typeB' 'typeC']
+    all_degree = {}
+    # Creat dictionaries based on the number of types, count the degree of genes based on gene types.
+    dictName = {}
+    for j in range(len(types)):
+        dictionaryName = 'dictionary_' + str(types[j])
+        dictName[dictionaryName] = {}
+    
+    for i in range(len(edges.nodes)):
+        if edges.nodes[i][0:4] in geneHead:
+            # For the first column of edge matrix, count all degree
+            if edges.nodes[i] not in all_degree:
+                all_degree[edges.nodes[i]] = 1
+            else:
+                all_degree[edges.nodes[i]] += 1
+                
+            # For the second column of edge matrix, count all degree
+            if edges.genes[i] not in all_degree:
+                all_degree[edges.genes[i]] = 1
+            else:
+                all_degree[edges.genes[i]] += 1
+                
+            # For the first column of edge matrix, count the degree based on different gene types
+            if edges.nodes[i] not in dictName['dictionary_' + str(edges.type[i])]:
+                dictName['dictionary_' + str(edges.type[i])][edges.nodes[i]] = 1
+            else:
+                dictName['dictionary_' + str(edges.type[i])][edges.nodes[i]] += 1
+                
+            # For the second column of edge matrix, count the degree based on different gene types 
+            if edges.genes[i] not in dictName['dictionary_' + str(edges.type[i])]:
+                dictName['dictionary_' + str(edges.type[i])][edges.genes[i]] = 1
+            else:
+                dictName['dictionary_' + str(edges.type[i])][edges.genes[i]] += 1
+               
+                
+    degreeMatrix = pd.DataFrame.from_dict(all_degree.items())
+    for j in range(len(types)):
+        tempDegreeMatrix = pd.DataFrame.from_dict(dictName['dictionary_' + str(types[j])].items())
+        degreeMatrix = pd.DataFrame.merge(degreeMatrix, tempDegreeMatrix, how = 'left', on = 0)
+   
+    degreeMatrix = degreeMatrix.fillna(0)
+    return degreeMatrix.values
+
 def degree():
     outname = 'toy_hsa_c'
     path = '../networks/'
