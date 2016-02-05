@@ -1,0 +1,19 @@
+{
+	"folders":
+	[
+		{
+			"path": "/C/Users/MrLinkowski/metapath",
+			"folder_exclude_patterns": ["output*"]
+		}
+	],
+	"settings":
+	{
+
+		"color_scheme": "Packages/Color Scheme - Default/Eiffel.tmTheme",
+
+		"tab_size": 4,
+		"translate_tabs_to_spaces": false,
+
+		"highlight_modified_tabs": true
+	}
+}
