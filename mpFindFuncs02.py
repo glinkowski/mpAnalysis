@@ -18,8 +18,8 @@
 #	degree()
 #	nodeBining(thresholdHigh, thresholdLow, infile)
 #	sampleMatrix(sname)
-#	
-#	
+#	writeNodeBinFiles(ntwkPath, ntwkName, geneList, edgeArray, geneHead, binThresholds)
+#	degreeMatrix(edgeArray, geneHead)
 #	
 
 # ---------------------------------------------------------
