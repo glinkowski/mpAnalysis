@@ -16,6 +16,7 @@ cytoscape/*
 keep/*
 old_code/*
 sampleMatrix/*
+*.sublime-workspace
 
 
 # Compiled source #
