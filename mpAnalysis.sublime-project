@@ -4,6 +4,10 @@
 		{
 			"path": "/C/Users/MrLinkowski/metapath",
 			"folder_exclude_patterns": ["output*"]
+		},
+		{
+			"path": "/C/_research/metapath",
+			"folder_exclude_patterns": ["output*"]
 		}
 	],
 	"settings":
