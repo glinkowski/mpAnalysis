@@ -66,6 +66,8 @@ keepDouble = True
 keepTriple = True
 # File extension to use when saving the matrix
 matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
+# Whether to save a text-only copy of the matrices
+saveTextCopy = False
 
 ####### ####### ####### ####### 
 
@@ -1242,8 +1244,10 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 			mpath)
 
 		# VERIFICATION: save as a text-readable file
-		saveMatrixText(mList[i], "t"+str(num).zfill(zpad),
-			mpath, True)
+		if saveTextCopy :
+			saveMatrixText(mList[i], "t"+str(num).zfill(zpad),
+				mpath, True)
+		#end if
 
 		num += 1
 	#end loop
@@ -1323,8 +1327,9 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 			mpath)
 
 		# VERIFICATION: save as a text-readable file
-		saveMatrixText(mList[i], "t"+str(i).zfill(zpad),
-			mpath, True)
+		if saveTextCopy :
+			saveMatrixText(mList[i], "t"+str(i).zfill(zpad),
+				mpath, True)
 	#end loop
 
 	return
