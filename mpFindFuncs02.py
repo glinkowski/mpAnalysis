@@ -86,6 +86,18 @@ def writeNodeBinFiles(ntwkPath, ntwkName, geneList, edgeArray, geneHead, binThre
     return 
     
     
+'''
+README
+degreeMatrix:
+The goal for this function is to creat a degree matrix from an edge array.
+Input:
+    the edge array of the original network
+    the gene head such as ENSG
+
+Output:
+    an np ndarray matrix of degree matrix
+    
+'''
 
 def degreeMatrix(edgeArray, geneHead):
     edges = edgeArray
