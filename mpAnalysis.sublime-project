@@ -8,6 +8,10 @@
 		{
 			"path": "/C/_research/metapath",
 			"folder_exclude_patterns": ["output*"]
+		},
+		{
+			"path": "/home/greg/Dropbox/metapath",
+			"folder_exclude_patterns": ["output*", "cytoscape"]
 		}
 	],
 	"settings":
