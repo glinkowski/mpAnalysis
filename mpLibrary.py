@@ -946,3 +946,67 @@ def applyGroupPathSim(path, name, mpTuple, sample) :
 
 	return scores
 #end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Calculate the Group PathSim for all genes not
+#	in the test sample
+# Input ----
+#	path, str: directory to write output file
+#	statArray, float array: the stat used to rank the items
+#	itemDict, {str: int} dict:
+#		key, str - name of the item
+#		value, int - index of the item within a sorted list
+#	itemIndex, int list: indices of items (known/test) against
+#		which the rest of the items (hidden/concealed) are ranked
+# Returns ----
+#	filename, str: path & filename to output file
+def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
+
+
+	statSum = np.sum(statArray, axis=1)
+	statAvg = np.mean(statArray, axis=1)
+
+	delim = '\t'
+	filename = path + 'scores.txt'
+	fs = open(filename, 'wb')
+	fs.write('')
+	fs.write('Genes scored by similarty to sample ...\n')
+#	fs.write('network:{}{}\n'.format(delim, eName))
+#	fs.write('sample:{}{}\n'.format(delim, sName))
+#	fs.write('known:{}{}\n'.format(delim, len(gKnown)))
+#	fs.write('concealed:{}{}\n'.format(delim, len(gHidden)))
+	fs.write('\n')
+
+	# Get the indices for all genes not in the test sample
+	itemOutdex = [n for n in range(len(itemDict)) if n not in itemIndex]
+	#print itemOutdex
+	geneList = itemDict.keys()
+	geneList.sort()
+	geneList = [geneList[g] for g in itemOutdex]
+	del itemOutdex
+	#print geneList
+
+	#fs.write('{}'.format(delim))
+	for bp in colHeader :
+		fs.write('{}{}'.format(delim, bp))
+	#end loop
+	fs.write('{}sum{}avg\n'.format(delim, delim))
+
+	#print statArray.shape, len(statSum), len(statAvg)
+
+	for i in range( statArray.shape[0] ) :
+		fs.write('{}'.format(delim))
+		for j in range( statArray.shape[1] ) :
+			fs.write( '{}{}'.format(statArray[i,j], delim) )
+		#end loop
+	#	print i
+		fs.write( '{}{}{}{}{}\n'.format(statSum[i], delim,
+			statAvg[i], delim, geneList[i]) )
+	#end loop
+	fs.write('\n')
+
+
+	return filename
+#end def ######## ######## ######## 

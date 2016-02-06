@@ -46,14 +46,15 @@ if useNtwk == 0 :
 	sName = 'sample01'
 	sPath = 'samplesFake/'
 else :
-	eName = 'toy2_hsa'
+	eName = 'toy2_p3gz'
 	ePath = '../networks/'
-	sName = 'XXX'
+	sName = 'BERTUCCI_MEDULLARY_VS_DUCTAL_BREAST_CANCER'
 	sPath = '../samples/'
 #end if
 
 # Path & new directory to save output (& temp files)
 oRoot = 'outputFake/'
+oRoot = '../output/'
 oDirPrefix = 'pred01-' + sName[0:8]
 
 ####### ####### ####### ####### 
@@ -159,71 +160,18 @@ for i in range(len(bestRanks)) :
 
 # 7) Rank genes by similarity along selected metapaths
 
-## Get the indices for all genes not in the test sample
-#sampOutdex = [n for n in range(len(geneIndex))if n not in sampIndex]
-##print sampIndex, sampOutdex
-
-#for mp in bestPaths :
-#end loop
-
-
-# test the approach
-#path = bestPaths[0]
-#colRank = mp.applyGroupPathSim(ePath, eName, pathDict[path], sampIndex)
-#print colRank
-
-
 # Get the indices for all genes not in the test sample
 sampOutdex = [n for n in range(len(geneIndex)) if n not in sampIndex]
 
+# Calculate similarity for each top metapath
 simArray = np.empty([len(sampOutdex), len(bestPaths)])
-#print simArray.shape
 for p in range(len(bestPaths)) :
 	simArray[:,p] = mp.applyGroupPathSim(ePath, eName, pathDict[bestPaths[p]], sampIndex)
 #end loop
-#print simArray
 
-simSum = np.sum(simArray, axis=1)
-simAvg = np.mean(simArray, axis=1)
-
-delim = '\t'
-fs = open(oPath + 'scores.txt', 'wb')
-fs.write('')
-fs.write('Genes scored by similarty to sample ...\n')
-fs.write('network:{}{}\n'.format(delim, eName))
-fs.write('sample:{}{}\n'.format(delim, sName))
-fs.write('known:{}{}\n'.format(delim, len(gKnown)))
-fs.write('concealed:{}{}\n'.format(delim, len(gHidden)))
-fs.write('\n')
-
-# Get the indices for all genes not in the test sample
-sampOutdex = [n for n in range(len(geneIndex)) if n not in sampIndex]
-#print sampOutdex
-geneList = geneIndex.keys()
-geneList.sort()
-geneList = [geneList[g] for g in sampOutdex]
-del sampOutdex
-#print geneList
-
-#fs.write('{}'.format(delim))
-for bp in bestPaths :
-	fs.write('{}{}'.format(delim, bp))
-#end loop
-fs.write('{}sum{}avg\n'.format(delim, delim))
-
-#print simArray.shape, len(simSum), len(simAvg)
-
-for i in range( simArray.shape[0] ) :
-	fs.write('{}'.format(delim))
-	for j in range( simArray.shape[1] ) :
-		fs.write( '{}{}'.format(simArray[i,j], delim) )
-	#end loop
-#	print i
-	fs.write( '{}{}{}{}{}\n'.format(simSum[i], delim,
-		simAvg[i], delim, geneList[i]) )
-#end loop
-fs.write('\n')
-
+# Write the ranked output to file
+outFile = mp.writeItemRanks(oPath, simArray, geneIndex, sampIndex, bestPaths)
+print "Saving gene predictions to {}".format(outFile)
 
 	
 
