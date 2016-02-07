@@ -52,7 +52,19 @@ import numpy as np
 import random
 import os.path
 
+'''
+README
+writeNodeBinFiles:
+The goal for this function is to separeate genes by their degree to high/med/low bins.
+Input:
+    the edge array of the original network
+    the gene head such as ENSG
+    the gene list of the original network
 
+Output:
+    write high/med/low bins into .txt files for future sample generationg
+    
+'''
 
 def writeNodeBinFiles(ntwkPath, ntwkName, geneList, edgeArray, geneHead, binThresholds):
     
