@@ -1,3 +1,4 @@
+
 # ---------------------------------------------------------
 # author: Greg Linkowski
 # project: Metapath Analysis
@@ -104,53 +105,47 @@ def readKeepFile(fname) :
 	# Read the file
 	f = open(fname, "rb")
 	line = f.readline()    # throw away the first line
-#	for line in f :
-	while line :
-		# split the line by columns
-		line = f.readline()
+
+	section = 'header'		# the section of the file being read
+
+	# read file line by line
+	for line in f :
 		line = line.rstrip()
+		if line == '':
+			continue
+		#end if
+
+		# split the line by columns
 		lv = line.split('\t')
 
-		# Read in the gene types (# given in file)
+		# Sections headers set the behavior for the
+		#	lines that follow
 		if lv[0] == 'GENE TYPES' :
-			count = int(lv[2])
-			for i in range(0, count) :
-				line = f.readline()
-				line = line.rstrip()
-				lv = line.split('\t')
-				if lv[2] == 'yes' :
-					keepGenes.append(lv[1])
-				else :
-					loseGenes.append(lv[1])
-				#end if
-			#end loop
-		# Read in the edge types (# given in file)
+			section = 'gene'
 		elif lv[0] == 'EDGE TYPES' :
-			count = int(lv[2])
-			for i in range(0, count) :
-				line = f.readline()
-				line = line.rstrip()
-				lv = line.split('\t')
-				if lv[2] == 'yes' :
-					keepEdges.append(lv[1])
-				#end if
-			#end loop
-		elif lv[0] == 'INDIRECT' :
-			count = int(lv[2])
-			for i in range(0, count) :
-				line = f.readline()
-				line = line.rstrip()
-				lv = line.split('\t')
-				if lv[2] == 'yes' :
-					indirEdges.append(lv[1])
-			#end loop
+			section = 'edge'
 		elif lv[0] == 'THRESHOLD' :
+			section = 'threshold'
 			tHold = float(lv[2])
+		elif section == 'gene' :
+			# sort genes between kept & ignored
+			if (lv[2] == 'keep') or (lv[2] == 'yes') :
+				keepGenes.append(lv[1])
+			else :
+				loseGenes.append(lv[1])
+			#end if
+		elif section == 'edge' :
+			# sort kept edges & note indirect edges
+			if (lv[2] == 'keep') or (lv[2] == 'yes') :
+				keepEdges.append(lv[0])
+				if (lv[1] != 'direct') and (lv[1] != 'yes') :
+					indirEdges.append(lv[0])
+				#end if
+			#end if
 		#end if
 	#end loop
 
 	return keepGenes, loseGenes, keepEdges, indirEdges, tHold
-
 #end def ######## ######## ########
 
 

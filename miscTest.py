@@ -13,17 +13,28 @@ import preProcFuncs as pp
 
 
 
-spath = 'samplesFake/'
-sList = ff.getSampleList(spath)
-print 'The following samples were found in {}'.format(spath)
-print sList
-print ''
+#spath = 'samplesFake/'
+#sList = ff.getSampleList(spath)
+#print 'The following samples were found in {}'.format(spath)
+#print sList
+#print ''
+#
+#spath = 'samplesMSIG/'
+#sList = ff.getSampleList(spath)
+#print 'The following samples were found in {}'.format(spath)
+#for item in sList :
+#    print item
+#print ''
 
-spath = 'samplesMSIG/'
-sList = ff.getSampleList(spath)
-print 'The following samples were found in {}'.format(spath)
-for item in sList :
-    print item
-print ''
 
-
+ename = 'fakeNtwk01'
+epath = 'networks/'
+kfile = ename + '.keep.txt'
+print "\nReading in the network:", ename
+print "    reading the keep file", kfile
+keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
+print 'Keep genes: {}'.format(keepGenes)
+print 'Ignore genes: {}'.format(loseGenes)
+print 'Keep edges: {}'.format(keepEdges)
+print 'Indirect: {}'.format(indirEdges)
+print 'Threshold = {}'.format(thresh)
