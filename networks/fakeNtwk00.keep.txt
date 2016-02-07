@@ -1,10 +1,13 @@
-Type	Alias	Keep?
-GENE TYPES	--	2
-human1	G000	yes
-human2	GA00	yes
-EDGE TYPES	--	3
-A	typeA	yes
-B	typeB	yes
-C	typeC	yes
-INDIRECT	--	0
+Species	Regex	Keep?	(gene)
+Type	Direct?	Keep?	(edge)
+
+GENE TYPES	--
+human1	G000	keep
+human2	GA00	keep
+
+EDGE TYPES	--
+typeA	direct	keep
+typeB	direct	keep
+typeC	direct	keep
+
 THRESHOLD	--	0.1
