@@ -32,9 +32,10 @@ epath = 'networks/'
 kfile = ename + '.keep.txt'
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
-keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
+hGenes, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
 print 'Keep genes: {}'.format(keepGenes)
 print 'Ignore genes: {}'.format(loseGenes)
 print 'Keep edges: {}'.format(keepEdges)
 print 'Indirect: {}'.format(indirEdges)
 print 'Threshold = {}'.format(thresh)
+print 'Humans: {}'.format(hGenes)

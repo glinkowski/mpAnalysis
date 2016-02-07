@@ -46,13 +46,9 @@ kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
 cfile = ename + '.correct.txt'
 
+# NODE BINNING --
 # Threshold percentages for binning the genes
 binThresholds = [.4, .9]
-
-# REGEX mask for genes to keep
-geneHead = ['ENSG', 'G000']
-#TODO: collect this from the keep file?
-# will only want human genes
 
 ####### ####### ####### ####### 
 
@@ -71,7 +67,7 @@ tstart = time.time()
 #	if not there, ask to have it created
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
-keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
+geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
 
 # Read in the network (edge file) to a matrix
 print "    reading in the edge file", efile
@@ -118,7 +114,7 @@ pp.writeModEdgeFilePlus(epath, outname,
 ######## ######## ######## ######## 
 # Save the node-binning stats for the network
 #sm.writeNodeBinFiles(epath, outname, geneList,
-#	edgeArray, geneHead, binThresholds )
+#	edgeArray, geneHuman, binThresholds )
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)

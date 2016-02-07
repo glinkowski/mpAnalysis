@@ -97,6 +97,7 @@ def readKeepFile(fname) :
 	#end if
 
 	# The lists to return
+	humanGenes = list()
 	keepGenes = list()
 	loseGenes = list()
 	keepEdges = list()
@@ -118,8 +119,8 @@ def readKeepFile(fname) :
 		# split the line by columns
 		lv = line.split('\t')
 
-		# Sections headers set the behavior for the
-		#	lines that follow
+		# Sections headers (defined by all-caps)
+		#	set the behavior for the lines that follow
 		if lv[0] == 'GENE TYPES' :
 			section = 'gene'
 		elif lv[0] == 'EDGE TYPES' :
@@ -131,6 +132,8 @@ def readKeepFile(fname) :
 			# sort genes between kept & ignored
 			if (lv[2] == 'keep') or (lv[2] == 'yes') :
 				keepGenes.append(lv[1])
+				if lv[0].startswith('human') :
+					humanGenes.append(lv[1])
 			else :
 				loseGenes.append(lv[1])
 			#end if
@@ -140,12 +143,10 @@ def readKeepFile(fname) :
 				keepEdges.append(lv[0])
 				if (lv[1] != 'direct') and (lv[1] != 'yes') :
 					indirEdges.append(lv[0])
-				#end if
-			#end if
 		#end if
 	#end loop
 
-	return keepGenes, loseGenes, keepEdges, indirEdges, tHold
+	return humanGenes, keepGenes, loseGenes, keepEdges, indirEdges, tHold
 #end def ######## ######## ########
 
 
