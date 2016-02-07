@@ -1,0 +1,13 @@
+Species	Regex	Keep?	(gene)
+Type	Direct?	Keep?	(edge)
+
+GENE TYPES	--	1
+human1	ENSG	keep
+
+EDGE TYPES	--	4
+GO_term	indirect	keep
+motif_u5_gc	indirect	keep
+pfam_domain	indirect	keep
+prot_homol	direct	keep
+
+THRESHOLD	--	0.00
