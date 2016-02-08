@@ -1,0 +1,3 @@
+PPI_intact	PPI_IntAct
+STRING_cooccurrance	STRING_cooccurrence
+STRING_coocurrance	STRING_cooccurrence

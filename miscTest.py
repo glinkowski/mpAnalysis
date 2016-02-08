@@ -10,7 +10,7 @@
 
 import mpFindFuncs as ff
 import preProcFuncs as pp
-
+import numpy as np
 
 
 #spath = 'samplesFake/'
@@ -39,3 +39,20 @@ print 'Keep edges: {}'.format(keepEdges)
 print 'Indirect: {}'.format(indirEdges)
 print 'Threshold = {}'.format(thresh)
 print 'Humans: {}'.format(hGenes)
+
+
+
+# Identify unique edge names in a network
+print ''
+fe = open('networks/all_v1.edge.txt', 'rb')
+edgeSet = set()
+for line in fe :
+	line = line.rstrip()
+	lv = line.split('\t')
+
+	if lv[3] not in edgeSet :
+		edgeSet.add(lv[3])
+#end loop
+edgeList = list(edgeSet)
+edgeList.sort()
+print 'Edges in all_v1: {}'.format(edgeList)
