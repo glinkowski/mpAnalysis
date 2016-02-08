@@ -804,9 +804,9 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 		tLrg = [tMed[1]+1, mean+(2*std)]
 
 		# Save those tuples to the look-up dict
-		iNames[et+"_sm"] = tSml
-		iNames[et+"_md"] = tMed
-		iNames[et+"_lg"] = tLrg
+		iNames[et+"_SM"] = tSml
+		iNames[et+"_MD"] = tMed
+		iNames[et+"_LG"] = tLrg
 	#end loop
 
 #	print iNames
@@ -867,9 +867,9 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			for term in termDict.keys() :
 
 				# get the tuples to check
-				tSml = iNames[row[3] + "_sm"]
-				tMed = iNames[row[3] + "_md"]
-				tLrg = iNames[row[3] + "_lg"]
+				tSml = iNames[row[3] + "_SM"]
+				tMed = iNames[row[3] + "_MD"]
+				tLrg = iNames[row[3] + "_LG"]
 
 
 				if (tSml[0] <= termDict[term] <= tSml[1]) :
@@ -926,7 +926,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				#end if
 
 				mList.append(thisM)
-				mNames.append(et+"_sm")
+				mNames.append(et+"_SM")
 			#end if
 
 			# Create the second (medium) matrix
@@ -973,7 +973,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				#end if
 
 				mList.append(thisM)
-				mNames.append(et+"_md")
+				mNames.append(et+"_MD")
 			#end if
 			
 			# Create the third (large) matrix
@@ -1020,7 +1020,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				#end if
 				
 				mList.append(thisM)
-				mNames.append(et+"_lg")
+				mNames.append(et+"_LG")
 			#end if
 			
 
