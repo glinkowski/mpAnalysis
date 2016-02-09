@@ -837,6 +837,12 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			termDict = dict()
 			for row in thisArray :
 
+# TODO: what to do about bad gene mappings?
+				# Skip improperly mapped genes
+				if row[1] not in gSet :
+					continue
+
+
 				# Only add if the node is not a gene
 				if row[0] not in gSet :
 					# Else, increment count by 1
@@ -900,6 +906,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 						# ASSUME: terms always in col 0, genes in col 1
 						gA = eArray[i,1]
 						gB = eArray[j,1]
+
+# TODO: what to do about bad gene mappings?
+						# Skip improperly mapped genes
+						if gA not in gSet :
+							continue
+						elif gB not in gSet :
+							continue
+
 						# Increment the entry(s) in the array (symmetric)
 						thisM[gDict[gA],gDict[gB]] += 1
 						thisM[gDict[gB],gDict[gA]] += 1
@@ -942,11 +956,20 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				rowList = nDict[term]
 				# Join all genes connected to term X
 				for i in range(0, len(rowList)) :
-					for j in range(0+1, len(rowList)) :
-						# Find two genes joined by term
+					for j in range(0+1, len(rowList)) :						# Find two genes joined by term
 						# ASSUME: terms always in col 0, genes in col 1
 						gA = eArray[i,1]
 						gB = eArray[j,1]
+
+# TODO: what to do about bad gene mappings?
+						# Skip improperly mapped genes
+						if gA not in gSet :
+							continue
+						elif gB not in gSet :
+							continue
+
+
+
 						# Increment the entry(s) in the array (symmetric)
 						thisM[gDict[gA],gDict[gB]] += 1
 						thisM[gDict[gB],gDict[gA]] += 1
@@ -994,6 +1017,15 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 						# ASSUME: terms always in col 0, genes in col 1
 						gA = eArray[i,1]
 						gB = eArray[j,1]
+
+# TODO: what to do about bad gene mappings?
+						# Skip improperly mapped genes
+						if gA not in gSet :
+							continue
+						elif gB not in gSet :
+							continue
+
+
 						# Increment the entry(s) in the array (symmetric)
 						thisM[gDict[gA],gDict[gB]] += 1
 						thisM[gDict[gB],gDict[gA]] += 1
@@ -1039,6 +1071,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			thisArray = eArray[eArray[:,3]==et]
 			# increment entry at (i,j) = (gene0,gene1)
 			for row in thisArray :
+
+# TODO: what to do about bad gene mappings?
+				# Skip improperly mapped genes
+				if row[0] not in gSet :
+					continue
+				elif row[1] not in gSet :
+					continue
+
 				thisM[gDict[row[0]],gDict[row[1]]] += 1
 				thisM[gDict[row[1]],gDict[row[0]]] += 1
 				count += 1

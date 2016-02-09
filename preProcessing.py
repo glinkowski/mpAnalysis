@@ -34,13 +34,13 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'toy2_hsa'
-#epath = '../networks/'
-ename = 'fakeNtwk00'
-epath = 'networks/'
+ename = 'all_v1'
+epath = '../networks/'
+#ename = 'fakeNtwk00'
+#epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 4
+mpDepth = 1
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -68,6 +68,9 @@ tstart = time.time()
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
 geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
+print keepGenes
+print keepEdges
+print indirEdges
 
 # Read in the network (edge file) to a matrix
 print "    reading in the edge file", efile
@@ -100,8 +103,10 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 # 2) Save the modified network
 
 # Create an updated nodeDict from modified edge list
-allGenes = keepGenes + loseGenes
-nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
+#TODO: Why am I concatenating these lists?
+#allGenes = keepGenes + loseGenes
+#nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
+nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
 
 # Save the edge list, node dict, gene list
 outname = pp.createModEdgeFileName(ename, keepEdges,
