@@ -321,13 +321,18 @@ def sampleMatrix(ntwkPath, ntwkName, geneList, spath, sname):
     #spath = 'samplesFake/'
     #opath = '../sampleMatrix/'
     saperatedGenes = ntwkPath + ntwkName + '/' 
+    print saperatedGenes
     high = ff.readSampleFiles(saperatedGenes + 'High1', False, False)
+    print high
     med = ff.readSampleFiles(saperatedGenes + 'Med1', False, False)
+    print med
     low = ff.readSampleFiles(saperatedGenes + 'Low1', False, False)
+    print low
 
     # read a gene list and convert it into numbers
-    sampleDict = ff.readFileAsIndexDict(geneList)
     
+    sampleDict = ff.readFileAsIndexDict(ntwkPath + ntwkName + '/' + 'genes.txt')
+    print sampleDict
    
 
 
