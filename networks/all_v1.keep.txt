@@ -1,0 +1,32 @@
+Species	Regex	Keep?	(gene)
+Type	Direct?	Keep?	(edge)
+
+GENE TYPES	--	
+human1	ENSG	keep
+human2	LRG_	keep
+mouse	ENSM	no
+fly	FBgn	no
+bee	GB[45][0123456789]	no
+worm	WBGe	no
+yeast	Y[ABCDEFGHIJKLMNOP][LR][0123456]	no
+grass	AT[12345CM]G	no
+
+EDGE TYPES	--	16
+GO_term	indirect	keep
+KEGG	direct	no
+PPI_BioGRID	direct	no
+PPI_DIP	direct	no
+PPI_IntAct	direct	no
+PPI_MINT	direct	no
+STRING_coexpression	direct	no
+STRING_cooccurrence	direct 	no
+STRING_database	direct	no
+STRING_experimental	direct	no
+STRING_fusion	direct	no
+STRING_neighborhood	direct	no
+STRING_textmining	direct	no
+motif_u5_gc	indirect	keep
+pfam_domain	indirect	keep
+prot_homol	direct	keep
+
+THRESHOLD	--	0.00
