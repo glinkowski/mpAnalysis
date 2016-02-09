@@ -112,7 +112,7 @@ Output:
 '''
 
 def degreeMatrix(edgeArray, geneHead):
-    edges = edgeArray
+    edges = pd.DataFrame(edgeArray)
     edges = edges.rename(columns = {0:'nodes', 1:'genes', 2:'weight', 3:'type'})
     types = np.unique(edges.type) #['typeA' 'typeB' 'typeC']
     print types
@@ -315,17 +315,18 @@ def nodeBining(thresholdHigh, thresholdLow, infile):
 # ---------------------------------------------------------
 '''
 
-def sampleMatrix(sname):
+def sampleMatrix(ntwkPath, ntwkName, geneList, spath, sname):
 
-    spath = '../samples/'
-    opath = '../sampleMatrix/'
-    saperatedGenes = '../saperated genes/'
-    high = ff.readSampleFiles(saperatedGenes + 'High1nodeBining', False, False)
-    med = ff.readSampleFiles(saperatedGenes + 'Med1nodeBining', False, False)
-    low = ff.readSampleFiles(saperatedGenes + 'Low1nodeBining', False, False)
+    #spath = '../samples/'
+    #spath = 'samplesFake/'
+    #opath = '../sampleMatrix/'
+    saperatedGenes = ntwkPath + ntwkName + '/' 
+    high = ff.readSampleFiles(saperatedGenes + 'High1', False, False)
+    med = ff.readSampleFiles(saperatedGenes + 'Med1', False, False)
+    low = ff.readSampleFiles(saperatedGenes + 'Low1', False, False)
 
     # read a gene list and convert it into numbers
-    sampleDict = ff.readFileAsIndexDict('../networks/geneList.txt')
+    sampleDict = ff.readFileAsIndexDict(geneList)
     
    
 
@@ -390,7 +391,6 @@ def sampleMatrix(sname):
     SampleMatrix = SampleMatrix.T
     #SampleMatrix.to_csv(opath + sname + '_sampleMatrix.txt', sep = '\t', index = False, header = False)
     return SampleMatrix.values
-    
 
 
 
