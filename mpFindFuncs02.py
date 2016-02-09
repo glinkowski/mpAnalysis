@@ -91,9 +91,9 @@ def writeNodeBinFiles(ntwkPath, ntwkName, geneList, edgeArray, geneHead, binThre
         High = degreeMatrix2[[0, columnNumber]].sort(columnNumber, ascending = False).head(high) 
         Low = degreeMatrix2[[0, columnNumber]].sort(columnNumber, ascending = False).tail(low)
         Med = degreeMatrix2[[0, columnNumber]].sort(columnNumber, ascending = False).reset_index().loc[high:(len(degreeMatrix2)-low-1), :]
-        High[0].to_csv(outputFolder + 'High' + str(columnNumber)  + '.txt', sep = '\t', index = False, header = False) 
-        Low[0].to_csv(outputFolder + 'Low' + str(columnNumber) + '.txt', sep = '\t', index = False, header = False)
-        Med[0].to_csv(outputFolder + 'Med' + str(columnNumber) + '.txt', sep = '\t', index = False, header = False)
+        #High[0].to_csv(outputFolder + 'High' + str(columnNumber)  + '.txt', sep = '\t', index = False, header = False) 
+        #Low[0].to_csv(outputFolder + 'Low' + str(columnNumber) + '.txt', sep = '\t', index = False, header = False)
+        #Med[0].to_csv(outputFolder + 'Med' + str(columnNumber) + '.txt', sep = '\t', index = False, header = False)
     
     return 
     
