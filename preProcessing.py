@@ -24,7 +24,7 @@ import preProcFuncs as pp
 #TODO:
 ######## ######## ######## ######## 
 # Import the library containing node binning functions
-#import sampleMatrix as sm
+import mpFindFuncs02 as ff2
 ######## ######## ######## ######## 
 import time
 
@@ -34,10 +34,10 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'all_v1'
-epath = '../networks/'
-#ename = 'fakeNtwk00'
-#epath = 'networks/'
+#ename = 'toy2_hsa'
+#epath = '../networks/'
+ename = 'fakeNtwk01'
+epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
 mpDepth = 1
@@ -118,8 +118,7 @@ pp.writeModEdgeFilePlus(epath, outname,
 #TODO:
 ######## ######## ######## ######## 
 # Save the node-binning stats for the network
-#sm.writeNodeBinFiles(epath, outname, geneList,
-#	edgeArray, geneHuman, binThresholds )
+ff2.writeNodeBinFiles(epath, outname, geneList, edgeArray, geneHuman, binThresholds )
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)

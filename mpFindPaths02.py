@@ -20,7 +20,7 @@
 # ---------------------------------------------------------
 
 import mpFindFuncs as ff
-import sampleMatrix as sm
+import mpFindFuncs02 as ff2
 import time
 
 ## REMOVE: The following is for verification.
@@ -33,16 +33,16 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'fakeNtwk00_g2e3t10'
-#epath = 'networks/'
-ename = 'toy2_hsa.edge'
-epath = '../networks/'
+ename = 'fakeNtwk01_g3e4t1'
+epath = 'networks/'
+#ename = 'toy2_hsa.edge'
+#epath = '../networks/'
 
 # The sample to test and path
-#sname = 'Fake00_sample02'
-#spath = 'samplesFake/'
-sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
-spath = '../samples/'
+sname = 'sample02'
+spath = 'samplesFake/'
+#sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
+#spath = '../samples/'
 
 # Where to store the output
 #oname = 'find02-' + ename + "-" + sname
@@ -103,7 +103,7 @@ print ("Choosing {} random samples of".format(numRand) +
 ######## ######## ######## ######## 
 #TODO: Replace the following line.
 #	Instead, use node binning to select the random samples.
-randSamps = sm.sampleMatrix(sname)
+randSamps = ff2.sampleMatrix(epath, ename, sampGenes, spath, sname)
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
