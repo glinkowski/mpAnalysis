@@ -33,16 +33,16 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'fakeNtwk01_g3e4t1'
-epath = 'networks/'
-#ename = 'toy2_hsa.edge'
-#epath = '../networks/'
+#ename = 'fakeNtwk01_g3e4t1'
+#epath = 'networks/'
+ename = 'toy2_p3gz'
+epath = '../networks/'
 
 # The sample to test and path
-sname = 'sample02'
-spath = 'samplesFake/'
-#sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
-#spath = '../samples/'
+#sname = 'sample03'
+#spath = 'samplesFake/'
+sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
+spath = '../samples/'
 
 # Where to store the output
 #oname = 'find02-' + ename + "-" + sname

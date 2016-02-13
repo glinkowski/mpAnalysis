@@ -60,7 +60,7 @@ Input:
     the edge array of the original network
     the gene head such as ENSG
     the gene list of the original network
-
+    binThresholds: a list of percentile [0.1, 0.25, 0.5] will separate the genes to four bins
 Output:
     write high/med/low bins into .txt files for future sample generationg
     

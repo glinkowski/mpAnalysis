@@ -32,12 +32,13 @@ import time
 
 # The network to use and directory path
 #ename = 'fakeNtwk00_g2e3t10'
+#ename = 'fakeNtwk01_g3e4t1'
 #epath = 'networks/'
-ename = 'toy2_hsa_g1e4t0'
+ename = 'toy2_p3gz'
 epath = '../networks/'
 
 # The sample to test and path
-#sname = 'Fake00_sample02'
+#sname = 'sample03'
 #spath = 'samplesFake/'
 sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
 spath = '../samples/'
