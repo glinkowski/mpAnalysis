@@ -176,7 +176,7 @@ Output:
     
 '''
 
-def writeDegreeMatrix(edgeArray, geneHead):
+def writeDegreeMatrix(ntwkPath, ntwkName, edgeArray, geneHead):
     edges = pd.DataFrame(edgeArray)
     edges = edges.rename(columns = {0:'nodes', 1:'genes', 2:'weight', 3:'type'})
     types = np.unique(edges.type) #['typeA' 'typeB' 'typeC']
@@ -224,7 +224,7 @@ def writeDegreeMatrix(edgeArray, geneHead):
     degreeMatrix = degreeMatrix.fillna(0)
     
     headers = ['Genes', 'All_degree',] + list(types)
-    
+    degreeMatrix.to_csv(ntwkPath + ntwkName +'/' + 'degreeMatrix.txt', sep = '\t', index = False, header = False)
     return degreeMatrix.values, headers
 
 def degree():
