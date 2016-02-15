@@ -168,16 +168,19 @@ README
 writeDegreeMatrix:
 The goal for this function is to write a degree matrix into files.
 Input:
-    the edge array of the original network
+    the path of the edge array of the original network
     the gene head such as ENSG
 
 Output:
     a .txt file that contains an np ndarray matrix of degree matrix
+    a .txt file that contains the header of degree matrix
     
 '''
 
-def writeDegreeMatrix(ntwkPath, ntwkName, edgeArray, geneHead):
-    edges = pd.DataFrame(edgeArray)
+def writeDegreeMatrix(ntwkPath, ntwkName, geneHead):
+    
+    edges = pd.read_table(ntwkPath + ntwkName + '/' + 'edge.txt', header=None)
+    
     edges = edges.rename(columns = {0:'nodes', 1:'genes', 2:'weight', 3:'type'})
     types = np.unique(edges.type) #['typeA' 'typeB' 'typeC']
     print types
@@ -224,8 +227,13 @@ def writeDegreeMatrix(ntwkPath, ntwkName, edgeArray, geneHead):
     degreeMatrix = degreeMatrix.fillna(0)
     
     headers = ['Genes', 'All_degree',] + list(types)
-    degreeMatrix.to_csv(ntwkPath + ntwkName +'/' + 'degreeMatrix.txt', sep = '\t', index = False, header = False)
+    degreeMatrix = degreeMatrix.sort(0, ascending=True)
+    degreeMatrix.to_csv(ntwkPath + ntwkName + '/' + 'degreeMatrix.txt', sep = '\t', index = False, header = False)
+    headers = pd.Series(headers)
+    headers.to_csv(ntwkPath + ntwkName + '/' + 'header.txt', sep = '\t', index = False, header = False)
     return degreeMatrix.values, headers
+    
+    
 
 def degree():
     outname = 'toy_hsa_c'
