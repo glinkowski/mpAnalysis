@@ -18,9 +18,9 @@ import preProcFuncs as pp
 
 ####### ####### ####### ####### 
 # PARAMETERS
-ename = 'hsa_dghmw'
-#ename = 'all-v1'
-oname = 'toy4_hsa'
+#ename = 'hsa_dghmw'
+ename = 'all_v1'
+oname = 'toy5_all'
 path = 'networks/'
 spath = 'samplesMSIG/'
 kfile = ename + '.keep.txt'
@@ -30,8 +30,8 @@ outfile = oname + '.edge.txt'
 outdict = oname + '.dict.txt'
 delim = '\t'
 
-# percent of nodes to remove
-prune = 20
+# percent of genes to remove
+prune = 75
 
 ## species               gene designation
 #include_human = True   # ENSG
