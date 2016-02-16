@@ -9,18 +9,21 @@
 # ----------------------------------------------------
 import sys
 #import re
-import mpfuncs as mp
+#import mpfuncs as mp
 import random
+import mpFindFuncs as ff
+import preProcFuncs as pp
 
 
 
 ####### ####### ####### ####### 
 # PARAMETERS
-
-ename = 'hsa_dghmw_c'
+ename = 'hsa_dghmw'
 #ename = 'all-v1'
-oname = 'toy2_hsa'
-path = '../networks/'
+oname = 'toy4_hsa'
+path = 'networks/'
+spath = 'samplesMSIG/'
+kfile = ename + '.keep.txt'
 
 infile = ename + '.edge.txt'
 outfile = oname + '.edge.txt'
@@ -28,7 +31,7 @@ outdict = oname + '.dict.txt'
 delim = '\t'
 
 # percent of nodes to remove
-prune = 50
+prune = 20
 
 ## species               gene designation
 #include_human = True   # ENSG
@@ -71,21 +74,36 @@ if (path+outfile) == (path+infile) :
 
 
 print "Reading in the original edge file..."
-edgeArray, nodeDict = mp.readEdgeFile(path+infile, delim)
+edgeArray, nodeDict = pp.readEdgeFile(path + infile)
+#edgeArray, nodeDict = mp.readEdgeFile(path+infile, delim)
 
+
+# Create a safe list from the sample sets
+safeSet = set()
+sList = ff.getSampleList(spath)
+for name in sList :
+	sGenes = ff.readSampleFiles(spath + name, True, True)
+	safeSet |= set(sGenes)
+#end if
+
+# Only want to throw away genes
+temp1, keepGenes, loseGenes, temp2, temp3, temp4 = pp.readKeepFile(path+kfile)
+temp5, geneList = pp.createNodeLists(edgeArray, (keepGenes + loseGenes) )
+del temp1, temp2, temp3, temp4, temp5
 
 # Build the list of nodes to exclude
 remSet = set()
 # normalize prune value to [0,1]
 check = prune / 100.0
 
-nodeList = list(nodeDict.keys())
-for node in nodeList :
-	# randomly add nodes to remove list
+#nodeList = list(nodeDict.keys())
+#for node in nodeList :
+for node in geneList :
+	# randomly add nodes to the 'remove' list
 	test = random.random()
 	if test <= check :
-		remSet.add(node)
-	#end if
+		if node not in safeSet :
+			remSet.add(node)
 #end loop
 
 print "Saving the reduced edge file as {}".format(outfile)

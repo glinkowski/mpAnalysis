@@ -161,6 +161,79 @@ def degreeMatrix(edgeArray, geneHead):
     headers = ['Genes', 'All_degree',] + list(types)
     
     return degreeMatrix.values, headers
+    
+    
+'''
+README
+writeDegreeMatrix:
+The goal for this function is to write a degree matrix into files.
+Input:
+    the path of the edge array of the original network
+    the gene head such as ENSG
+
+Output:
+    a .txt file that contains an np ndarray matrix of degree matrix
+    a .txt file that contains the header of degree matrix
+    
+'''
+
+def writeDegreeMatrix(ntwkPath, ntwkName, geneHead):
+    
+    edges = pd.read_table(ntwkPath + ntwkName + '/' + 'edge.txt', header=None)
+    
+    edges = edges.rename(columns = {0:'nodes', 1:'genes', 2:'weight', 3:'type'})
+    types = np.unique(edges.type) #['typeA' 'typeB' 'typeC']
+    print types
+    all_degree = {}
+    # Creat dictionaries based on the number of types, count the degree of genes based on gene types.
+    dictName = {}
+    for j in range(len(types)):
+        dictionaryName = 'dictionary_' + str(types[j])
+        dictName[dictionaryName] = {}
+    print dictName
+    for i in range(len(edges.nodes)):
+        if edges.nodes[i][0:4] in geneHead:
+            # For the first column of edge matrix, count all degree
+            if edges.nodes[i] not in all_degree:
+                all_degree[edges.nodes[i]] = 1
+            else:
+                all_degree[edges.nodes[i]] += 1
+            
+            # For the first column of edge matrix, count the degree based on different gene types
+            if edges.nodes[i] not in dictName['dictionary_' + str(edges.type[i])]:
+                dictName['dictionary_' + str(edges.type[i])][edges.nodes[i]] = 1
+            else:
+                dictName['dictionary_' + str(edges.type[i])][edges.nodes[i]] += 1
+                
+        if edges.genes[i][0:4] in geneHead:    
+            # For the second column of edge matrix, count all degree
+            if edges.genes[i] not in all_degree:
+                all_degree[edges.genes[i]] = 1
+            else:
+                all_degree[edges.genes[i]] += 1
+                
+            # For the second column of edge matrix, count the degree based on different gene types 
+            if edges.genes[i] not in dictName['dictionary_' + str(edges.type[i])]:
+                dictName['dictionary_' + str(edges.type[i])][edges.genes[i]] = 1
+            else:
+                dictName['dictionary_' + str(edges.type[i])][edges.genes[i]] += 1
+                          
+    degreeMatrix = pd.DataFrame.from_dict(all_degree.items())
+    for j in range(len(types)):
+        tempDegreeMatrix = pd.DataFrame.from_dict(dictName['dictionary_' + str(types[j])].items())
+        print tempDegreeMatrix
+        degreeMatrix = pd.DataFrame.merge(degreeMatrix, tempDegreeMatrix, how = 'left', on = 0)
+    #Fill missing values
+    degreeMatrix = degreeMatrix.fillna(0)
+    
+    headers = ['Genes', 'All_degree',] + list(types)
+    degreeMatrix = degreeMatrix.sort(0, ascending=True)
+    degreeMatrix.to_csv(ntwkPath + ntwkName + '/' + 'degreeMatrix.txt', sep = '\t', index = False, header = False)
+    headers = pd.Series(headers)
+    headers.to_csv(ntwkPath + ntwkName + '/' + 'header.txt', sep = '\t', index = False, header = False)
+    return degreeMatrix.values, headers
+    
+    
 
 def degree():
     outname = 'toy_hsa_c'
