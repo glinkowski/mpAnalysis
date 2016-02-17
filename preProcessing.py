@@ -34,10 +34,10 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'toy2_hsa'
-#epath = '../networks/'
-ename = 'fakeNtwk01'
+ename = 'toy5_all'
 epath = 'networks/'
+#ename = 'fakeNtwk01'
+#epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
 mpDepth = 1
@@ -118,7 +118,7 @@ pp.writeModEdgeFilePlus(epath, outname,
 #TODO:
 ######## ######## ######## ######## 
 # Save the node-binning stats for the network
-ff2.writeNodeBinFiles(epath, outname, geneList, edgeArray, geneHuman, binThresholds )
+#ff2.writeNodeBinFiles(epath, outname, geneList, edgeArray, geneHuman, binThresholds )
 ######## ######## ######## ######## 
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
@@ -129,7 +129,9 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Change indirect edges to direct
 print "Creating the primary gene-gene matrices ..."
-matrixList, matrixNames = pp.createMatrixList(edgeArray,
+#matrixList, matrixNames = pp.createMatrixList(edgeArray,
+#	keepEdges, indirEdges, geneList, nodeDict)
+matrixList, matrixNames = pp.createMatrixListNoBinning(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
 
 # Save the primary matrices

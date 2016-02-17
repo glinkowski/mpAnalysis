@@ -10,6 +10,7 @@ bee	GB[45][0123456789]	no
 worm	WBGe	no
 yeast	Y[ABCDEFGHIJKLMNOP][LR][0123456]	no
 grass	AT[12345CM]G	no
+unknown	Q0[01234][0123456789]	no
 
 EDGE TYPES	--	16
 GO_term	indirect	keep
