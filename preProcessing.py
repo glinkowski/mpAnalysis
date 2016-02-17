@@ -34,13 +34,13 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'toy5_all'
-epath = 'networks/'
+ename = 'all_v1'
+epath = '../networks/'
 #ename = 'fakeNtwk01'
 #epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 1
+mpDepth = 2
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -68,13 +68,15 @@ tstart = time.time()
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
 geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
-print keepGenes
-print keepEdges
-print indirEdges
+#print keepGenes
+#print keepEdges
+#print indirEdges
 
 # Read in the network (edge file) to a matrix
 print "    reading in the edge file", efile
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
+print "    initial edgeArray size: {} bytes".format(edgeArray.nbytes)
+
 
 # Read in the corrections file
 #   if not there, skip corrections, alert user
@@ -95,6 +97,8 @@ edgeArray = pp.applyThreshold(edgeArray, thresh)
 # Discard specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 	keepEdges, indirEdges)
+print "    final edgeArray size: {} bytes".format(edgeArray.nbytes)
+
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 

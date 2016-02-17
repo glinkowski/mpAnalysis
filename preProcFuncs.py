@@ -69,6 +69,8 @@ keepTriple = True
 matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
 # Whether to save a text-only copy of the matrices
 saveTextCopy = False
+# Whether to print non-error messages within these funcs
+verbose = True
 
 ####### ####### ####### ####### 
 
@@ -218,7 +220,9 @@ def readEdgeFile(datafile) :
 	# close the data file
 	df.close()
 
-#    print "  file contained {:,} lines".format(nLines)
+	if verbose :
+	    print "  file contained {:,} lines".format(nLines)
+
 	return Edges, Nodes
 #end def ######## ######## ########
 
@@ -259,8 +263,9 @@ def applyCorrections(edges, fname) :
 		fixList.append(lv[1])
 	#end loop
 
-#	print checkSet
-#	print edges.shape
+	if verbose :
+		print checkSet
+		print edges.shape
 
 	for i in range(0, edges.shape[0]) :
 		if edges[i,0] in checkSet :
@@ -895,7 +900,8 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			else :
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
-			print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			if verbose :
+				print "    building {}, at {} bytes".format(et, thisM.nbytes)
 
 			count = 0
 			for term in term_sm :
@@ -1257,7 +1263,8 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
 
-			print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			if verbose :
+				print "    building {}, at {} bytes".format(et, thisM.nbytes)
 #TODO: build from here.
 			count = 0
 			for term in termDict.keys() :
@@ -1444,7 +1451,8 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
 
-			print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			if verbose :
+				print "    building {}, at {} bytes".format(et, thisM.nbytes)
 			
 			count = 0
 
