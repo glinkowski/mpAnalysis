@@ -39,7 +39,7 @@ tstart = time.time()
 
 # Load the primary matrices to memory
 print "\nLoading the primary path matrices"
-primNames, primList = pp.readPrimaryMatrices(ename, epath)
+primNames, primList = pp.readPrimaryMatrices(epath, ename)
 #print primNames
 #print primList[0]
 

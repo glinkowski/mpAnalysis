@@ -2155,7 +2155,67 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 #	pNames, dict
 #		key, str: metapath names
 #		value, int: corresponding index number for mList
-def readPrimaryMatrices(nName, nPath) :
+def readPrimaryMatrices(nPath, nName) :
+
+	# Check for folder existence
+	path = nPath + nName + "_Primaries/"
+	if not os.path.exists(path) :
+		print "ERROR: Path doesn't exist: {}".format(path)
+		sys.exit()
+	#end if
+
+	# Items to return
+	pNames = list()
+	pList = list()
+
+	# Read in the key file
+	fn = open(path + "key.txt", "rb")
+	for line in fn :
+		line = line.rstrip()
+		lv = line.split('\t')
+
+		pNames.append(lv[1])
+
+		if speedVsMemory :
+			if os.path.isfile( path + lv[0] + '.gz' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.gz') )
+			elif os.path.isfile( path + lv[0] + '.txt' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.txt') )
+			else :
+				print ("ERROR: Unknown file name and extension" +
+					" for matrix {}.".format(lv[0]))
+				sys.exit()
+			#end if
+		else :
+			if os.path.isfile( path + lv[0] + '.gz' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.gz', dtype=matrixDT) )
+			elif os.path.isfile( path + lv[0] + '.txt' ) :
+				pList.append( np.loadtxt(path + lv[0] + '.txt', dtype=matrixDT) )
+			else :
+				print ("ERROR: Unknown file name and extension" +
+					" for matrix {}.".format(lv[0]))
+				sys.exit()
+			#end if
+		#end if
+	#end loop
+
+	return pNames, pList
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: read in the primary matrices
+# Input: 
+#	nPath, str - path to the network
+#	nName, str - name of the network
+# Returns: 
+#	pList, list of NxN matrices - the primary matrices
+#		ie: the 1-level path matrices
+#	pNames, dict
+#		key, str: metapath names
+#		value, int: corresponding index number for mList
+def countNodeDegrees(nPath, nName, edgeArray) :
 
 	# Check for folder existence
 	path = nPath + nName + "_Primaries/"
