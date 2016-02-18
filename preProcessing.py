@@ -34,21 +34,21 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'toy5_all'
-epath = 'networks/'
-#ename = 'fakeNtwk01'
+#ename = 'toy5_all'
 #epath = 'networks/'
+ename = 'fakeNtwk01'
+epath = 'networks/'
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 1
+mpDepth = 2
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
 cfile = ename + '.correct.txt'
 
-# NODE BINNING --
-# Threshold percentages for binning the genes
-binThresholds = [.4, .9]
+#	# NODE BINNING --
+#	# Threshold percentages for binning the genes
+#	binThresholds = [.4, .9]
 
 ####### ####### ####### ####### 
 
@@ -115,6 +115,8 @@ pp.writeModEdgeFilePlus(epath, outname,
 # Save the node-binning stats for the network
 #ff2.writeNodeBinFiles(epath, outname, geneList, edgeArray, geneHuman, binThresholds )
 ######## ######## ######## ######## 
+pp.saveSelectGeneDegrees(epath, outname, edgeArray, geneList, geneHuman)
+
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
