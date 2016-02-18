@@ -71,6 +71,8 @@ matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
 saveTextCopy = False
 # Data delimiter to use in the output file:
 textDelim = '\t'
+# Whether to print non-error messages within these funcs
+verbose = True
 
 ####### ####### ####### ####### 
 
@@ -220,7 +222,9 @@ def readEdgeFile(datafile) :
 	# close the data file
 	df.close()
 
-#    print "  file contained {:,} lines".format(nLines)
+	if verbose :
+	    print "  file contained {:,} lines".format(nLines)
+
 	return Edges, Nodes
 #end def ######## ######## ########
 
@@ -261,8 +265,9 @@ def applyCorrections(edges, fname) :
 		fixList.append(lv[1])
 	#end loop
 
-#	print checkSet
-#	print edges.shape
+	if verbose :
+		print checkSet
+		print edges.shape
 
 	for i in range(0, edges.shape[0]) :
 		if edges[i,0] in checkSet :
@@ -839,6 +844,12 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			termDict = dict()
 			for row in thisArray :
 
+# TODO: what to do about bad gene mappings?
+				# Skip improperly mapped genes
+				if row[1] not in gSet :
+					continue
+
+
 				# Only add if the node is not a gene
 				if row[0] not in gSet :
 					# Else, increment count by 1
@@ -891,7 +902,8 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			else :
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
-			print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			if verbose :
+				print "    building {}, at {} bytes".format(et, thisM.nbytes)
 
 			count = 0
 			for term in term_sm :
@@ -906,6 +918,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 						# ASSUME: terms always in col 0, genes in col 1
 						gA = eArray[i,1]
 						gB = eArray[j,1]
+
+# TODO: what to do about bad gene mappings?
+						# Skip improperly mapped genes
+						if gA not in gSet :
+							continue
+						elif gB not in gSet :
+							continue
+
 						# Increment the entry(s) in the array (symmetric)
 						thisM[gDict[gA],gDict[gB]] += 1
 						thisM[gDict[gB],gDict[gA]] += 1
@@ -955,6 +975,16 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 						# ASSUME: terms always in col 0, genes in col 1
 						gA = eArray[i,1]
 						gB = eArray[j,1]
+
+# TODO: what to do about bad gene mappings?
+						# Skip improperly mapped genes
+						if gA not in gSet :
+							continue
+						elif gB not in gSet :
+							continue
+
+
+
 						# Increment the entry(s) in the array (symmetric)
 						thisM[gDict[gA],gDict[gB]] += 1
 						thisM[gDict[gB],gDict[gA]] += 1
@@ -1004,6 +1034,15 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 						# ASSUME: terms always in col 0, genes in col 1
 						gA = eArray[i,1]
 						gB = eArray[j,1]
+
+# TODO: what to do about bad gene mappings?
+						# Skip improperly mapped genes
+						if gA not in gSet :
+							continue
+						elif gB not in gSet :
+							continue
+
+
 						# Increment the entry(s) in the array (symmetric)
 						thisM[gDict[gA],gDict[gB]] += 1
 						thisM[gDict[gB],gDict[gA]] += 1
@@ -1049,6 +1088,14 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			thisArray = eArray[eArray[:,3]==et]
 			# increment entry at (i,j) = (gene0,gene1)
 			for row in thisArray :
+
+# TODO: what to do about bad gene mappings?
+				# Skip improperly mapped genes
+				if row[0] not in gSet :
+					continue
+				elif row[1] not in gSet :
+					continue
+
 				thisM[gDict[row[0]],gDict[row[1]]] += 1
 				thisM[gDict[row[1]],gDict[row[0]]] += 1
 				count += 1
@@ -1218,7 +1265,8 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
 
-			print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			if verbose :
+				print "    building {}, at {} bytes".format(et, thisM.nbytes)
 #TODO: build from here.
 			count = 0
 			for term in termDict.keys() :
@@ -1405,7 +1453,8 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
 
-			print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			if verbose :
+				print "    building {}, at {} bytes".format(et, thisM.nbytes)
 			
 			count = 0
 

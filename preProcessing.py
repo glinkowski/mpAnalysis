@@ -34,8 +34,8 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'toy5_all'
-#epath = 'networks/'
+#ename = 'all_v1'
+#epath = '../networks/'
 ename = 'fakeNtwk01'
 epath = 'networks/'
 
@@ -68,10 +68,15 @@ tstart = time.time()
 print "\nReading in the network:", ename
 print "    reading the keep file", kfile
 geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
+#print keepGenes
+#print keepEdges
+#print indirEdges
 
 # Read in the network (edge file) to a matrix
 print "    reading in the edge file", efile
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
+print "    initial edgeArray size: {} bytes".format(edgeArray.nbytes)
+
 
 # Read in the corrections file
 #   if not there, skip corrections, alert user
@@ -92,6 +97,8 @@ edgeArray = pp.applyThreshold(edgeArray, thresh)
 # Discard specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 	keepEdges, indirEdges)
+print "    final edgeArray size: {} bytes".format(edgeArray.nbytes)
+
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
@@ -100,8 +107,10 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 # 2) Save the modified network
 
 # Create an updated nodeDict from modified edge list
-allGenes = keepGenes + loseGenes
-nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
+#TODO: Why am I concatenating these lists?
+#allGenes = keepGenes + loseGenes
+#nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
+nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
 
 # Save the edge list, node dict, gene list
 outname = pp.createModEdgeFileName(ename, keepEdges,
