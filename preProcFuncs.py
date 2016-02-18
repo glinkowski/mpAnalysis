@@ -38,6 +38,7 @@
 #	createMPLengthFour(pList, pNames, path)
 #	createMetaPaths(pList, pNames, gList, depth, path)
 #	readPrimaryMatrices(nName, nPath)
+#	saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex)
 # ---------------------------------------------------------
 
 import os.path
@@ -56,7 +57,7 @@ nodeDT = np.dtype('a30')
 # Whether to use the data-type for the matrices:
 speedVsMemory = True	# True favors speed, disables dtype
 # Data-type for the path matrices:
-matrixDT = np.uint16
+matrixDT = np.float32	#TODO: do any 
 warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
@@ -1565,6 +1566,7 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	#end if
 
 	# Write to the file
+#TODO: check if the fmt option is appropriate, or pointless
 #	np.save(mpath+mname, matrix)
 	np.savetxt(mpath + mname + matrixExt, matrix, fmt='%u')
 #NOTE: In this case, the text file from savetxt() is much
@@ -2274,20 +2276,6 @@ def saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex) :
 	if not os.path.exists(nPath+nName+"/") :
 		os.makedirs(nPath+nName+"/")
 	#end if
-
-	# NOTE: Only considering human genes (at least for now)
-#	# Separate out human genes from all genes
-#	genesHuman = list()
-#	for gene in genesAll :
-#		# list of matches to be found
-#		ma = list()
-#		for exp in humanRegex :
-#			ma.append( re.match(exp, gene) )
-#		# add gene only if one of the matches is positive
-#		if any(match != None for match in ma) :
-#			genesHuman.append(gene)
-#	#end loop
-#	genesHuman.sort()
 
 	# NOTE: Only considering human genes (at least for now)
 	# Build an index dictionary from the human genes
