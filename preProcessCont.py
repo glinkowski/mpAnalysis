@@ -20,7 +20,7 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'toy2_hsa_g1e4t0'
+ename = 'all_v1_g2e11t0'
 epath = '../networks/'
 #ename = 'fakeNtwk00_g2e3t10'
 #epath = 'networks/'

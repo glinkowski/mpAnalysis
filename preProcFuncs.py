@@ -54,9 +54,10 @@ import re
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
 # Whether to use the data-type for the matrices:
-speedVsMemory = True	# True favors speed, disables dtype
+speedVsMemory = False	# True favors speed, disables dtype
 # Data-type for the path matrices:
-matrixDT = np.uint16
+#matrixDT = np.uint16
+matrixDT = np.float32
 warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
@@ -2223,6 +2224,10 @@ def readPrimaryMatrices(nName, nPath) :
 		line = line.rstrip()
 		lv = line.split('\t')
 
+		if verbose:
+			print "    reading matrix {}".format(lv[1])
+		#end if
+
 		pNames.append(lv[1])
 
 		if speedVsMemory :
@@ -2246,6 +2251,9 @@ def readPrimaryMatrices(nName, nPath) :
 				sys.exit()
 			#end if
 		#end if
+
+		if verbose :
+			print "    finished loading {}, total: {} bytes".format(lv[1], pList.npbytes)
 	#end loop
 
 	return pNames, pList
