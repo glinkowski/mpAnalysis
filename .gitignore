@@ -7,16 +7,12 @@
 ###########################
 output*/*
 networks/*/*
-samplesMSIG/*
 networks/hsa_dghmw.edge.txt
 networks/all_v1.edge.txt
 
 
 # Related Folders & Files #
 ############################
-cytoscape/*
-keep/*
-old_code/*
 sampleMatrix/*
 *.sublime-workspace
 

@@ -10,7 +10,8 @@ bee	GB[45][0123456789]	no
 worm	WBGe	no
 yeast	Y[ABCDEFGHIJKLMNOP][LR][0123456]	no
 grass	AT[12345CM]G	no
-unknown	Q0[01234][0123456789]	no
+unknown1	Q0[01234][0123456789]	no
+unknown2	Arth
 
 EDGE TYPES	--	16
 GO_term	indirect	keep
@@ -19,13 +20,13 @@ PPI_BioGRID	direct	no
 PPI_DIP	direct	no
 PPI_IntAct	direct	no
 PPI_MINT	direct	no
-STRING_coexpression	direct	no
-STRING_cooccurrence	direct 	no
-STRING_database	direct	no
-STRING_experimental	direct	no
-STRING_fusion	direct	no
-STRING_neighborhood	direct	no
-STRING_textmining	direct	no
+STRING_coexpression	direct	keep
+STRING_cooccurrence	direct 	keep
+STRING_database	direct	keep
+STRING_experimental	direct	keep
+STRING_fusion	direct	keep
+STRING_neighborhood	direct	keep
+STRING_textmining	direct	keep
 motif_u5_gc	indirect	keep
 pfam_domain	indirect	keep
 prot_homol	direct	keep
