@@ -46,6 +46,7 @@ import os.path
 import sys
 import numpy as np
 import re
+import time
 
 
 
@@ -55,7 +56,7 @@ import re
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
 # Whether to use the data-type for the matrices:
-speedVsMemory = False	# True favors speed, disables dtype
+speedVsMemory = True	# True favors speed, disables dtype
 # Data-type for the path matrices:
 matrixDT = np.float32	#TODO: any considerations here?
 warnDTvalue = 65000
@@ -2256,7 +2257,8 @@ def readPrimaryMatrices(nPath, nName) :
 		#end if
 
 		if verbose :
-			print "    finished loading {}, total: {} bytes".format(lv[1], pList.npbytes)
+			print "    finished loading {}, total: {} bytes".format(lv[1], pList[len(pList)-1].nbytes)
+			print "    current time: {}".format( time.time() )
 	#end loop
 
 	return pNames, pList
