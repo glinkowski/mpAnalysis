@@ -36,6 +36,8 @@ keyZPad = 5
 fnZPad = 3
 # Data delimiter to use in the output file:
 textDelim = '\t'
+# Whether to print non-error messages within these funcs
+verbose = True
 
 ######## ######## ######## ######## 
 
@@ -979,6 +981,7 @@ def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 #	fs.write('concealed:{}{}\n'.format(delim, len(gHidden)))
 	fs.write('\n')
 
+
 	# Get the indices for all genes not in the test sample
 	itemOutdex = [n for n in range(len(itemDict)) if n not in itemIndex]
 	#print itemOutdex
@@ -987,6 +990,7 @@ def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 	geneList = [geneList[g] for g in itemOutdex]
 	del itemOutdex
 	#print geneList
+
 
 	#fs.write('{}'.format(delim))
 	for bp in colHeader :
@@ -1009,4 +1013,167 @@ def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 
 
 	return filename
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Choose N random samples, return as an array of
+#	gene indices, ! Use node-binning !
+# Input ----
+#	path, str: path to the network files
+#	name, str: name of the network to use
+#	sample, str list: list of nodes by name
+#		ASSUME: only contains nodes in the network
+#	indexDict, dict:
+#       key, str: gene name as read from file
+#       value, int: index to corresponding array
+#	cutoffPercent, float list: values to use as bin cutoffs
+#		ex: [0.4] means lower bin contains 40% of lowest-degree nodes
+#	eType, str: the desired edge type along which to bin,
+#		'all' means total degree count
+#	numRandSamples, int: desired #, indicates # rows
+# Returns ----
+#   rSamples, int array: 
+def createRandomSamplesBinned(path, name, sample,
+	indexDict, cutoffPercent, eType, numRandSamples) :
+
+	fname = path + name + '/node-degree.txt'
+
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	if verbose :
+		print "Opening {}".format(fname)
+
+
+	# Read in the file:
+	dfile = open(fname, 'rb')
+	col = -1
+	degreeDict = dict()
+	for line in dfile :
+		line = line.rstrip()
+		lv = line.split(textDelim)
+
+		# Locate the column corresponding to eType
+		if lv[0] == 'HEADER' :
+			for i in range(len(lv)) :
+				if lv[i] == eType :
+					col = i
+			# end loop
+			if verbose :
+				print "    {} at column {}".format(eType, col)
+			if col == -1 :
+				print ( "ERROR: Specified edge type doesn't appear" +
+					" in node-degree.txt" )
+				sys.exit()
+			#end if
+
+		# Once column is found, create the node-degree dict
+		else :
+			degreeDict[lv[0]] = int(lv[col])
+	#end loop
+
+
+	# Define the bin cutoffs
+	values = degreeDict.values()
+	values.sort()
+	cutoffs = list()
+	for cp in cutoffPercent :
+
+		if (cp <= 1) and (cp >= 0) :
+			decimal = cp
+		elif cp < 100 :
+			decimal = cp / 100
+		else :
+			print ( "ERROR: Specified node-binning cutoff percent" +
+				" is outside range: {}".format(decimal) )
+		#end if
+
+		# Find the value of the gene at cp %
+		# Goal: capture X % of nodes, sorted by degree
+		location = int(round(cp * len(values)))
+		cutoffs.append(values[location])
+	#end loop
+	cutoffs.append(np.amax(values) + 1)	# The 100% ceiling
+
+
+	# Bin the sample
+	distribution = [0] * (len(cutoffs) + 1)
+	for node in sample :
+		# Get the sample node's degree
+		this = degreeDict[node]
+
+		# Increment the appropriate bin
+		for i in range(len(cutoffs)) :
+			if this < cutoffs[i] :
+				distribution[i] += 1
+				break
+		# end loop
+	#end loop
+
+	if verbose :
+		print "    degree distribution of sample: {}".format(distribution)
+		print "    with cutoffs: {}".format(cutoffs)
+	#end if
+
+
+
+	# Build inverse array as {bin: [genes]}
+	binDict = dict()
+	for i in range(len(distribution)) :
+		binDict[i] = list()
+	#end loop
+
+	# Place the node names into the bins
+	for key in degreeDict :
+		# Add key to lowest matching bin number
+		for i in range(len(cutoffs)) :
+			if degreeDict[key] < cutoffs[i] :
+				binDict[i].append(key)
+				break
+		#end loop
+	#end loop
+	del degreeDict	# Your services are no longer needed.
+
+	if verbose :
+		distBins = list()
+		for i in range(len(binDict)) :
+			distBins.append(len(binDict[i]))
+		print "    degree distribution of network: {}".format(distBins)
+	#end if
+
+
+	# Populate the random samples matrix (rows = samples, cols = indices to nodes)
+	rSamples = np.empty([numRandSamples, len(sample)], dtype=np.int32)
+	for row in range(0, numRandSamples) :
+		oneRSample = list()
+
+		# Select genes from each bin, add to random sample
+		for i in range(len(binDict)) :
+
+			if distribution[i] > len(binDict[i]) :
+				print ( "ERROR: For bin {} the number of nodes in sample ({})" +
+					" exceeds number for the network {}".format(i, 
+						distribution[i], len(binDict[i])) )
+			#end if
+
+			# get the indices from the list of nodes in bin
+			indices = random.sample(xrange(len(binDict[i])), distribution[i])
+			indices.sort()
+			# convert to list of indices from the passed dict
+			tempList = [indexDict[binDict[i][idx]] for idx in indices]
+
+			oneRSample.extend(tempList)
+		#end loop
+
+		rSamples[row,:] = oneRSample
+	#end loop
+
+
+	return rSamples
 #end def ######## ######## ######## 

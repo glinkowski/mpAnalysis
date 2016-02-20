@@ -2278,7 +2278,8 @@ def readPrimaryMatrices(nPath, nName) :
 #	genesAll, str list: list of all genes in network
 #	humanRegex, str list: regex for first 4 chars of genes to keep
 # Returns ----
-# Returns ----
+# Creates ----
+#	file called node-degree.txt ... TODO: explain
 def saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex) :
 
 	# If folder doesn't exist, create it
