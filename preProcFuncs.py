@@ -38,6 +38,7 @@
 #	createMPLengthFour(pList, pNames, path)
 #	createMetaPaths(pList, pNames, gList, depth, path)
 #	readPrimaryMatrices(nName, nPath)
+#	saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex)
 # ---------------------------------------------------------
 
 import os.path
@@ -45,6 +46,7 @@ import os.path
 import sys
 import numpy as np
 import re
+import time
 
 
 
@@ -56,7 +58,7 @@ nodeDT = np.dtype('a30')
 # Whether to use the data-type for the matrices:
 speedVsMemory = True	# True favors speed, disables dtype
 # Data-type for the path matrices:
-matrixDT = np.uint16
+matrixDT = np.float32	#TODO: any considerations here?
 warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
@@ -69,6 +71,8 @@ keepTriple = True
 matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
 # Whether to save a text-only copy of the matrices
 saveTextCopy = False
+# Data delimiter to use in the output file:
+textDelim = '\t'
 # Whether to print non-error messages within these funcs
 verbose = True
 
@@ -1563,6 +1567,7 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	#end if
 
 	# Write to the file
+#TODO: check if the fmt option is appropriate, or pointless
 #	np.save(mpath+mname, matrix)
 	np.savetxt(mpath + mname + matrixExt, matrix, fmt='%u')
 #NOTE: In this case, the text file from savetxt() is much
@@ -2204,7 +2209,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 #	pNames, dict
 #		key, str: metapath names
 #		value, int: corresponding index number for mList
-def readPrimaryMatrices(nName, nPath) :
+def readPrimaryMatrices(nPath, nName) :
 
 	# Check for folder existence
 	path = nPath + nName + "_Primaries/"
@@ -2222,6 +2227,10 @@ def readPrimaryMatrices(nName, nPath) :
 	for line in fn :
 		line = line.rstrip()
 		lv = line.split('\t')
+
+		if verbose:
+			print "    reading matrix {}".format(lv[1])
+		#end if
 
 		pNames.append(lv[1])
 
@@ -2246,7 +2255,111 @@ def readPrimaryMatrices(nName, nPath) :
 				sys.exit()
 			#end if
 		#end if
+
+		if verbose :
+			print "    finished loading {}, total: {} bytes".format(lv[1], pList[len(pList)-1].nbytes)
+			print "    current time: {}".format( time.time() )
 	#end loop
 
 	return pNames, pList
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: count degree of specified genes by
+#	each edge type and save output to file
+# Input ----
+#	nPath, str: path to the network files
+#	nName, str: name of the network (save location)
+#   edgeArray - (Nx4) matrix of char strings
+#       each row: node, node, edge weight, edge type
+#		!ASSUME: this is the gene-only version of the network
+#	genesAll, str list: list of all genes in network
+#	humanRegex, str list: regex for first 4 chars of genes to keep
+# Returns ----
+# Creates ----
+#	file called node-degree.txt ... TODO: explain
+def saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex) :
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(nPath+nName+"/") :
+		os.makedirs(nPath+nName+"/")
+	#end if
+
+	# NOTE: Only considering human genes (at least for now)
+	# Build an index dictionary from the human genes
+	genesAll = np.unique(genesAll)
+	genesAll.sort()
+	gHumanDict = dict()
+	index = 0
+	for gene in genesAll :
+		# Look for matches to regex expression
+		ma = list()
+		for exp in humanRegex :
+			ma.append( re.match(exp, gene) )
+		# add gene only if one of the matches is positive
+		if any(match != None for match in ma) :
+			gHumanDict[gene] = index
+			index += 1
+	#end loop
+
+	# Get list of edge types
+	eTypes = np.unique(edgeArray[:,3])
+	eTypes.sort()
+	# Build an index dictionary from the edge types
+	eDict = dict()
+	index = 1 		# col 0 reserved for 'all'
+	for et in eTypes :
+		eDict[et] = index
+		index += 1
+	#end loop
+
+	# matrix to store degree counts (col 0 reserved for 'all')
+	degreeMatrix = np.zeros([ len(gHumanDict), len(eTypes)+1 ])
+
+	# First, count degrees along SPECIFIED edge types
+	for row in edgeArray :
+		# by incrementing the matrix
+		if row[0] in gHumanDict :
+			degreeMatrix[ gHumanDict[row[0]], eDict[row[3]] ] += 1
+		if row[1] in gHumanDict :
+			degreeMatrix[ gHumanDict[row[1]], eDict[row[3]] ] += 1
+	#end loop
+
+	# Second, sum degrees along ALL edge types
+	degreeMatrix[:, 0] = np.sum(degreeMatrix, axis=1)
+
+	# Open the output file
+	fname = nPath+nName+'/node-degree.txt'
+	# ERROR CHECK: rename if file exists
+	if os.path.isfile(fname) :
+		print ( "WARNING: Specified file already exists:" +
+			" {}".format(fname) )
+		i = 0
+		while os.path.isfile(fname) :
+			fname = nPath+nName+"/node-degree{:03d}.txt".format(i)
+			i += 1
+		print "    using new file name: {}".format(fname)
+	#end if
+	outf = open(fname, 'wb')
+
+	# Write column headers
+	outf.write("HEADER{}all".format(textDelim))
+	for et in eTypes :
+		outf.write("{}{}".format(textDelim, et))
+
+	# Write the matrix to file
+	gHumanList = gHumanDict.keys()
+	gHumanList.sort()
+	for i in range(len(gHumanList)) :
+		outf.write( "\n{}".format(gHumanList[i]) )
+
+		for j in range(degreeMatrix.shape[1]) :
+			outf.write( "{}{:.0f}".format(textDelim, degreeMatrix[i,j]) )
+	#end loop
+
+	outf.close()
+
+	return
 #end def ######## ######## ######## 

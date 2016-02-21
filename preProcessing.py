@@ -24,7 +24,7 @@ import preProcFuncs as pp
 #TODO:
 ######## ######## ######## ######## 
 # Import the library containing node binning functions
-import mpFindFuncs02 as ff2
+#import mpFindFuncs02 as ff2
 ######## ######## ######## ######## 
 import time
 
@@ -34,21 +34,29 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'all_v1'
-epath = '../networks/'
-#ename = 'fakeNtwk01'
-#epath = 'networks/'
+useRealData = True
+
+if not useRealData :
+#	ename = 'fakeNtwk00_g2e3t10'
+	ename = 'fakeNtwk01'
+	epath = 'networks/'
+else :
+#	ename = all_v1
+	ename = 'toy2_hsa'
+	epath = 'networks/'
+#end if
+
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 2
+mpDepth = 1
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
 cfile = ename + '.correct.txt'
 
-# NODE BINNING --
-# Threshold percentages for binning the genes
-binThresholds = [.4, .9]
+#	# NODE BINNING --
+#	# Threshold percentages for binning the genes
+#	binThresholds = [.4, .9]
 
 ####### ####### ####### ####### 
 
@@ -124,6 +132,8 @@ pp.writeModEdgeFilePlus(epath, outname,
 # Save the node-binning stats for the network
 #ff2.writeNodeBinFiles(epath, outname, geneList, edgeArray, geneHuman, binThresholds )
 ######## ######## ######## ######## 
+pp.saveSelectGeneDegrees(epath, outname, edgeArray, geneList, geneHuman)
+
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 

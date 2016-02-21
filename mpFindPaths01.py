@@ -31,23 +31,27 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-#ename = 'fakeNtwk00_g2e3t10'
-#ename = 'fakeNtwk01_g3e4t1'
-#epath = 'networks/'
-ename = 'toy2_p3gz'
-epath = '../networks/'
-
 # The sample to test and path
-#sname = 'sample03'
-#spath = 'samplesFake/'
-sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
-spath = '../samples/'
+useRealData = False
+
+if not useRealData :
+	#ename = 'fakeNtwk00_g2e3t10'
+	ename = 'fakeNtwk01_g3e4t1'
+	epath = 'networks/'
+	sname = 'sample03'
+	spath = 'samplesFake/'
+else :
+	ename = 'toy2_p3gz'
+	epath = '../networks/'
+	sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
+	spath = '../samples/'
+#end if
+
 
 # Where to store the output
-#oname = 'find01-' + ename + "-" + sname
-#opath = 'outputFake/'
 oname = 'mpf01-' + ename + '-' + sname
 opath = '../output/'
+
 
 # How many random samples to examine
 numRand = 100

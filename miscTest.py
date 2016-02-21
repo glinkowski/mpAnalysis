@@ -9,68 +9,42 @@
 # ---------------------------------------------------------
 
 import mpFindFuncs as ff
-import preProcFuncs as pp
+#import preProcFuncs as pp
 import numpy as np
+import re
+import os
 
 
-#spath = 'samplesFake/'
-#sList = ff.getSampleList(spath)
-#print 'The following samples were found in {}'.format(spath)
-#print sList
-#print ''
-#
-#spath = 'samplesMSIG/'
-#sList = ff.getSampleList(spath)
-#print 'The following samples were found in {}'.format(spath)
-#for item in sList :
-#    print item
-#print ''
+humanRegex = ['ENSG', 'LGI_']
+keep = list()
+for gene in ['ENSG09483', 'LGI_43287', 'tomato'] :
+	# list of matches to be found
+	ma = list()
+	for exp in humanRegex :
+		ma.append( re.match(exp, gene) )
+	if any(match != None for match in ma) :
+		keep.append(gene)
+#end loop
+print keep
 
-
-ename = 'fakeNtwk01'
-epath = 'networks/'
-kfile = ename + '.keep.txt'
-print "\nReading in the network:", ename
-print "    reading the keep file", kfile
-hGenes, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
-print 'Keep genes: {}'.format(keepGenes)
-print 'Ignore genes: {}'.format(loseGenes)
-print 'Keep edges: {}'.format(keepEdges)
-print 'Indirect: {}'.format(indirEdges)
-print 'Threshold = {}'.format(thresh)
-print 'Humans: {}'.format(hGenes)
-
-
-
-## Identify unique edge names in a network
-#print ''
-#fe = open('networks/all_v1.edge.txt', 'rb')
-#edgeSet = set()
-#for line in fe :
-#	line = line.rstrip()
-#	lv = line.split('\t')
-#
-#	if lv[3] not in edgeSet :
-#		edgeSet.add(lv[3])
+#keep = list()
+#for gene in ['ENSG09483', 'LGI_43287', 'tomato'] :
+#	if any(match != None for match in re.match(humanRegex, gene)) :
+#		keep.append(gene)
 ##end loop
-#edgeList = list(edgeSet)
-#edgeList.sort()
-#print 'Edges in all_v1: {}'.format(edgeList)
+#print keep
 
 
-
-print ''
-ename = 'all_v1'
-epath = 'networks/'
-kfile = ename + '.keep.txt'
-# Read in the keep file
-#	if not there, ask to have it created
-print "\nReading in the network:", ename
-print "    reading the keep file", kfile
-geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
-print 'Keep genes: {}'.format(keepGenes)
-print 'Ignore genes: {}'.format(loseGenes)
-print 'Keep edges: {}'.format(keepEdges)
-print 'Indirect: {}'.format(indirEdges)
-print 'Threshold = {}'.format(thresh)
-print 'Humans: {}'.format(hGenes)
+nPath = 'networks/'
+nName = 'fakeNtwk01'
+fname = nPath+nName+'/node-degree.txt'
+# ERROR CHECK: rename if file exists
+if os.path.isfile(fname) :
+	print ( "WARNING: Specified file already exists:" +
+		" {}".format(fname) )
+	i = 0
+	while os.path.isfile(fname) :
+		fname = nPath+nName+"/node-degree{:03d}.txt".format(i)
+		i += 1
+	print "    using new file name: {}".format(fname)
+#end if
