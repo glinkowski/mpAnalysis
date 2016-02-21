@@ -37,6 +37,7 @@ from os import listdir
 import sys
 import numpy as np
 import random
+import gzip
 
 
 
@@ -52,7 +53,10 @@ fnZPad = 3
 # Data delimiter to use in the output file:
 textDelim = '\t'
 # Whether to save uncompressed text version of matrix:
-#saveText = True		# (useful for error-checking)
+#saveText = True		# (useful for error-checking)# Whether to use the data-type for the matrices:
+speedVsMemory = True	# True favors speed, disables dtype
+# Data-type for the path matrices:
+matrixDT = np.float32
 
 ####### ####### ####### ####### 
 
@@ -427,6 +431,64 @@ def getPathMatrix(mpTuple, path, name) :
 	# Load the matrix
 #	matrix = np.load(fname)
 	matrix = np.loadtxt(fname)
+
+	# Convert to transpose if flag==True
+	if mpTuple[1] :
+		return np.transpose(matrix)
+	else :
+		return matrix
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Load the matrix containing the number of paths
+#	of this type which join the nodes in the network
+# Input ----
+#	mpTuple [int, bool]: indicates which matrix file to use
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
+#	matrix, int array: num paths between node pairs
+def getPathMatrixGZip(mpTuple, path, name, sizeOf) :
+
+	zpad = keyZPad
+#	fname = (path + name + "_MetaPaths/" +
+#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+
+	prename = (path + name + "_MetaPaths/" +
+		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	fin = gzip.open(fname, 'rb')
+
+	# Declare the matrix
+	if speedVsMemory :
+		matrix = np.zeros([sizeOf, sizeOf])
+	else :
+		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+	#end if
+
+	# Read in the file
+	row = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			line = line.rstrip()
+			lv = line.split(textDelim)
+			matrix[row,:] = lv
+			row += 1
+	#end with
 
 	# Convert to transpose if flag==True
 	if mpTuple[1] :
