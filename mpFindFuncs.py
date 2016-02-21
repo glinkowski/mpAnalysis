@@ -657,7 +657,7 @@ def getPercentile(oCount, rSamples, matrix) :
 #	rStDev, float list: standard deviation of rand samples
 #	zScore, float list: z-Score for each path type
 def calculateStatistics(sample, rSamples, mpDict,
-	path, name) :
+	path, name, matrixSize) :
 
 	# The items to return
 	sCount = list()		# num of each path in given sample
@@ -674,6 +674,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 	for mp in mpList :
 
 		matrix = getPathMatrix(mpDict[mp], path, name)
+		matrix = getPathMatrixGZip(mpDict[mp], path, name, matrixSize)
 
 		tCount = getPathCountOne(sample, matrix)
 		sCount.append(tCount)
