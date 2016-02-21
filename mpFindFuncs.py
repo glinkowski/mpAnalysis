@@ -478,19 +478,29 @@ def getPathMatrixGZip(mpTuple, path, name, sizeOf) :
 	fin = gzip.open(fname, 'rb')
 
 	# Declare the matrix
+#TODO: declare the matrix data type? Can I?
 	if speedVsMemory :
 		matrix = np.zeros([sizeOf, sizeOf])
 	else :
 		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
 	#end if
+#	matrix = np.zeros([sizeOf, sizeOf])
 
 	# Read in the file
 	row = 0
 	with gzip.open(fname, 'rb') as fin :
 		for line in fin :
 			line = line.rstrip()
-			lv = line.split(textDelim)
-			matrix[row,:] = lv
+			lv = line.split()
+			matrix[row,:] = lv[:]
+			col = 0
+
+#			print lv
+
+#			for item in lv :
+#				matrix[row,col] = float(lv[col])
+#				col += 1
+#			#end loop
 			row += 1
 	#end with
 
@@ -722,9 +732,12 @@ def nameOutputFile(path, name) :
 
 	# ERROR CHECK: verify directory exists
 	if not os.path.isdir(path) :
-		print ( "ERROR: Specified path doesn't exist:" +
+#		print ( "ERROR: Specified path doesn't exist:" +
+#			" {}".format(path) )
+		print ( "WARNING: Specified path doesn't exist, creating:" +
 			" {}".format(path) )
-		sys.exit()
+		os.makedirs(path)
+#		sys.exit()
 	#end if
 
 	zpad = fnZPad

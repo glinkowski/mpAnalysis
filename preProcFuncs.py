@@ -47,6 +47,7 @@ import sys
 import numpy as np
 import re
 import time
+import gzip
 
 
 
@@ -2198,6 +2199,74 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 
 
 
+######## ######## ######## ######## 
+# Function: Load the matrix containing the number of paths
+#	of this type which join the nodes in the network
+# Input ----
+#	mpTuple [int, bool]: indicates which matrix file to use
+#	path, str: path to the network files
+#	name, str: name of the network to use
+# Returns ----
+#	matrix, int array: num paths between node pairs
+def getPrimaryMatrixGZip(mpTuple, path, name, sizeOf) :
+
+	zpad = keyZPad
+#	fname = (path + name + "_MetaPaths/" +
+#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+
+	prename = (path + name + "_MetaPaths/" +
+		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = (path + name + "_MetaPaths/" +
+		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	fin = gzip.open(fname, 'rb')
+
+	# Declare the matrix
+#TODO: declare the matrix data type? Can I?
+	if speedVsMemory :
+		matrix = np.zeros([sizeOf, sizeOf])
+	else :
+		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+	#end if
+#	matrix = np.zeros([sizeOf, sizeOf])
+
+	# Read in the file
+	row = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			line = line.rstrip()
+			lv = line.split()
+			matrix[row,:] = lv[:]
+			col = 0
+
+#			print lv
+
+#			for item in lv :
+#				matrix[row,col] = float(lv[col])
+#				col += 1
+#			#end loop
+			row += 1
+	#end with
+
+	# Convert to transpose if flag==True
+	if mpTuple[1] :
+		return np.transpose(matrix)
+	else :
+		return matrix
+#end def ######## ######## ######## 
+
+
+
 ######## ######## ######## ########
 # Function: read in the primary matrices
 # Input: 
@@ -2232,29 +2301,74 @@ def readPrimaryMatrices(nPath, nName) :
 			print "    reading matrix {}".format(lv[1])
 		#end if
 
+
+		# Append the matrix type name to pNames
 		pNames.append(lv[1])
 
-		if speedVsMemory :
-			if os.path.isfile( path + lv[0] + '.gz' ) :
-				pList.append( np.loadtxt(path + lv[0] + '.gz') )
-			elif os.path.isfile( path + lv[0] + '.txt' ) :
-				pList.append( np.loadtxt(path + lv[0] + '.txt') )
-			else :
-				print ("ERROR: Unknown file name and extension" +
-					" for matrix {}.".format(lv[0]))
-				sys.exit()
-			#end if
+
+		# Verify matrix file exists
+		if os.path.isfile( path + lv[0] + '.gz' ) :
+			fname = path + lv[0] + '.gz'
+		elif os.path.isfile( path + lv[0] + '.txt' ) :
+			fname = path + lv[0] + '.txt'
 		else :
-			if os.path.isfile( path + lv[0] + '.gz' ) :
-				pList.append( np.loadtxt(path + lv[0] + '.gz', dtype=matrixDT) )
-			elif os.path.isfile( path + lv[0] + '.txt' ) :
-				pList.append( np.loadtxt(path + lv[0] + '.txt', dtype=matrixDT) )
-			else :
-				print ("ERROR: Unknown file name and extension" +
-					" for matrix {}.".format(lv[0]))
-				sys.exit()
-			#end if
+			print ("ERROR: Unknown file name and extension" +
+				" for matrix {}.".format(lv[0]))
+			sys.exit()
 		#end if
+
+
+		# Append the primary path matrix to pList
+		fin = gzip.open(fname, 'rb')
+
+		# count # lines in file (size of matrix)
+		sizeOf = 0
+		with gzip.open(fname, 'rb') as fin :
+			for line in fin :
+				sizeOf += 1
+		#end with
+
+		# Declare the matrix
+		if speedVsMemory :
+			matrix = np.zeros([sizeOf, sizeOf])
+		else :
+			matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+		#end if
+
+		# Read in the file, placing values into matrix
+		row = 0
+		with gzip.open(fname, 'rb') as fin :
+			for line in fin :
+				line = line.rstrip()
+				lv = line.split()
+				matrix[row,:] = lv[:]
+				row += 1
+		#end with
+
+		pList.append( matrix )
+
+
+#		if speedVsMemory :
+#			if os.path.isfile( path + lv[0] + '.gz' ) :
+#				pList.append( np.loadtxt(path + lv[0] + '.gz') )
+#			elif os.path.isfile( path + lv[0] + '.txt' ) :
+#				pList.append( np.loadtxt(path + lv[0] + '.txt') )
+#			else :
+#				print ("ERROR: Unknown file name and extension" +
+#					" for matrix {}.".format(lv[0]))
+#				sys.exit()
+#			#end if
+#		else :
+#			if os.path.isfile( path + lv[0] + '.gz' ) :
+#				pList.append( np.loadtxt(path + lv[0] + '.gz', dtype=matrixDT) )
+#			elif os.path.isfile( path + lv[0] + '.txt' ) :
+#				pList.append( np.loadtxt(path + lv[0] + '.txt', dtype=matrixDT) )
+#			else :
+#				print ("ERROR: Unknown file name and extension" +
+#					" for matrix {}.".format(lv[0]))
+#				sys.exit()
+#			#end if
+#		#end if
 
 		if verbose :
 			print "    finished loading {}, total: {} bytes".format(lv[1], pList[len(pList)-1].nbytes)
