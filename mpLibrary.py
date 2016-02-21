@@ -36,6 +36,8 @@ keyZPad = 5
 fnZPad = 3
 # Data delimiter to use in the output file:
 textDelim = '\t'
+# Whether to print non-error messages within these funcs
+verbose = True
 
 ######## ######## ######## ######## 
 
@@ -1006,7 +1008,6 @@ def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 			statAvg[i], delim, geneList[i]) )
 	#end loop
 	fs.write('\n')
-
 
 	return filename
 #end def ######## ######## ######## 
