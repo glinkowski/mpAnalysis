@@ -137,7 +137,7 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 # Calculate stats for each metapath
 print "Calculating statistics ..."
 sCount, rMeans, rStDev, zScore, percList = ff.calculateStatistics(
-	sampIndex, randSamps, pathDict, epath, ename)
+	sampIndex, randSamps, pathDict, epath, ename, len(geneIndex))
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 

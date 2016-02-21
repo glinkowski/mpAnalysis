@@ -1011,7 +1011,6 @@ def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 	#end loop
 	fs.write('\n')
 
-
 	return filename
 #end def ######## ######## ######## 
 
