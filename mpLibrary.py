@@ -1066,7 +1066,7 @@ def createRandomSamplesBinned(path, name, sample,
 					col = i
 			# end loop
 			if verbose :
-				print "    {} at column {}".format(eType, col)
+				print "    binning along edge type: {} (column {})".format(eType, col)
 			if col == -1 :
 				print ( "ERROR: Specified edge type doesn't appear" +
 					" in node-degree.txt" )

@@ -44,10 +44,11 @@ if not useRealData :
 	sname = 'sample04'
 	spath = 'samplesFake/'
 else :
-	ename = 'toy2_p3gz'
-	epath = 'networks/'
+	ename = 'all_v1_g2e11t0'
+#	ename = 'toy2_p3gz'
+	epath = '../networks/'
 	sname = 'CAMPS_COLON_CANCER_COPY_NUMBER'
-	spath = 'samplesMSIG/'
+	spath = '../samplesMSIG/'
 #end if
 
 

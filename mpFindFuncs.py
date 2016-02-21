@@ -37,6 +37,7 @@ from os import listdir
 import sys
 import numpy as np
 import random
+import time
 
 
 
@@ -53,6 +54,8 @@ fnZPad = 3
 textDelim = '\t'
 # Whether to save uncompressed text version of matrix:
 #saveText = True		# (useful for error-checking)
+# Whether to print non-error messages within these funcs
+verbose = True
 
 ####### ####### ####### ####### 
 
@@ -609,9 +612,21 @@ def calculateStatistics(sample, rSamples, mpDict,
 #	mpList.sort()
 	mpList = removeInvertedPaths(mpDict)
 
+	numMPs = 0
 	for mp in mpList :
+		numMPs += 1
+
+		if verbose :
+			print "    loading {}, matrix {}".format(numMPs, mp)
+			print "      --time: {}".format(time.strftime('%X %x %Z'))
+		#end if
 
 		matrix = getPathMatrix(mpDict[mp], path, name)
+
+		if verbose :
+			print "      matrix size: {}".format(matrix.nbytes)
+			print "      --time: {}".format(time.strftime('%X %x %Z'))
+		#end if
 
 		tCount = getPathCountOne(sample, matrix)
 		sCount.append(tCount)
