@@ -43,7 +43,7 @@ if not useRealData :
 else :
 #	ename = all_v1
 	ename = 'toy2_hsa'
-	epath = 'networks/'
+	epath = '../Dropbox/mp/networks/'
 #end if
 
 
@@ -123,7 +123,7 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
 # Save the edge list, node dict, gene list
 outname = pp.createModEdgeFileName(ename, keepEdges,
 	keepGenes, thresh)
-print "Saving modified network to {}.edge.txt".format(outname)
+print "Saving modified network to {}.network.txt".format(outname)
 pp.writeModEdgeFilePlus(epath, outname,
 	nodeDict, geneList, edgeArray)
 

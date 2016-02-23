@@ -633,7 +633,7 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 
 ######## ######## ######## ########
 # Function: write the modified network to a file
-#	This includes the nodeDict and geneList
+#	This includes the nodeDict, geneList, and edge types
 # Input:
 #	path, str - path to the folder to save the file
 #	oname, str - new network name
@@ -652,10 +652,13 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 		os.makedirs(newPath)
 	#end if
 
-	gfile = "genes.txt"
-	nfile = "indices.txt"
-	gf = open(newPath + gfile, "wb")
-	nf = open(newPath + nfile, "wb")
+
+	# Save output: ordered list of genes
+	# Save output: row indices for each node in edge file
+	gfile = 'genes.txt'
+	nfile = 'indices.txt'
+	gf = open(newPath + gfile, 'wb')
+	nf = open(newPath + nfile, 'wb')
 	first = True
 	for gene in gList :
 
@@ -683,12 +686,33 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 		#end loop
 
 	#end loop
-
 	gf.close()
 	nf.close()
 
-	ofile = "edge.txt"
-	of = open(newPath + ofile, "wb")
+
+	# Save output: list of edge types
+	eTypes = np.unique(eArray[:,3])
+	eTypes.sort()
+
+	efile = 'edges.txt'
+	ef = open(newPath + efile, 'wb')
+
+	first = True
+	for et in eTypes :
+		if first == True :
+			first = False
+		else :
+			ef.write("\n")
+		#end if
+
+		ef.write("{}".format(et))
+	#end loop
+	ef.close()
+
+
+	# Save output: the network (as an edge list)
+	ofile = 'network.txt'
+	of = open(newPath + ofile, 'wb')
 
 	first = True
 	for i in range(0, eArray.shape[0]) :
@@ -702,8 +726,8 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 			eArray[i,1], eArray[i,2], eArray[i,3]))
 
 	#end loop
-
 	of.close()
+
 
 	return
 #end def ######## ######## ######## 
