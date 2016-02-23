@@ -54,7 +54,7 @@ else :
 
 # Where to store the output
 oname = 'mpf02-' + ename + '-' + sname
-opath = '../Dropbox/mp/output/'
+opath = '../output/'
 
 
 # How many random samples to examine
