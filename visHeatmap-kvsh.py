@@ -15,6 +15,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import visLibrary as vl
+import mpLibrary as mp
 
 
 
@@ -40,6 +41,9 @@ if pFolder.endswith('/') :
 	pDir = pPath + pFolder
 else :
 	pDir = pPath + pFolder + '/'
+
+# Data type used by preProcessing when reading in nodes
+nodeDT = np.dtype('a30')
 
 ####### ####### ####### ####### 
 
@@ -67,9 +71,40 @@ rGenes = vl.randSelectWithExclude(allGenes, sGenes, numRand)
 #print len(rGenes)
 
 
-
-
-
-
+# Define the array used to sort the genes
 # Numpy structured array to put genes in order:
 # gene name, order (1, 2, 3 == rand, hidd, known), avg path count
+
+gOrder = np.recarray( (len(rGenes) + len(sGenes)),
+	dtype=[('name', nodeDT), ('order', 'i4'), ('pcount', 'f4')] )
+
+row = 0
+for g in rGenes :
+	gOrder[row] = (g, 1, 0)
+	row += 1
+for g in hGenes :
+	gOrder[row] = (g, 2, 0)
+	row += 1
+for g in kGenes :
+	gOrder[row] = (g, 3, 0)
+	row += 1
+#end if
+
+geneDict = mp.readFileAsIndexDict(nDir+'genes.txt')
+eTypes = vl.readFileColumnAsString(nDir+'edges.txt', 0, 0)
+
+mpDir = nDir[0:-1]+'-Primaries/'
+#TODO: create mapping of etypes to matrix files
+
+
+#TODO: define path count array
+
+#for et in eTypes :
+
+#TODO: create array of path counts, sort gOrder by order+pcount
+#TODO: output a heatmap image to pDir
+
+
+
+
+
