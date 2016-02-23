@@ -57,7 +57,7 @@ import gzip
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
 # Whether to use the data-type for the matrices:
-speedVsMemory = True	# True favors speed, disables dtype
+speedVsMemory = False	# True favors speed, disables dtype
 # Data-type for the path matrices:
 matrixDT = np.float32	#TODO: any considerations here?
 warnDTvalue = 65000
@@ -2340,8 +2340,8 @@ def readPrimaryMatrices(nPath, nName) :
 		with gzip.open(fname, 'rb') as fin :
 			for line in fin :
 				line = line.rstrip()
-				lv = line.split()
-				matrix[row,:] = lv[:]
+				ml = line.split()
+				matrix[row,:] = ml[:]
 				row += 1
 		#end with
 

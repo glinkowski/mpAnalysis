@@ -21,7 +21,7 @@ import time
 
 # The network to use and directory path
 ename = 'all_v1_g2e11t0'
-epath = '../networks/'
+epath = '../Dropbox/mp/networks/'
 #ename = 'fakeNtwk00_g2e3t10'
 #epath = 'networks/'
 
