@@ -10,6 +10,8 @@
 #	between genes used in a prediction. Separate into three
 #	groups: the Known genes, the Hidden/Concealed genes, and
 #	a random selection of genes outside the sample.
+# NOTE: This only looks at the primary edge types, or
+#	metapaths of length 1.
 # ---------------------------------------------------------
 
 import matplotlib.pyplot as plt
@@ -108,50 +110,53 @@ indices.sort()
 #print indices
 
 
-##for et in eTypes :
-et = 'prot_homol'
+for et in eTypes :
+#et = 'prot_homol'
 
 
-# reduce the path matrix to the desired columns
-avgCounts = np.mean( pathList[et][:,indices], axis=1 )
-#print len(avgCounts), pathList[et].shape[0]
-# for each gene in gOrder, get the avg path count w/in this set
-gOrder['pcount'] = [avgCounts[geneDict[g]] for g in gOrder['name']]
+	# reduce the path matrix to the desired columns
+	#avgCounts = np.mean( pathList[et][:,indices], axis=1 )
+	sumCounts = np.sum( pathList[et][:,indices], axis=1 )
+	#print len(avgCounts), pathList[et].shape[0]
+	# for each gene in gOrder, get the avg path count w/in this set
+	#gOrder['pcount'] = [avgCounts[geneDict[g]] for g in gOrder['name']]
+	gOrder['pcount'] = [sumCounts[geneDict[g]] for g in gOrder['name']]
 
-gOrder.sort(order=['order', 'pcount'])
-print gOrder
+	gOrder.sort(order=['order', 'pcount'])
+	#print gOrder
 
-# Fill the heatmap with values from path matrix
-for x in xrange(len(gOrder)) :
-	for y in xrange(x,len(gOrder)) :
+	# Fill the heatmap with values from path matrix
+	for x in xrange(len(gOrder)) :
+		for y in xrange(x,len(gOrder)) :
 
-		hmap[x,y] = (pathList[et][ geneDict[gOrder['name'][x]],
-			geneDict[gOrder['name'][y]] ])
+			hmap[x,y] = (pathList[et][ geneDict[gOrder['name'][x]],
+				geneDict[gOrder['name'][y]] ])
 
-		if x != y :
-			hmap[y,x] = hmap[x,y]
-#end loop
+			if x != y :
+				hmap[y,x] = hmap[x,y]
+	#end loop
 
-# Plot the figure
-#fig = plt.figure()
-#fig.suptitle('Heatmap of '+pFolder+' for edge '+et)
-#fig.pcolor(np.transpose(hmap), cmap=plt.cm.Reds)
-#fig.show()
+	# Plot the figure
+	#fig = plt.figure()
+	#fig.suptitle('Heatmap of '+pFolder+' for edge '+et)
+	#fig.pcolor(np.transpose(hmap), cmap=plt.cm.Reds)
+	#fig.show()
 
-plt.pcolor(hmap, cmap=plt.cm.Reds)
-plt.suptitle('Heatmap of '+pFolder+' for edge '+et)
-# omit whitespace & reverse the order of the axes
-plt.axis([0, len(gOrder), 0, len(gOrder)])
-plt.gca().invert_xaxis()
-plt.gca().invert_yaxis()
-# label the axis labels and ticks
-plt.yticks(range(len(gOrder)), gOrder['name'], fontsize=8)
-plt.xticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
-	len(gOrder)], ['outside set', 'hidden', 'known'])
+	plt.pcolor(hmap, cmap=plt.cm.Reds)
+	plt.suptitle('Heatmap of '+pFolder+' for edge '+et)
+	# omit whitespace & reverse the order of the axes
+	plt.axis([0, len(gOrder), 0, len(gOrder)])
+	plt.gca().invert_xaxis()
+	plt.gca().invert_yaxis()
+	# label the axis labels and ticks
+	plt.yticks(range(len(gOrder)), gOrder['name'], fontsize=5)
+	plt.xticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
+		len(gOrder)], ['outside set', 'hidden', 'known'], ha='left')
 
-plt.subplots_adjust(left=0.2)
-plt.show()
-plt.close()
+	plt.subplots_adjust(left=0.2)
+#	plt.show()
+	plt.savefig(pDir+'Heatmap_'+et+'.png')
+	plt.close()
 
 
 #print avgCounts
