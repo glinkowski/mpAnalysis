@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import visLibrary as vl
 import mpLibrary as mp
+import preProcFuncs as pp
 
 
 
@@ -74,10 +75,8 @@ rGenes = vl.randSelectWithExclude(allGenes, sGenes, numRand)
 # Define the array used to sort the genes
 # Numpy structured array to put genes in order:
 # gene name, order (1, 2, 3 == rand, hidd, known), avg path count
-
 gOrder = np.recarray( (len(rGenes) + len(sGenes)),
 	dtype=[('name', nodeDT), ('order', 'i4'), ('pcount', 'f4')] )
-
 row = 0
 for g in rGenes :
 	gOrder[row] = (g, 1, 0)
@@ -91,17 +90,75 @@ for g in kGenes :
 #end if
 
 geneDict = mp.readFileAsIndexDict(nDir+'genes.txt')
-eTypes = vl.readFileColumnAsString(nDir+'edges.txt', 0, 0)
+#eTypes = vl.readFileColumnAsString(nDir+'edges.txt', 0, 0)
 
-mpDir = nDir[0:-1]+'-Primaries/'
-#TODO: create mapping of etypes to matrix files
+# Get the primary path matrices & names
+#mpDir = nDir[0:-1]+'-Primaries/'
+pathList = pp.readPrimaryMatrices(nPath, nFolder)
+eTypes = pathList.keys()
+eTypes.sort()
+
+# Define the matrix to hold the path counts (the heatmap)
+hmap = np.zeros([len(gOrder), len(gOrder)])
 
 
-#TODO: define path count array
+# Identify the hottest genes within gOrder
+indices = [geneDict[g] for g in gOrder['name']]
+indices.sort()
+#print indices
 
-#for et in eTypes :
 
-#TODO: create array of path counts, sort gOrder by order+pcount
+##for et in eTypes :
+et = 'prot_homol'
+
+
+# reduce the path matrix to the desired columns
+avgCounts = np.mean( pathList[et][:,indices], axis=1 )
+#print len(avgCounts), pathList[et].shape[0]
+# for each gene in gOrder, get the avg path count w/in this set
+gOrder['pcount'] = [avgCounts[geneDict[g]] for g in gOrder['name']]
+
+gOrder.sort(order=['order', 'pcount'])
+print gOrder
+
+# Fill the heatmap with values from path matrix
+for x in xrange(len(gOrder)) :
+	for y in xrange(x,len(gOrder)) :
+
+		hmap[x,y] = (pathList[et][ geneDict[gOrder['name'][x]],
+			geneDict[gOrder['name'][y]] ])
+
+		if x != y :
+			hmap[y,x] = hmap[x,y]
+#end loop
+
+# Plot the figure
+#fig = plt.figure()
+#fig.suptitle('Heatmap of '+pFolder+' for edge '+et)
+#fig.pcolor(np.transpose(hmap), cmap=plt.cm.Reds)
+#fig.show()
+
+plt.pcolor(hmap, cmap=plt.cm.Reds)
+plt.suptitle('Heatmap of '+pFolder+' for edge '+et)
+# omit whitespace & reverse the order of the axes
+plt.axis([0, len(gOrder), 0, len(gOrder)])
+plt.gca().invert_xaxis()
+plt.gca().invert_yaxis()
+# label the axis labels and ticks
+plt.yticks(range(len(gOrder)), gOrder['name'], fontsize=8)
+plt.xticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
+	len(gOrder)], ['outside set', 'hidden', 'known'])
+
+plt.subplots_adjust(left=0.2)
+plt.show()
+plt.close()
+
+
+#print avgCounts
+#print avgCounts[geneDict['ENSG00000183310']], np.mean(pathList[et][geneDict['ENSG00000183310'],indices])
+
+
+
 #TODO: output a heatmap image to pDir
 
 

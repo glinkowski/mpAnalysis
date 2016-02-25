@@ -11,6 +11,11 @@
 #	results.
 #
 # Functions provided:
+#	setParamVerbose(newVal)
+#	setParamTextDelim(newVal)
+#	setParamFileZeroPad(newMval, newOval)
+#	readFileColumnAsString(fname, iCol, nSkip)
+#	randSelectWithExclude(itemList, excludeSet, quantity)
 # ---------------------------------------------------------
 
 import os.path
@@ -21,12 +26,12 @@ import random
 
 
 
+
 ######## ######## ######## ######## 
 # PARAMETERS
 
 # Seed the random functions, if desired
 random.seed(42)
-
 
 
 # Length to pad the matrix file names:
@@ -39,8 +44,6 @@ textDelim = '\t'
 verbose = True
 
 ######## ######## ######## ######## 
-
-
 
 
 
@@ -92,8 +95,6 @@ def setParamFileZeroPad(newMval, newOval) :
 
 	return
 #end def ######## ######## ######## 
-
-
 
 
 
@@ -158,8 +159,6 @@ def readFileColumnAsString(fname, iCol, nSkip) :
 
 	return theList
 #end def ######## ######## ######## 
-
-
 
 
 
