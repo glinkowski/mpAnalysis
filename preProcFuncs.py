@@ -87,14 +87,14 @@ verbose = True
 #	The keep file specifies which genes & edges to
 #	keep in the final product, and provides the
 #	necessary regex characters to identify them.
-# Input:
-#	fname, str - path & name to keep file
-# Returns:
-#	keepGenes - list of Regex expressions for the
+# Input ----
+#	fname, str: path & name to keep file
+# Returns ----
+#	keepGenes: list of Regex expressions for the
 #		genes to keep specified in file
-#	keepEdges - list of Regex expressions for the
+#	keepEdges: list of Regex expressions for the
 #		edges to keep specified in file
-#	indirEdges - list of indirect edge types
+#	indirEdges: list of indirect edge types
 def readKeepFile(fname) :
 
 	# Make sure the keep file exists
@@ -160,12 +160,12 @@ def readKeepFile(fname) :
 
 ######## ######## ######## ########
 # Function: Read in the Knowledge Graph
-# Input:
-#	fname, str - path & name to the network edge file 
-# Returns:
-#   Edges - (Nx4) matrix of char strings
+# Input ----
+#	fname, str: path & name to the network edge file 
+# Returns ----
+#   Edges: (Nx4) matrix of char strings
 #       each row is: node, node, edge weight, edge type
-#   Nodes - dictionary of nodes in the edge list
+#   Nodes: dictionary of nodes in the edge list
 #       key = node name
 #       value = list of indices of the rows in
 #           the edge matrix where node (key) appears
@@ -176,13 +176,7 @@ def readEdgeFile(datafile) :
 	nLines = sum( 1 for line in open(datafile, "rb") )
 
 	# assign space for edge list
-#    dt = np.dtype('a30')
-	dt = nodeDT
-#    dt = np.dtype(str)
-#    dt = np.dtype(object)
-
-#    Edges = np.empty( [nLines,4], dtype=dt)
-	Edges = np.empty( (nLines,4), dtype=dt)
+	Edges = np.empty( (nLines,4), dtype=nodeDT)
 
 	# dictionary to hold Node indices
 	Nodes = dict()
@@ -238,10 +232,10 @@ def readEdgeFile(datafile) :
 #	in the corrections file. The file contains two
 #	columns: the typo, the correction. If no file,
 #	then leave the array unchanged.
-# Input:
-#	edges, array (N,4) - edge array
+# Input ----
+#	edges, array (N,4): edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
-# Returns:
+# Returns ----
 #	nothing
 #	Makes in-place corrections to the array
 def applyCorrections(edges, fname) :
@@ -280,7 +274,6 @@ def applyCorrections(edges, fname) :
 			edges[i,1] = fixList[checkDict[edges[i,1]]]
 		#end if
 		if edges[i,3] in checkSet :
-#			print edges[i,3], fixList[checkDict[edges[i,3]]]
 			edges[i,3] = fixList[checkDict[edges[i,3]]]
 		#end if
 	#end loop
@@ -294,18 +287,18 @@ def applyCorrections(edges, fname) :
 ######## ######## ######## ########
 # Function: For each edge type, collect the weights
 #	and normalize to [0,1].
-# Input:
-#	edges, array (N,4) - edge array
+# Input ----
+#	edges, array (N,4): edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
-#	lowBound, int - indicates what should be used as
+#	lowBound, int: indicates what should be used as
 #		the lower bound on the weight. If 0, then set
 #		vmin = 0. Else, vmin = lowest weight.
-# Returns:
+# Returns ----
 #	nothing
 #	Makes in-place corrections to the array
 def applyNormalization(edges, lowBound) :
 
-#TODO: check & fix lower bound condition. Don't want edges
+#TODO: ? check & fix lower bound condition. Don't want edges
 #	to be given a weight of 0. There should be a small
 #	weight applied even to the lowest-weighted edge
 
@@ -316,9 +309,12 @@ def applyNormalization(edges, lowBound) :
 #	print eTypes
 
 
-#	print "Normalizing edge type ..."
+	if verbose :
+		print "Normalizing edge type ..."
+	# Normalize values within each edge type in the graph
 	for et in eTypes :
-#		print "    {}".format(et)
+		if verbose :
+			print "    {}".format(et)
 
 		# extract the edge weights for only this edge type
 		weightStr = edges[edges[:,3]==et, 2]
@@ -336,7 +332,6 @@ def applyNormalization(edges, lowBound) :
 
 		vmax = float(np.amax(weightFlt))
 		vdif = vmax - vmin
-	#    print vmin, vmax, vdif
 
 		for i in range(0, edges.shape[0]) :
 			# calculate normalized value & update array
@@ -349,7 +344,6 @@ def applyNormalization(edges, lowBound) :
 					temp = (
 						float(edges[i,2]) - vmin) / vdif
 				#end if
-#				print temp, vmin, vdif
 				edges[i,2] = str(temp)
 			#end if
 		#end loop
@@ -365,22 +359,23 @@ def applyNormalization(edges, lowBound) :
 # Function: Examine the edge weights. Throw out edges
 #	that are below the threshold value. (Only keep
 #	those that are at or above.)
-# Input:
-#	edges, array (N,4) - edge array
+# Input ----
+#	edges, array (N,4): edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
-#	threshold, float - the value against which to test
+#	threshold, float: the value against which to test
 #		edge weights; throw out edges that are below
-# Returns:
-#	newEdges, str array - the modified edge array
+# Returns ----
+#	newEdges, str array: the modified edge array
 def applyThreshold(edges, threshold) :
 	# Not using del[], because each del is O(n)
 
-#	if threshold > 1 :
-#		print ("\nWARNING: threshold value {}".format(threshold)
-#			+ " is outside the normalized range.")
-#		print ("    If network has been normalized, all"
-#			+ " edges will be kept.")
-#	#end if
+	# ERROR CHECK: threshold meant to be applied after normalization
+	if threshold > 1 :
+		print ("WARNING: threshold value {}".format(threshold)
+			+ " is outside the normalized range.")
+		print ("    If network has been normalized, all"
+			+ " edges will be kept.")
+	#end if
 
 	# Get the weights in the network, count how
 	#	many are at/above the threshold value
@@ -391,16 +386,15 @@ def applyThreshold(edges, threshold) :
 		#end if
 	#end loop
 
-	# If no edges are above threshold value ...
+	# ERROR CHECK: If no edges are above threshold value ...
 	if count == 0 :
-		print ("\nWARNING: No edge weights above "
+		print ("\nWARNING: No edge weights above threshold"
 			+ " {}, returning unaltered array.\n".format(threshold))
 		return edges
 	#end if
 
 	# temporary array to hold the new matrix
 	newEdges = np.empty([count,4], dtype=nodeDT)
-#	print newEdges.shape, count
 
 	# Read the weight of each edge, and add to
 	#	temp array if at or above threshold
@@ -408,23 +402,15 @@ def applyThreshold(edges, threshold) :
 	for i in range(0, edges.shape[0]) :
 		weight = float(edges[i,2])
 		if weight >= threshold :
-#			print i, index
-#			print edges[i,:]
 			newEdges[index] = edges[i]
 			index += 1
-#			newEdges.append(edges[i])
-		#end if
 	#end loop
 
-#	print newEdges
-
-	# Replace current network with new one
-#	edges = newEdges
-#	return
-
-#TODO: If desired threshold value is 0, don't throw
-# out any edges. 
-	return newEdges
+	# If threshold is zero, return unaltered network
+	if threshold <= 0 :
+		return edges
+	else :
+		return newEdges
 #end def ######## ######## ########
 
 
@@ -433,17 +419,17 @@ def applyThreshold(edges, threshold) :
 # Function: Examine the edge weights. Throw out edges
 #	that are below the threshold value. (Only keep
 #	those that are at or above.)
-# Input:
-#	edges, str array (N,4) - edge array
+# Input ----
+#	edges, str array (N,4): edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
-#	kGenes, str list - regex of genes to keep
+#	kGenes, str list: regex of genes to keep
 #		each entry is just the first four chars of
 #		the gene name
-#	kEdges, str list - edge types (full) to keep
-#	threshold, float - the value against which to test
+#	kEdges, str list: edge types (full) to keep
+#	threshold, float: the value against which to test
 #		edge weights; throw out edges that are below
-# Returns:
-#	newEdges, str array - the modified edge array
+# Returns ----
+#	newEdges, str array: the modified edge array
 # NOTE: This assumes the network has been altered
 #	to just gene-gene edges !!!
 def applyKeepEdges(edges, kEdges) :
@@ -451,19 +437,10 @@ def applyKeepEdges(edges, kEdges) :
 	keepIndex = list()
 	kEdgeSet = set(kEdges)
 
+	# Find indices corresponding to specified keep edges
 	for i in range(0, edges.shape[0]) :
-
 		if edges[i,3] in kEdgeSet :
 			keepIndex.append(i)
-		#end if
-
-#		# Throw out non-kept edges
-#		if edges[i,3] not in kEdgeSet :
-#			# Skip this edge
-#			continue
-#		#end if
-#		keepIndex.append(i)
-
 	#end loop
 
 	newEdges = edges[keepIndex, :]
@@ -474,17 +451,17 @@ def applyKeepEdges(edges, kEdges) :
 
 ######## ######## ######## ########
 # Function: 
-# Input:
-#	edges, str array (N,4) - edge array
+# Input ----
+#	edges, str array (N,4): edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
-#	kGenes, str list - regex of genes to keep
+#	kGenes, str list: regex of genes to keep
 #		each entry is just the first four chars of
 #		the gene name
-#	kEdges, str list - edge types (full) to keep
-#	threshold, float - the value against which to test
+#	kEdges, str list: edge types (full) to keep
+#	threshold, float: the value against which to test
 #		edge weights; throw out edges that are below
-# Returns:
-#	newEdges, str array - the modified edge array
+# Returns ----
+#	newEdges, str array: the modified edge array
 def applyKeepLists(edges, lGenes, kEdges, iEdges) :
 
 	keepIndex = list()
@@ -541,11 +518,11 @@ def applyKeepLists(edges, lGenes, kEdges, iEdges) :
 ######## ######## ######## ########
 # Function: Create a node dictionary from the current
 #	edge list.
-# Input:
-#	edges, str array (N,4) - edge array
+# Input ----
+#	edges, str array (N,4): edge array
 #		col 0: node, 1: node, 2: weight, 3: edge type 
-# Returns:
-#	nodeDict - node dictionary
+# Returns ----
+#	nodeDict: node dictionary
 #		key: str, name of node
 #		value: list of int, list of indices where
 #			these nodes occur in the edge list
@@ -604,28 +581,22 @@ def createNodeLists(edges, aGenes) :
 
 ######## ######## ######## ########
 # Function: creates the name to use when saving the file
-# Input:
-#	name, str - the name of the original edge file
-#	kEdges, str list - list of edge types kept
-#	kGenes, str list - list of gene types kept
-#	tHold, float - threshold value for kept edge weights
-# Returns:
-#	oname, str - the new network name for the new files
+# Input ----
+#	name, str: the name of the original edge file
+#	kEdges, str list: list of edge types kept
+#	kGenes, str list: list of gene types kept
+#	tHold, float: threshold value for kept edge weights
+# Returns ----
+#	oname, str: the new network name for the new files
 def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 
-	# save edge list, node dict, genes?
-#	oname = name + "_g{1}t{0}_".format( int(tHold*100),
-#		len(kGenes))
-
-#	oname = ename + "_t{0}%_g{1}_".format( int(thresh*100),
-#	    len(keepGenes))
+	oname = name + "_g{}e{}t{}".format( len(kGenes),
+		len(kEdges), int(tHold*100) )
 
 #	for et in kEdges :
 #		oname = oname + et[0]
 #	#end loop
 
-	oname = name + "_g{}e{}t{}".format( len(kGenes),
-		len(kEdges), int(tHold*100) )
 	return oname
 #end def ######## ######## ######## 
 
@@ -634,15 +605,15 @@ def createModEdgeFileName(name, kEdges, kGenes, tHold) :
 ######## ######## ######## ########
 # Function: write the modified network to a file
 #	This includes the nodeDict, geneList, and edge types
-# Input:
-#	path, str - path to the folder to save the file
-#	oname, str - new network name
-#	nDict, dict - 
+# Input ----
+#	path, str: path to the folder to save the file
+#	oname, str: new network name
+#	nDict, dict: 
 #		keys, node names as strings
 #		values, int list of indexes: rows in eArray where
 #			the node appears
-#		eArray, (Nx4) array - the network
-# Returns:
+#		eArray, (Nx4) array: the network
+# Returns ----
 def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 
 	newPath = path + oname + '/'
@@ -737,9 +708,9 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 ######## ######## ######## ########
 # Function: create a mapping of genes to matrix indices
 #	ASSUMPTION: gList is properly ordered to match matrix
-# Input:
+# Input ----
 #	gList, str list: ordered list of gene names
-# Returns:
+# Returns ----
 #	gDict, dict
 #		key, str: gene names
 #		value, int: row/col where gene appears in matrix
@@ -758,39 +729,43 @@ def createGeneMapping(gList) :
 
 
 ######## ######## ######## ########
-# Function: create a dict of node counts
-# Input:
-# Returns:
+# Function: from a list of items, create a dictionary
+#	giving the count for how many times each appears
+# Input ----
+#	aList, XX list: the list of items (with repetitions)
+# Returns ----
+#	aDict, dict
+#		key, XX: unique items from the list
+#		value, int: how many times that item appears in the list
 def createCountDict(aList) :
-	# From the list of genes in this network, dictionary
-	#	will return a count of how many times each appears
 
-	aSet = set()
+	aSet = set()	# using set to speed up membership checks
 	aDict = dict()
 
 	for item in aList :
-
 		if item in aSet :
 			aDict[item] += 1
 		else :
 			aSet.add(item)
 			aDict[item] = 1
-		#end if
 	#end loop
 
 	return aDict
 #end def ######## ######## ######## 
+
+
+
 ######## ######## ######## ########
 # Function: create a list of the primary matrices
-# Input:
-#	path, str - path to the folder to save the file
-#	oname, str - new network name
-#	nDict, dict - 
+# Input ----
+#	path, str: path to the folder to save the file
+#	oname, str: new network name
+#	nDict, dict: 
 #		keys, node names as strings
 #		values, int list of indexes: rows in eArray where
 #			the node appears
-#		eArray, (Nx4) array - the network
-# Returns:
+#		eArray, (Nx4) array: the network
+# Returns ----
 def createMatrixList(eArray, kEdges, iEdges, gList,
 	nDict): #, path, oname) :
 
@@ -1148,26 +1123,21 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 
 	return mList, mNames
 #end def ######## ######## ######## 
+
+
+
 ######## ######## ######## ########
 # Function: create a list of the primary matrices
-# Input:
-#	path, str - path to the folder to save the file
-#	oname, str - new network name
-#	nDict, dict - 
+# Input ----
+#	path, str: path to the folder to save the file
+#	oname, str: new network name
+#	nDict, dict: 
 #		keys, node names as strings
 #		values, int list of indexes: rows in eArray where
 #			the node appears
-#		eArray, (Nx4) array - the network
-# Returns:
-def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
-	nDict): #, path, oname) :
-
-	# data-type for the path matrices
-	dt = matrixDT
-	warnVal = warnDTvalue
-
-	# How far from Std Dev will be kept as "Medium"
-#	stdGap = 0.75
+#		eArray, (Nx4) array: the network
+# Returns ----
+def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 
 	# Get a gene-to-index mapping to use with the
 	#	newly-created matrices
@@ -1183,55 +1153,12 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 	iEdges.sort()
 	kEdges.sort()
 
-#	# Define cut-offs for indirect edges
-#	# ASSUMPTION: indirect edges, col 0 is non-gene node
-#	iNames = dict()
-#		# key: edge type + sm/md/lg
-#		# value: integer tuple w/ low & high cutoffs
-#
-#	for et in iEdges :
-#
-#		# Get the degree of each node for this edge type
-#		nodeList = list(eArray[eArray[:,3]==et, 0])
-#		nodeCount = createCountDict(nodeList)
-#
-#		# Get the mean & std dev for the node degrees
-#		mean = int(round(np.mean(nodeCount.values())))
-#		std = int(round(np.std(nodeCount.values())))
-#		stdPart = int(round(std * stdGap))
-#
-#		# Create the breakdown by small/med/large
-#		tSml = [max(0, mean-(2*std)), mean - stdPart]
-#		tMed = [tSml[1]+1, mean + stdPart]
-#		tLrg = [tMed[1]+1, mean+(2*std)]
-#
-#		# Save those tuples to the look-up dict
-#		iNames[et+"_SM"] = tSml
-#		iNames[et+"_MD"] = tMed
-#		iNames[et+"_LG"] = tLrg
-#	#end loop
-#
-##	print iNames
-#
-#	# Initialize empty file
-#	# This file stores what types were kept & how many edges
-##	fn = path + oname + 'types.txt'
-##	fet = open(fn, 'wb')
-##	#fet.write("{}{}{}\n".format(et, delim, count))
-##	fet.close()
 
 	# Start creating matrices
 	for et in kEdges :
 
-		# Remove indirect edges if needed
+		# Convert indirect edges to direct
 		if et in iEdges :
-
-			# Create lists corresponding to the new edge types
-#			term_sm = list()
-#			term_md = list()
-#			term_lg = list()
-
-#			termList = list()
 
 			# Separate out the edges of type et
 			thisArray = eArray[eArray[:,3]==et]
@@ -1246,50 +1173,17 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 					# Else, increment count by 1
 					if row[0] in checkSet :
 						termDict[row[0]] += 1
-#						print "if", row[0]
 					# If not yet added, then set = 1
 					else :
-#						print "else", row[0]
 						checkSet.add(row[0])
 						termDict[row[0]] = 1
-					#end if
 				#end if
-
-#				## Only add if the node is not a gene
-#				#if row[1] not in gSet :
-#				#	# If not yet added, then set = 1
-#				#	if row[1] in checkSet :
-#				#		termDict[row[1]] == 1
-#				#		checkSet.add(row[1])
-#				#	# Else, increment count by 1
-#				#	else :
-#				#		termDict[row[1]] += 1
-#				##end if
-#			#end loop
-#
-#			# Assign to groups according to node degree
-#			for term in termDict.keys() :
-#
-#				# get the tuples to check
-#				tSml = iNames[row[3] + "_SM"]
-#				tMed = iNames[row[3] + "_MD"]
-#				tLrg = iNames[row[3] + "_LG"]
-#
-#
-#				if (tSml[0] <= termDict[term] <= tSml[1]) :
-#					term_sm.append(term)
-#				elif (tMed[0] <= termDict[term] <= tMed[1]) :
-#					term_md.append(term)
-#				elif (tLrg[0] <= termDict[term] <= tLrg[1]) : 
-#					term_lg.append(term)
-#				#end if
-#			#end loop
 
 			# Create the matrix
 			if speedVsMemory :
 				thisM = np.zeros([numG, numG])
 			else :
-				thisM = np.zeros([numG,numG], dtype=dt)
+				thisM = np.zeros([numG,numG], dtype=matrixDT)
 			#end if
 
 			if verbose :
@@ -1317,159 +1211,9 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 
 			if (count > 0) :
 				# save to a file
-
-				# ERROR CHECK: verify counts fit within
-				#	specified data type
-				if np.amax(thisM) > warnVal :
-					print ("WARNING: Path counts exceed" +
-						"{}, change data-type.".format(warnVal))
-				#end if
-
 				mList.append(thisM)
 				mNames.append(et)
 			#end if
-#
-#			# Create the first (small) matrix
-##			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][1]))
-#			if speedVsMemory :
-#				thisM = np.zeros([numG, numG])
-#			else :
-#				thisM = np.zeros([numG,numG], dtype=dt)
-#			#end if
-#			count = 0
-#			for term in term_sm :
-#				# list of all edges with this term
-#				rowList = nDict[term]
-#				# Join all genes connected to term X
-#				for i in range(0, len(rowList)) :
-#					for j in range(0+1, len(rowList)) :
-#						# Find two genes joined by term
-#						# ASSUME: terms always in col 0, genes in col 1
-#						gA = eArray[i,1]
-#						gB = eArray[j,1]
-#						# Increment the entry(s) in the array (symmetric)
-#						thisM[gDict[gA],gDict[gB]] += 1
-#						thisM[gDict[gB],gDict[gA]] += 1
-#						count += 1
-#					#end loop
-#				#end loop
-#			#end loop			
-#			if (count > 0) :
-#				# save to a file
-##				fn = mpath + oname + et + '_sm'
-##				print "    saving to {}".format(fn)
-##				np.save(fn, thisM)
-##				# This file stores what types were kept & how many edges
-##				fn = mpath + oname + 'types.txt'
-##				fet = open(fn, 'ab')
-##				fet.write("{}\t{}\n".format(et+'_sm', count))
-##				fet.close()
-#
-#				# ERROR CHECK: verify counts fit within
-#				#	specified data type
-#				if np.amax(thisM) > warnVal :
-#					print ("WARNING: Path counts exceed" +
-#						"{}, change data-type.".format(warnVal))
-#				#end if
-#
-#				mList.append(thisM)
-#				mNames.append(et+"_SM")
-#			#end if
-#
-#			# Create the second (medium) matrix
-##			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][2]))
-#			if speedVsMemory :
-#				thisM = np.zeros([numG, numG])
-#			else :
-#				thisM = np.zeros([numG,numG], dtype=dt)
-#			#end if
-#			count = 0
-#			for term in term_md :
-#				# list of all edges with this term
-#				rowList = nDict[term]
-#				# Join all genes connected to term X
-#				for i in range(0, len(rowList)) :
-#					for j in range(0+1, len(rowList)) :
-#						# Find two genes joined by term
-#						# ASSUME: terms always in col 0, genes in col 1
-#						gA = eArray[i,1]
-#						gB = eArray[j,1]
-#						# Increment the entry(s) in the array (symmetric)
-#						thisM[gDict[gA],gDict[gB]] += 1
-#						thisM[gDict[gB],gDict[gA]] += 1
-#						count += 1
-#					#end loop
-#				#end loop
-#			#end loop
-#			if (count > 0) :
-#				# save to a file
-##				fn = mpath + oname + et + '_md'
-##				print "    saving to {}".format(fn)
-##				np.save(fn, thisM)
-##				# This file stores what types were kept & how many edges
-##				fn = mpath + oname + 'types.txt'
-##				fet = open(fn, 'ab')
-##				fet.write("{}\t{}\n".format(et+'_md', count))
-##				fet.close()
-#
-#				# ERROR CHECK: verify counts fit within
-#				#	specified data type
-#				if np.amax(thisM) > warnVal :
-#					print ("WARNING: Path counts exceed" +
-#						"{}, change data-type.".format(warnVal))
-#				#end if
-#
-#				mList.append(thisM)
-#				mNames.append(et+"_MD")
-#			#end if
-#			
-#			# Create the third (large) matrix
-##			print "Creating matrix from edge type: {}".format(et+' < '+str(cutf[et][3]))
-#			if speedVsMemory :
-#				thisM = np.zeros([numG, numG])
-#			else :
-#				thisM = np.zeros([numG,numG], dtype=dt)
-#			#end if
-#			count = 0
-#			for term in term_lg :
-#				# list of all edges with this term
-#				rowList = nDict[term]
-#				# Join all genes connected to term X
-#				for i in range(0, len(rowList)) :
-#					for j in range(0+1, len(rowList)) :
-#						# Find two genes joined by term
-#						# ASSUME: terms always in col 0, genes in col 1
-#						gA = eArray[i,1]
-#						gB = eArray[j,1]
-#						# Increment the entry(s) in the array (symmetric)
-#						thisM[gDict[gA],gDict[gB]] += 1
-#						thisM[gDict[gB],gDict[gA]] += 1
-#						count += 1
-#					#end loop
-#				#end loop
-#			#end loop
-#			if (count > 0) :
-#				# save to a file
-##				fn = mpath + oname + et + '_lg'
-##				print "    saving to {}".format(fn)
-##				np.save(fn, thisM)
-##				# This file stores what types were kept & how many edges
-##				fn = mpath + oname + 'types.txt'
-##				fet = open(fn, 'ab')
-##				fet.write("{}\t{}\n".format(et+'_lg', count))
-##				fet.close()
-#
-#				# ERROR CHECK: verify counts fit within
-#				#	specified data type
-#				if np.amax(thisM) > warnVal :
-#					print ("WARNING: Path counts exceed" +
-#						"{}, change data-type.".format(warnVal))
-#				#end if
-#				
-#				mList.append(thisM)
-#				mNames.append(et+"_LG")
-#			#end if
-#			
 
 
 		# If already direct, create the matrix
@@ -1482,10 +1226,9 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 
 			if verbose :
 				print "    building {}, at {} bytes".format(et, thisM.nbytes)
+			#end if
 			
 			count = 0
-
-	#		print "Creating matrix from edge type: {}".format(et)
 			thisArray = eArray[eArray[:,3]==et]
 			# increment entry at (i,j) = (gene0,gene1)
 			for row in thisArray :
@@ -1493,19 +1236,6 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 				thisM[gDict[row[1]],gDict[row[0]]] += 1
 				count += 1
 			#end loop
-
-			# This file stores what types were kept & how many edges
-#			fn = mpath + oname + '.types.txt'
-#			fet = open(fn, 'ab')
-#			fet.write("{}\t{}\n".format(et, count))
-#			fet.close()
-
-			# ERROR CHECK: verify counts fit within
-			#	specified data type
-			if np.amax(thisM) > warnVal :
-				print ("WARNING: Path counts exceed" +
-					"{}, change data-type.".format(warnVal))
-			#end if
 				
 			mList.append(thisM)
 			mNames.append(et)
@@ -1519,12 +1249,12 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList,
 
 ######## ######## ######## ########
 # Function: save the given matrix as a .txt file
-# Input:
-#	matrix, (NxN) list - the values to save
-#	mname, str - name of the file to save
-#	mpath, str - path to the folder to save the file
-#	integer, bool - True means save values as int()
-# Returns:
+# Input ----
+#	matrix, (NxN) list: the values to save
+#	mname, str: name of the file to save
+#	mpath, str: path to the folder to save the file
+#	integer, bool: True means save values as int()
+# Returns ----
 #	nothing
 def saveMatrixText(matrix, mname, mpath, integer) :
 
@@ -1563,11 +1293,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 				fout.write("{}".format( int(matrix[i,j]) ))
 			else :
 				fout.write("{}".format( matrix[i,j] ))
-			#end if
-
-		#end loop
 	#end loop
-
 	fout.close()
 
 	return
@@ -1577,12 +1303,12 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 
 ######## ######## ######## ########
 # Function: save the given matrix as a .npy file
-# Input:
-#	matrix, (NxN) list - the values to save
-#	mname, str - name of the file to save
-#	mpath, str - path to the folder to save the file
-#	integer, bool - True means save values as int()
-# Returns:
+# Input ----
+#	matrix, (NxN) list: the values to save
+#	mname, str: name of the file to save
+#	mpath, str: path to the folder to save the file
+#	integer, bool: True means save values as int()
+# Returns ----
 #	nothing
 def saveMatrixNumpy(matrix, mname, mpath) :
 
@@ -1610,9 +1336,9 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 
 ######## ######## ######## ########
 # Function: delete the files within a directory
-# Input:
-#	path, str - the directory to delete
-# Returns:
+# Input ----
+#	path, str: the directory to empty
+# Returns ----
 #	nothing
 # NOTE: This only works if no sub-folders
 def clearFilesInDirectory(path) :
@@ -1635,20 +1361,16 @@ def clearFilesInDirectory(path) :
 
 ######## ######## ######## ########
 # Function: save a list of matrices
-# Input:
-#	mList, list of NxN matrices - the matrices to save
-#	mNames, list of str - names of the paths in matrix
-#	mGenes, list of str - names of genes in the matrix
-#	mpath, str - path to the folder to save the file
-# Returns:
+# Input ----
+#	mList, list of NxN matrices: the matrices to save
+#	mNames, list of str: names of the paths in matrix
+#	mGenes, list of str: names of genes in the matrix
+#	mpath, str: path to the folder to save the file
+# Returns ----
 #	nothing
 # Creates:
 #	
 def saveMatrixList(mList, mNames, mGenes, mpath) :
-
-	# Number of digits to zero-pad the file name/number
-#	zpad = 5
-	zpad = keyZPad
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1687,12 +1409,12 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 		fkey.write("{:05d}\t{}".format(num, mNames[i]))
 
 		# Save each matrix as the corresponding number
-		saveMatrixNumpy(mList[i], str(num).zfill(zpad),
+		saveMatrixNumpy(mList[i], str(num).zfill(keyZPad),
 			mpath)
 
 		# VERIFICATION: save as a text-readable file
 		if saveTextCopy :
-			saveMatrixText(mList[i], "t"+str(num).zfill(zpad),
+			saveMatrixText(mList[i], "t"+str(num).zfill(keyZPad),
 				mpath, True)
 		#end if
 
@@ -1706,22 +1428,18 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 
 ######## ######## ######## ########
 # Function: save a list of matrices
-# Input:
-#	mList, list of NxN matrices - the matrices to save
+# Input ----
+#	mList, list of NxN matrices: the matrices to save
 #	mNames, dict
 #		key, str: metapath names
 #		value, int: corresponding index number for mList
-#	mGenes, list of str - names of genes in the matrix
-#	mpath, str - path to the folder to save the file
-# Returns:
+#	mGenes, list of str: names of genes in the matrix
+#	mpath, str: path to the folder to save the file
+# Returns ----
 #	nothing
 # Creates:
 #	
 def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
-
-	# Number of digits to zero-pad the file name/number
-#	zpad = 5
-	zpad = keyZPad
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1742,7 +1460,6 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 	#end if
 	fgene.close()
 
-
 	# Get the sorted list of all paths
 	nameList = list(mNames.keys())
 	nameList.sort()
@@ -1757,9 +1474,7 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 		else :
 			fkey.write("\n")
 		#end if
-#		fkey.write("{:05d}\t{}".format(mNames[name], name))
-#		fkey.write("{:05d}".format(mNames[name][0]))
-		fkey.write("{}".format( str(mNames[name][0]).zfill(zpad) ))
+		fkey.write("{}".format( str(mNames[name][0]).zfill(keyZPad) ))
 		if mNames[name][1] == True :
 			fkey.write(",t")
 		else :
@@ -1770,12 +1485,11 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 
 	for i in range(0, len(mList)) :
 		# Save each matrix as the corresponding number
-		saveMatrixNumpy(mList[i], str(i).zfill(zpad),
-			mpath)
+		saveMatrixNumpy(mList[i], str(i).zfill(keyZPad), mpath)
 
 		# VERIFICATION: save as a text-readable file
 		if saveTextCopy :
-			saveMatrixText(mList[i], "t"+str(i).zfill(zpad),
+			saveMatrixText(mList[i], "t"+str(i).zfill(keyZPad),
 				mpath, True)
 	#end loop
 
@@ -1786,20 +1500,17 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 
 ######## ######## ######## ########
 # Function: save the key file for the metapath matrices
-# Input:
+# Input ----
 #	mDict, dict
 #		key, str: metapath names
 #		value, [int, : corresponding index number for mList
 #				bool] : True means use matrix transpose
-#	path, str - path to the folder to save the file
-# Returns: nothing
+#	path, str: path to the folder to save the file
+# Returns ---- nothing
 # Creates: a legend, mapping the path type on the right
 #	to the path matrix file on the left, where 't'
 #	indicates the transpose of that matrix should be used
 def saveKeyFile(mDict, path) :
-
-	# The length to pad the file name / matrix number
-	zpad = keyZPad
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(path) :
@@ -1820,9 +1531,7 @@ def saveKeyFile(mDict, path) :
 		else :
 			fkey.write("\n")
 		#end if
-#		fkey.write("{:05d}\t{}".format(mNames[name], name))
-#		fkey.write("{:05d}".format(mNames[name][0]))
-		fkey.write("{}".format( str(mDict[name][0]).zfill(zpad) ))
+		fkey.write("{}".format( str(mDict[name][0]).zfill(keyZPad) ))
 		if mDict[name][1] == True :
 			fkey.write(",t")
 		else :
@@ -1835,11 +1544,11 @@ def saveKeyFile(mDict, path) :
 #end def ######## ######## ######## 
 ######## ######## ######## ########
 # Function: save the list of genes
-# Input:
-#	mGenes, list of str - list of genes in matrix
+# Input ----
+#	mGenes, list of str: list of genes in matrix
 #		ASSUMPTION: list is already properly ordered
-#	path, str - path to the folder to save the file
-# Returns: nothing
+#	path, str: path to the folder to save the file
+# Returns ---- nothing
 # Creates: file containing ordered list of genes to
 #	use as the row/col headers for path matrices
 def saveGeneFile(mGenes, path) :
@@ -1921,12 +1630,12 @@ def readKeyFilePP(path) :
 #end def ######## ######## ######## 
 
 
+#TODO: update to utilize pList as a dict
 def createMPLengthOne(pList, pNames, path) :
 	mNum = 0
-	zpad = keyZPad
 	mDict = dict()
 	for i in range(0, len(pNames)) :
-		saveMatrixNumpy(pList[i], str(mNum).zfill(zpad), path)
+		saveMatrixNumpy(pList[i], str(mNum).zfill(keyZPad), path)
 		mDict[pNames[i]] = [mNum, False]
 		mNum += 1
 	#end loop
@@ -1936,7 +1645,6 @@ def createMPLengthOne(pList, pNames, path) :
 def createMPLengthTwo(pList, pNames, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)
-	zpad = keyZPad
 
 	for i in range(0, len(pNames)) :
 		for j in range(i, len(pNames)) :
@@ -1952,9 +1660,9 @@ def createMPLengthTwo(pList, pNames, path) :
 			nameRev = pNames[j] + "-" + pNames[i]
 
 			# Create new matrix if file doesn't already exist
-			if not os.path.isfile(path + str(mNum).zfill(zpad) + matrixExt) :
+			if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
 				newM = np.dot(pList[i], pList[j])
-				saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+				saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 			#end if
 
 			# Add the matrix name & number to mDict
@@ -1978,7 +1686,6 @@ def createMPLengthTwo(pList, pNames, path) :
 def createMPLengthThree(pList, pNames, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)+1
-	zpad = keyZPad
 
 	checkSet = set()
 	for i in range(0, len(pNames)) :
@@ -2015,12 +1722,12 @@ def createMPLengthThree(pList, pNames, path) :
 					checkSet.add(name)
 
 					# Create new matrix if file doesn't already exist
-					if not os.path.isfile(path + str(mNum).zfill(zpad) + matrixExt) :
+					if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
 						# Calculate the matrix
 						temp = np.dot(pList[i], pList[j])
 						newM = np.dot(temp, pList[k])
 						# Save the data
-						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 					#end if
 
 					mDict[name] = [mNum, False]
@@ -2045,7 +1752,6 @@ def createMPLengthThree(pList, pNames, path) :
 def createMPLengthFour(pList, pNames, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)
-	zpad = keyZPad
 
 	checkSet = set()
 	for h in range(0, len(pNames)) :
@@ -2097,7 +1803,7 @@ def createMPLengthFour(pList, pNames, path) :
 							temp2 = np.dot(temp1, pList[j])
 							newM = np.dot(temp2, pList[k])
 							# Save the data
-							saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 						#end if
 
 						mDict[name] = [mNum, False]
@@ -2106,7 +1812,7 @@ def createMPLengthFour(pList, pNames, path) :
 						if nameRev not in checkSet :
 							checkSet.add(nameRev)
 							# Save the data
-							saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 							mDict[nameRev] = [mNum, True]
 						#end if
 					#end if
@@ -2122,15 +1828,15 @@ def createMPLengthFour(pList, pNames, path) :
 #end def ######## ######## ######## 
 ######## ######## ######## ########
 # Function: save a list of matrices
-# Input:
-#	pList, list of NxN matrices - the primary matrices
+# Input ----
+#	pList, list of NxN matrices: the primary matrices
 #		ie: the 1-level path matrices
 #	pNames, dict
 #		key, str: metapath names
 #		value, int: corresponding index number for mList
-#	mGenes, list of str - names of genes in the matrix
-#	mpath, str - path to the folder to save the file
-# Returns: nothing
+#	mGenes, list of str: names of genes in the matrix
+#	mpath, str: path to the folder to save the file
+# Returns ---- nothing
 # Creates: The set of path matrices in the appropriate
 #	folder. These are simply named numerically, with a
 #	key/legend file provided. The list of genes used as
@@ -2182,13 +1888,11 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	#-------------------------------
 	# Create the 1-step paths
 	createMPLengthOne(pList, pNames, path)
+	print "    finished creating paths of length 1"
 
 	if depth < 2 :
-#		saveKeyFile(mDict, path)
-#		return mList, mDict
 		return
 	#end if
-	print "    finished creating paths of length 1"
 
 	#-------------------------------
 	## Create the 2-step paths
@@ -2196,8 +1900,6 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	print "    finished creating paths of length 2"
 	
 	if depth < 3 :
-#		saveKeyFile(mDict, path)
-#		return mList, mDict
 		return
 	#end if
 
@@ -2207,8 +1909,6 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	print "    finished creating paths of length 3"
 
 	if depth < 4 :
-#		saveKeyFile(mDict, path)
-#		return mList, mDict
 		return
 	#end if
 
@@ -2234,18 +1934,14 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 #	matrix, int array: num paths between node pairs
 def getPrimaryMatrixGZip(mpTuple, path, name, sizeOf) :
 
-	zpad = keyZPad
-#	fname = (path + name + "_MetaPaths/" +
-#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
-
 	prename = (path + name + "_MetaPaths/" +
-		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+		"{}".format(str(mpTuple[0]).zfill(keyZPad)) )
 	if os.path.isfile(prename + '.gz') :
 		fname = (path + name + "_MetaPaths/" +
-		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+		"{}.gz".format(str(mpTuple[0]).zfill(keyZPad)) )
 	elif os.path.isfile(prename + '.txt') :
 		fname = (path + name + "_MetaPaths/" +
-		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+		"{}.txt".format(str(mpTuple[0]).zfill(keyZPad)) )
 	else :
 		# ERROR CHECK: verify file exists
 		print ( "ERROR: Specified file doesn't exist:" +
@@ -2293,15 +1989,17 @@ def getPrimaryMatrixGZip(mpTuple, path, name, sizeOf) :
 
 ######## ######## ######## ########
 # Function: read in the primary matrices
-# Input: 
-#	nName, str - name of the network
-#	nPath, str - path to the network
-# Returns: 
-#	pList, list of NxN matrices - the primary matrices
-#		ie: the 1-level path matrices
-#	pNames, dict
-#		key, str: metapath names
-#		value, int: corresponding index number for mList
+# Input ----
+#	nName, str: name of the network
+#	nPath, str: path to the network
+# Returns ----
+#TODO: no real need to return pNames
+#	#	pNames, str list: sorted list of edge types / path
+#	#		names included in the pList dict
+#	pList, dict
+#		key, str: edge/path name
+#		value, NxN matrix: the primary path matrix
+#			ie: the level-1 path matrices 
 def readPrimaryMatrices(nPath, nName) :
 
 	# Check for folder existence
@@ -2312,8 +2010,9 @@ def readPrimaryMatrices(nPath, nName) :
 	#end if
 
 	# Items to return
-	pNames = list()
-	pList = list()
+#	pNames = list()
+#	pList = list()
+	pList = dict()
 
 	# Read in the key file
 	fn = open(path + "key.txt", "rb")
@@ -2326,8 +2025,8 @@ def readPrimaryMatrices(nPath, nName) :
 		#end if
 
 
-		# Append the matrix type name to pNames
-		pNames.append(lv[1])
+#		# Append the matrix type name to pNames
+#		pNames.append(lv[1])
 
 
 		# Verify matrix file exists
@@ -2369,7 +2068,8 @@ def readPrimaryMatrices(nPath, nName) :
 				row += 1
 		#end with
 
-		pList.append( matrix )
+#		pList.append( matrix )
+		pList[lv[1]] = matrix
 
 
 #		if speedVsMemory :
@@ -2395,11 +2095,14 @@ def readPrimaryMatrices(nPath, nName) :
 #		#end if
 
 		if verbose :
-			print "    finished loading {}, total: {} bytes".format(lv[1], pList[len(pList)-1].nbytes)
+#			print "    finished loading {}, total: {} bytes".format(lv[1], pList[len(pList)-1].nbytes)
+			print "    finished loading {}, total: {} bytes".format(lv[1], pList[lv[1]].nbytes)
 			print "    current time: {}".format( time.time() )
 	#end loop
 
-	return pNames, pList
+#	pNames.sort()
+#	return pNames, pList
+	return pList
 #end def ######## ######## ######## 
 
 
@@ -2410,7 +2113,7 @@ def readPrimaryMatrices(nPath, nName) :
 # Input ----
 #	nPath, str: path to the network files
 #	nName, str: name of the network (save location)
-#   edgeArray - (Nx4) matrix of char strings
+#   edgeArray: (Nx4) matrix of char strings
 #       each row: node, node, edge weight, edge type
 #		!ASSUME: this is the gene-only version of the network
 #	genesAll, str list: list of all genes in network
