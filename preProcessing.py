@@ -34,11 +34,11 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-useRealData = True
+useRealData = False
 
 if not useRealData :
 #	ename = 'fakeNtwk00_g2e3t10'
-	ename = 'fakeNtwk01'
+	ename = 'fakeNtwk00'
 	epath = 'networks/'
 else :
 #	ename = all_v1
@@ -48,7 +48,7 @@ else :
 
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 1
+mpDepth = 4
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -145,13 +145,13 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 print "Creating the primary gene-gene matrices ..."
 #matrixList, matrixNames = pp.createMatrixList(edgeArray,
 #	keepEdges, indirEdges, geneList, nodeDict)
-matrixList, matrixNames = pp.createMatrixListNoBinning(edgeArray,
+matrixList = pp.createMatrixListNoBinning(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
 
 # Save the primary matrices
 primpath = epath + outname + "_Primaries/"
 print "    ... saving to: {}".format(primpath)
-pp.saveMatrixList(matrixList, matrixNames, geneList, primpath)
+pp.saveMatrixList(matrixList, geneList, primpath)
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
@@ -164,7 +164,7 @@ print "Determining metapaths, up to length {}".format(mpDepth)
 mpPath = epath + outname + "_MetaPaths/"
 print "    ... and saving to: {}".format(mpPath)
 # Find paths up to length = mDepth
-pp.createMetaPaths(matrixList, matrixNames, geneList, mpDepth, mpPath)
+pp.createMetaPaths(matrixList, geneList, mpDepth, mpPath)
 
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 

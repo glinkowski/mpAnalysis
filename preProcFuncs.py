@@ -767,11 +767,7 @@ def createCountDict(aList) :
 #		eArray, (Nx4) array: the network
 # Returns ----
 def createMatrixList(eArray, kEdges, iEdges, gList,
-	nDict): #, path, oname) :
-
-	# data-type for the path matrices
-	dt = matrixDT
-	warnVal = warnDTvalue
+	nDict):
 
 	# How far from Std Dev will be kept as "Medium"
 	stdGap = 0.75
@@ -1082,7 +1078,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			if speedVsMemory :
 				thisM = np.zeros([numG, numG])
 			else :
-				thisM = np.zeros([numG,numG], dtype=dt)
+				thisM = np.zeros([numG,numG], dtype=matrixDT)
 			#end if
 			count = 0
 
@@ -1147,8 +1143,9 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 	# Create a set for faster membership checks
 	gSet = set(gList)
 
-	mList = list()
-	mNames = list()
+#	mList = list()
+#	mNames = list()
+	mList = dict()
 
 	iEdges.sort()
 	kEdges.sort()
@@ -1211,8 +1208,9 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 
 			if (count > 0) :
 				# save to a file
-				mList.append(thisM)
-				mNames.append(et)
+#				mList.append(thisM)
+#				mNames.append(et)
+				mList[et] = thisM
 			#end if
 
 
@@ -1221,7 +1219,7 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 			if speedVsMemory :
 				thisM = np.zeros([numG, numG])
 			else :
-				thisM = np.zeros([numG,numG], dtype=dt)
+				thisM = np.zeros([numG,numG], dtype=matrixDT)
 			#end if
 
 			if verbose :
@@ -1237,12 +1235,13 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 				count += 1
 			#end loop
 				
-			mList.append(thisM)
-			mNames.append(et)
+#			mList.append(thisM)
+#			mNames.append(et)
+			mList[et] = thisM
 		#end if
 	#end loop
 
-	return mList, mNames
+	return mList
 #end def ######## ######## ######## 
 
 
@@ -1363,14 +1362,13 @@ def clearFilesInDirectory(path) :
 # Function: save a list of matrices
 # Input ----
 #	mList, list of NxN matrices: the matrices to save
-#	mNames, list of str: names of the paths in matrix
 #	mGenes, list of str: names of genes in the matrix
 #	mpath, str: path to the folder to save the file
 # Returns ----
 #	nothing
 # Creates:
 #	
-def saveMatrixList(mList, mNames, mGenes, mpath) :
+def saveMatrixList(mList, mGenes, mpath) :
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1396,9 +1394,11 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 	# This file tells which matrix corresponds to which path
 	fkey = open(mpath+"key.txt", "wb")
 
+	mNames = mList.keys()
+	mNames.sort()
 	num = 0
 	firstline = True
-	for i in range(0, len(mNames)) :
+	for name in mNames :
 
 		# Write to the legend file
 		if firstline :
@@ -1406,15 +1406,15 @@ def saveMatrixList(mList, mNames, mGenes, mpath) :
 		else :
 			fkey.write("\n")
 		#end if
-		fkey.write("{:05d}\t{}".format(num, mNames[i]))
+		fkey.write("{:05d}\t{}".format(num, name))
 
 		# Save each matrix as the corresponding number
-		saveMatrixNumpy(mList[i], str(num).zfill(keyZPad),
+		saveMatrixNumpy(mList[name], str(num).zfill(keyZPad),
 			mpath)
 
 		# VERIFICATION: save as a text-readable file
 		if saveTextCopy :
-			saveMatrixText(mList[i], "t"+str(num).zfill(keyZPad),
+			saveMatrixText(mList[name], "t"+str(num).zfill(keyZPad),
 				mpath, True)
 		#end if
 
@@ -1630,45 +1630,50 @@ def readKeyFilePP(path) :
 #end def ######## ######## ######## 
 
 
-#TODO: update to utilize pList as a dict
-def createMPLengthOne(pList, pNames, path) :
+
+def createMPLengthOne(pList, path) :
 	mNum = 0
 	mDict = dict()
-	for i in range(0, len(pNames)) :
-		saveMatrixNumpy(pList[i], str(mNum).zfill(keyZPad), path)
-		mDict[pNames[i]] = [mNum, False]
+	# Create list of path names to loop over
+	pNames = pList.keys()
+	pNames.sort()
+	for p in pNames :
+		saveMatrixNumpy(pList[p], str(mNum).zfill(keyZPad), path)
+		mDict[p] = [mNum, False]
 		mNum += 1
 	#end loop
 	saveKeyFile(mDict, path)
 	return
 #end def ######## ######## ######## 
-def createMPLengthTwo(pList, pNames, path) :
+def createMPLengthTwo(pList, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)
 
-	for i in range(0, len(pNames)) :
-		for j in range(i, len(pNames)) :
+
+	pNames = pList.keys()
+	pNames.sort()
+	for p1 in pNames :
+		for p2 in pNames :
 			# Optionally skipping consecutive edges
 			if not keepDouble :
-				if i==j :
+				if p1 == p2 :
 					continue
 			#end if
 
 			# The name of this path
-			name = pNames[i] + "-" + pNames[j]
+			name = p1+'-'+p2
 			# The name of the reversed path
-			nameRev = pNames[j] + "-" + pNames[i]
+			nameRev = p2+'-'+p1
 
 			# Create new matrix if file doesn't already exist
 			if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
-				newM = np.dot(pList[i], pList[j])
+				newM = np.dot(pList[p1], pList[p2])
 				saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 			#end if
 
 			# Add the matrix name & number to mDict
-			if i == j :
-				# If name == nameRev (ie: typeA-typeA)
-				# Then add this matrix to the list
+			if name == nameRev : # (ie: typeA-typeA)
+				# Then add just this matrix to the list
 				mDict[name] = [mNum, False]
 			else :
 				# Add this path & note the reverse path
@@ -1683,38 +1688,39 @@ def createMPLengthTwo(pList, pNames, path) :
 	saveKeyFile(mDict, path)
 	return
 #end def ######## ######## ######## 
-def createMPLengthThree(pList, pNames, path) :
+def createMPLengthThree(pList, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)+1
 
+
+	pNames = pList.keys()
+	pNames.sort()
 	checkSet = set()
-	for i in range(0, len(pNames)) :
-		for j in range(0, len(pNames)) :
+	for p1 in pNames :
+		for p2 in pNames :
 			# Optionally skipping consecutive edges
 			if not keepDouble :
-				if i==j :
+				if p1 == p2 :
 					continue
 			#end if
-			for k in range(0, len(pNames)) :
+			for p3 in pNames :
 				# Optionally skipping consecutive edges
-				if not keepDouble :
-					if j==k :
-						continue
-				#end if
 				# Skip if i=j=k (three in a row)
 				if not keepTriple :
-					if (i==j) and (j==k) :
+					if (p1 == p2) and (p2 == p3) :
+						continue
+				if not keepDouble :
+					if p2 == p3 :
 						continue
 				#end if
 
-#				print "        creating {}, {}-{}-{}".format((mNum+1), i,j,k)
+#				if verbose :
+#					print "     creating path {}, {}-{}-{}".format((mNum+1), p1, p2, p3)
 
 				# The name of this path
-				name = ( pNames[i] + "-" +
-					pNames[j] + "-" + pNames[k] )
+				name = p1+'-'+p2+'-'+p3
 				# The name of the reversed path
-				nameRev = ( pNames[k] + "-" +
-					pNames[j] + "-" + pNames[i] )
+				nameRev = p3+'-'+p2+'-'+p1
 
 				# Verify this path wasn't yet calculated
 				#	if it has been, skip it
@@ -1724,8 +1730,8 @@ def createMPLengthThree(pList, pNames, path) :
 					# Create new matrix if file doesn't already exist
 					if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
 						# Calculate the matrix
-						temp = np.dot(pList[i], pList[j])
-						newM = np.dot(temp, pList[k])
+						temp = np.dot(pList[p1], pList[p2])
+						newM = np.dot(temp, pList[p3])
 						# Save the data
 						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 					#end if
@@ -1736,7 +1742,7 @@ def createMPLengthThree(pList, pNames, path) :
 					if nameRev not in checkSet :
 						checkSet.add(nameRev)
 						# Save the data
-						saveMatrixNumpy(newM, str(mNum).zfill(zpad), path)
+						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 						mDict[nameRev] = [mNum, True]
 					#end if
 				#end if
@@ -1749,47 +1755,49 @@ def createMPLengthThree(pList, pNames, path) :
 	saveKeyFile(mDict, path)
 	return
 #end def ######## ######## ######## 
-def createMPLengthFour(pList, pNames, path) :
+def createMPLengthFour(pList, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)
 
+
+	pNames = pList.keys()
+	pNames.sort()
 	checkSet = set()
-	for h in range(0, len(pNames)) :
-		for i in range(0, len(pNames)) :
+	for p1 in pNames :
+		for p2 in pNames :
 			# Optionally skipping consecutive edges
 			if not keepDouble :
-				if h==i :
+				if p1 == p2 :
 					continue
 			#end if
-			for j in range(0, len(pNames)) :
+
+			for p3 in pNames :
 				# Optionally skipping consecutive edges
-				if not keepDouble :
-					if i==j :
-						continue
-				#end if
 				# Skip if h=i=j (three in a row)
 				if not keepTriple :
-					if (h==i) and (i==j) :
+					if (p1 == p2) and (p2 == p3) :
+						continue
+				if not keepDouble :
+					if p2 == p3 :
 						continue
 				#end if
-				for k in range(0, len(pNames)) :
+
+				for p4 in pNames:
 					# Optionally skipping consecutive edges
 					if not keepDouble :
-						if j==k :
+						if p3 == p4 :
 							continue
 					#end if
 					# Skip if i=j=k (three in a row)
 					if not keepTriple :
-						if (i==j) and (j==k) :
+						if (p2 == p3) and (p3 == p4) :
 							continue
 					#end if
 
 					# The name of this path
-					name = ( pNames[h] + "-" + pNames[i] +
-						"-" + pNames[j] + "-" + pNames[k] )
+					name = p1+'-'+p2+'-'+p3+'-'+p4
 					# The name of the reversed path
-					nameRev = ( pNames[k] + "-" + pNames[j] +
-						"-" + pNames[i] + "-" + pNames[h] )
+					nameRev = p4+'-'+p3+'-'+p2+'-'+p1
 
 					# Verify this path wasn't yet calculated
 					#	if it has been, skip it
@@ -1797,11 +1805,11 @@ def createMPLengthFour(pList, pNames, path) :
 						checkSet.add(name)
 
 						# Create new matrix if file doesn't already exist
-						if not os.path.isfile(path + str(mNum).zfill(zpad) + matrixExt) :
+						if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
 							# Calculate the matrix
-							temp1 = np.dot(pList[h], pList[i])
-							temp2 = np.dot(temp1, pList[j])
-							newM = np.dot(temp2, pList[k])
+							temp1 = np.dot(pList[p1], pList[p2])
+							temp2 = np.dot(temp1, pList[p3])
+							newM = np.dot(temp2, pList[p4])
 							# Save the data
 							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
 						#end if
@@ -1823,6 +1831,7 @@ def createMPLengthFour(pList, pNames, path) :
 		#end loop
 	#end loop
 
+
 	saveKeyFile(mDict, path)
 	return
 #end def ######## ######## ######## 
@@ -1841,7 +1850,9 @@ def createMPLengthFour(pList, pNames, path) :
 #	folder. These are simply named numerically, with a
 #	key/legend file provided. The list of genes used as
 #	row/col headers is also saved to that folder.	
-def createMetaPaths(pList, pNames, gList, depth, path) :
+def createMetaPaths(pList, gList, depth, path) :
+#def createMetaPaths(pList, pNames, gList, depth, path) :
+
 
 	maxDepth = 4
 	if depth > maxDepth :
@@ -1872,11 +1883,11 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 	zpad = keyZPad
 
 	#ERROR CHECK: verify gene list & matrix dimensions
-	if len(gList) != pList[0].shape[0] :
+	if len(gList) != pList[pList.keys()[0]].shape[0] :
 		print ( "ERROR: The provided list of genes" +
 			" does not match the matrix. No paths created.")
 		return
-	elif pList[0].shape[0] != pList[0].shape[1] :
+	elif pList[pList.keys()[0]].shape[0] != pList[pList.keys()[0]].shape[1] :
 		print ( "ERROR: The primary path matrix passed" +
 			" is not square.")
 		return
@@ -1887,7 +1898,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 1-step paths
-	createMPLengthOne(pList, pNames, path)
+	createMPLengthOne(pList, path)
 	print "    finished creating paths of length 1"
 
 	if depth < 2 :
@@ -1896,7 +1907,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 
 	#-------------------------------
 	## Create the 2-step paths
-	createMPLengthTwo(pList, pNames, path)
+	createMPLengthTwo(pList, path)
 	print "    finished creating paths of length 2"
 	
 	if depth < 3 :
@@ -1905,7 +1916,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 3-step paths
-	createMPLengthThree(pList, pNames, path)
+	createMPLengthThree(pList, path)
 	print "    finished creating paths of length 3"
 
 	if depth < 4 :
@@ -1914,7 +1925,7 @@ def createMetaPaths(pList, pNames, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 4-step paths
-	createMPLengthFour(pList, pNames, path)
+	createMPLengthFour(pList, path)
 	print "    finished creating paths of length 4"
 
 #	return mList, mDict
