@@ -21,11 +21,6 @@
 # ---------------------------------------------------------
 
 import preProcFuncs as pp
-#TODO:
-######## ######## ######## ######## 
-# Import the library containing node binning functions
-#import mpFindFuncs02 as ff2
-######## ######## ######## ######## 
 import time
 
 
@@ -34,11 +29,11 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-useRealData = False
+useRealData = True
 
 if not useRealData :
 #	ename = 'fakeNtwk00_g2e3t10'
-	ename = 'fakeNtwk00'
+	ename = 'fakeNtwk01'
 	epath = 'networks/'
 else :
 #	ename = all_v1
@@ -53,10 +48,6 @@ mpDepth = 4
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
 cfile = ename + '.correct.txt'
-
-#	# NODE BINNING --
-#	# Threshold percentages for binning the genes
-#	binThresholds = [.4, .9]
 
 ####### ####### ####### ####### 
 
@@ -115,9 +106,6 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 # 2) Save the modified network
 
 # Create an updated nodeDict from modified edge list
-#TODO: Why am I concatenating these lists?
-#allGenes = keepGenes + loseGenes
-#nodeDict, geneList = pp.createNodeLists(edgeArray, allGenes)
 nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
 
 # Save the edge list, node dict, gene list
@@ -127,11 +115,7 @@ print "Saving modified network to {}.network.txt".format(outname)
 pp.writeModEdgeFilePlus(epath, outname,
 	nodeDict, geneList, edgeArray)
 
-#TODO:
-######## ######## ######## ######## 
 # Save the node-binning stats for the network
-#ff2.writeNodeBinFiles(epath, outname, geneList, edgeArray, geneHuman, binThresholds )
-######## ######## ######## ######## 
 pp.saveSelectGeneDegrees(epath, outname, edgeArray, geneList, geneHuman)
 
 
@@ -143,8 +127,6 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 # Change indirect edges to direct
 print "Creating the primary gene-gene matrices ..."
-#matrixList, matrixNames = pp.createMatrixList(edgeArray,
-#	keepEdges, indirEdges, geneList, nodeDict)
 matrixList = pp.createMatrixListNoBinning(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
 
