@@ -135,38 +135,40 @@ for et in eTypes :
 			if x != y :
 				hmap[y,x] = hmap[x,y]
 	#end loop
+	hmax = np.amax(hmap)
+
+
+#TODO: Should I apply a scaling to better visualize this? A log transform?
+	# Apply log scaling
+#	hmap = np.log(hmap + 1)
+
 
 	# Plot the figure
-	#fig = plt.figure()
-	#fig.suptitle('Heatmap of '+pFolder+' for edge '+et)
-	#fig.pcolor(np.transpose(hmap), cmap=plt.cm.Reds)
-	#fig.show()
-
 	plt.pcolor(hmap, cmap=plt.cm.Reds)
 	plt.suptitle('Heatmap of '+pFolder+' for edge '+et)
+	plt.title('max count = {}'.format(int(hmax)))
 	# omit whitespace & reverse the order of the axes
 	plt.axis([0, len(gOrder), 0, len(gOrder)])
 	plt.gca().invert_xaxis()
 	plt.gca().invert_yaxis()
 	# label the axis labels and ticks
-	plt.yticks(range(len(gOrder)), gOrder['name'], fontsize=5)
+#	plt.yticks(range(len(gOrder)), gOrder['name'], fontsize=5)
+	plt.yticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
+		len(gOrder)], ['outside set', 'hidden', 'known'],
+		ha='right', va='bottom', rotation='70')
+	plt.ylabel('genes: ascending by avg connections within this set')
 	plt.xticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
-		len(gOrder)], ['outside set', 'hidden', 'known'], ha='left')
-
+		len(gOrder)], ['outside set', 'hidden', 'known'], ha='left', rotation='-20')
+	plt.plot([0,len(gOrder)],[len(gOrder) - len(sGenes),len(gOrder) - len(sGenes)], 'lightgrey')
+	plt.plot([0,len(gOrder)],[len(gOrder) - len(kGenes),len(gOrder) - len(kGenes)], 'lightgrey')
+	plt.plot([len(gOrder) - len(sGenes),len(gOrder) - len(sGenes)],[0,len(gOrder)], 'lightgrey')
+	plt.plot([len(gOrder) - len(kGenes),len(gOrder) - len(kGenes)],[0,len(gOrder)], 'lightgrey')
 	plt.subplots_adjust(left=0.2)
-#	plt.show()
 	plt.savefig(pDir+'Heatmap_'+et+'.png')
+#	plt.show()
 	plt.close()
 
-
-#print avgCounts
-#print avgCounts[geneDict['ENSG00000183310']], np.mean(pathList[et][geneDict['ENSG00000183310'],indices])
+#end loop
 
 
-
-#TODO: output a heatmap image to pDir
-
-
-
-
-
+print "\nDone.\n"
