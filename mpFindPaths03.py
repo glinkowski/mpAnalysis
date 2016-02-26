@@ -49,7 +49,12 @@ spath = '../samples-subset2/'
 opath = '../output/'
 
 # How many random samples to examine
-numRand = 100   
+numRand = 100
+
+# NODE BINNING --
+# Threshold percentages for binning the genes
+binThresholds = [.25, .5, .75]
+
 
 ####### ####### ####### ####### 
 
@@ -64,6 +69,9 @@ tstart = time.time()
 
 # 0) Get the sample names
 sNames = ff.getSampleList(spath)
+
+percAll = np.zeros([43,len(getSampleList)])
+index = 0
 
 for sname in sNames :
 
@@ -115,8 +123,10 @@ for sname in sNames :
 	# Create N random samples
 	print ("Choosing {} random samples of".format(numRand) +
 		" length {} ...".format(len(inGenes)) )
-	randSamps = ff.createRandomSamplesArray(numRand,
-		len(inGenes), len(geneIndex))
+#	randSamps = ff.createRandomSamplesArray(numRand,
+#		len(inGenes), len(geneIndex))
+	randSamps = mpl.createRandomSamplesBinned(epath, ename, inGenes,
+		geneIndex, binThresholds, 'all', numRand)
 	#print randSamps
 	print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
@@ -145,6 +155,21 @@ for sname in sNames :
 	print "    ... {}".format(outFile)
 	print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
+
+
+	percAll[index,:] = percList
+#end loop
+
+pNames = pathDict.keys()
+pNames.sort()
+f = open(opath+'mpf03-all-000.txt','wb')
+for i in xrange(len(sNames)) :
+	f.write('{}\t'.format(sNames[i]))
+f.write('\n')
+for row in range(0, 42) :
+	for i in xrange(len(sNames)) :
+		f.write('{}\t'.format(sNames[i]))
+	f.write('{}\t{}\n'.format(pNames[row], pNames[row].count('-') + 1))
 #end loop
 
 
