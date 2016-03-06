@@ -13,6 +13,7 @@ from os import listdir
 import sys
 import numpy as np
 import random
+import gzip
 
 
 
@@ -438,7 +439,7 @@ def convertToIndices(names, iDict) :
 #   name, str: name of the network to use
 # Returns ----
 #   matrix, int array: num paths between node pairs
-def getPathMatrix(mpTuple, path, name) :
+def getPathMatrix(mpTuple, path, name, sizeOf) :
 
 	zpad = keyZPad
 #   fname = (path + name + "_MetaPaths/" +
@@ -461,7 +462,29 @@ def getPathMatrix(mpTuple, path, name) :
 
 	# Load the matrix
 #   matrix = np.load(fname)
-	matrix = np.loadtxt(fname)
+#	matrix = np.loadtxt(fname)
+
+	# Declare the matrix
+	sizeOf = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			sizeOf += 1
+	#end with
+#	if speedVsMemory :
+		matrix = np.zeros([sizeOf, sizeOf])
+#	else :
+#		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+#	#end if
+
+	# Read in the file, placing values into matrix
+	row = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			line = line.rstrip()
+			ml = line.split()
+			matrix[row,:] = ml[:]
+			row += 1
+	#end with
 
 	# Convert to transpose if flag==True
 	if mpTuple[1] :
@@ -647,10 +670,26 @@ def calculateStatistics(sample, rSamples, mpDict,
 	# An iterable list of metapaths
 	mpList = removeInvertedPaths(mpDict)
 
+	# Get expected matrix size
+#TODO: pack this into a function
+	fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(0).zfill(zpad)) )
+	sizeOf = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			sizeOf += 1
+	#end with
+
+	count = int(0)
 	# Calculate the stats for each metapath
 	for mp in mpList :
 
-		matrix = getPathMatrix(mpDict[mp], path, name)
+		if verbose :
+			if not (count % 15) :
+				print "    tested {} paths".format(count)
+		#end if
+
+		matrix = getPathMatrix(mpDict[mp], path, name, sizeOf)
 
 		tCount = getPathCountOne(sample, matrix)
 		sCount.append(tCount)
