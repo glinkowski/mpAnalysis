@@ -38,7 +38,7 @@ topKGenes = 100		# number of genes to predict
 
 # Input/Output names & locations
 
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -46,16 +46,22 @@ if useNtwk == 0 :
 	sName = 'sample01'
 	sPath = 'samplesFake/'
 else :
-	eName = 'toy2_p3gz'
-	ePath = '../networks/'
-	sName = 'BERTUCCI_MEDULLARY_VS_DUCTAL_BREAST_CANCER'
-	sPath = '../samples/'
+#	eName = 'toy2_p3gz'
+	eName = 'all_v1_g2e11t0'
+	ePath = '../Dropbox/mp/networks/'
+#	sName = 'BERTUCCI_MEDULLARY_VS_DUCTAL_BREAST_CANCER'
+	sName = 'CAMPS_COLON_CANCER_COPY_NUMBER'
+	sPath = '../Dropbox/mp/samplesMSIG/'
 #end if
 
 # Path & new directory to save output (& temp files)
-oRoot = 'outputFake/'
-oRoot = '../output/'
+#oRoot = 'outputFake/'
+oRoot = '../Dropbox/mp/output/'
 oDirPrefix = 'pred01-' + sName[0:8]
+
+# options for Node Binning 
+nodeBins = [0.25, 0.5, 0.75]
+binType = 'all'
 
 ####### ####### ####### ####### 
 
@@ -116,8 +122,10 @@ geneIndex = mp.readGenesFile(ePath, eName)
 # Create N random samples
 print ("Choosing {} random samples of".format(nRandSamp) +
 	" length {} ...".format(len(gKnown)) )
-randSamps = mp.createRandomSamplesArray(nRandSamp,
-	len(gKnown), len(geneIndex))
+#randSamps = mp.createRandomSamplesArray(nRandSamp,
+#	len(gKnown), len(geneIndex))
+randSamps = mp.createRandomSamplesBinned(ePath, eName,
+	gKnown, geneIndex, nodeBins, 'all', nRandSamp)
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
@@ -172,8 +180,8 @@ for p in range(len(bestPaths)) :
 # Write the ranked output to file
 outFile = mp.writeItemRanks(oPath, simArray, geneIndex, sampIndex, bestPaths)
 print "Saving gene predictions to {}".format(outFile)
+print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
-	
 
 
 print "\nDone.\n"

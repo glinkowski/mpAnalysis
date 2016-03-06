@@ -39,6 +39,10 @@ fnZPad = 3
 textDelim = '\t'
 # Whether to print non-error messages within these funcs
 verbose = True
+# Whether to use the data-type for the matrices:
+speedVsMemory = False	# True favors speed, disables dtype
+# Data-type for the path matrices:
+matrixDT = np.float32	#TODO: any considerations here?
 
 ######## ######## ######## ######## 
 
@@ -465,16 +469,11 @@ def getPathMatrix(mpTuple, path, name, sizeOf) :
 #	matrix = np.loadtxt(fname)
 
 	# Declare the matrix
-	sizeOf = 0
-	with gzip.open(fname, 'rb') as fin :
-		for line in fin :
-			sizeOf += 1
-	#end with
-#	if speedVsMemory :
+	if speedVsMemory :
 		matrix = np.zeros([sizeOf, sizeOf])
-#	else :
-#		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
-#	#end if
+	else :
+		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+	#end if
 
 	# Read in the file, placing values into matrix
 	row = 0
@@ -673,21 +672,16 @@ def calculateStatistics(sample, rSamples, mpDict,
 	# Get expected matrix size
 #TODO: pack this into a function
 	fname = (path + name + "_MetaPaths/" +
-		"{}.gz".format(str(0).zfill(zpad)) )
+		"{}.gz".format(str(0).zfill(keyZPad)) )
 	sizeOf = 0
 	with gzip.open(fname, 'rb') as fin :
 		for line in fin :
 			sizeOf += 1
 	#end with
 
-	count = int(0)
+	count = int(1)
 	# Calculate the stats for each metapath
 	for mp in mpList :
-
-		if verbose :
-			if not (count % 15) :
-				print "    tested {} paths".format(count)
-		#end if
 
 		matrix = getPathMatrix(mpDict[mp], path, name, sizeOf)
 
@@ -703,6 +697,12 @@ def calculateStatistics(sample, rSamples, mpDict,
 
 		tScore = (tCount - tMeans) / (tStDev + 0.0001)
 		zScore.append(tScore)
+
+		if verbose :
+			if not (count % 15) :
+				print "    tested {} paths".format(count)
+		#end if
+		count += 1
 	#end loop
 
 	return sCount, rMeans, rStDev, zScore, percents
@@ -890,46 +890,65 @@ def chooseTopKPathsSimple(k, ranker, mpDict) :
 
 
 
-######## ######## ######## ######## 
-# Function: Load the matrix containing the number of paths
-#	of this type which join the nodes in the network
-# Input ----
-#	mpTuple [int, bool]: indicates which matrix file to use
-#	path, str: path to the network files
-#	name, str: name of the network to use
-# Returns ----
-#	matrix, int array: num paths between node pairs
-def getPathMatrix(mpTuple, path, name) :
-
-	zpad = keyZPad
-#	fname = (path + name + "_MetaPaths/" +
-#		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
-
-	prename = (path + name + "_MetaPaths/" +
-		"{}".format(str(mpTuple[0]).zfill(zpad)) )
-	if os.path.isfile(prename + '.gz') :
-		fname = (path + name + "_MetaPaths/" +
-		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
-	elif os.path.isfile(prename + '.txt') :
-		fname = (path + name + "_MetaPaths/" +
-		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
-	else :
-		# ERROR CHECK: verify file exists
-		print ( "ERROR: Specified file doesn't exist:" +
-			" {}".format(fname) )
-		sys.exit()
-	#end if
-
-	# Load the matrix
-#	matrix = np.load(fname)
-	matrix = np.loadtxt(fname)
-
-	# Convert to transpose if flag==True
-	if mpTuple[1] :
-		return np.transpose(matrix)
-	else :
-		return matrix
-#end def ######## ######## ######## 
+######### ######## ######## ######## 
+## Function: Load the matrix containing the number of paths
+##	of this type which join the nodes in the network
+## Input ----
+##	mpTuple [int, bool]: indicates which matrix file to use
+##	path, str: path to the network files
+##	name, str: name of the network to use
+## Returns ----
+##	matrix, int array: num paths between node pairs
+#def getPathMatrix(mpTuple, path, name, sizeOf) :
+#
+##TODO: Are there two of this function!!??
+#
+#	zpad = keyZPad
+##	fname = (path + name + "_MetaPaths/" +
+##		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+#
+#	prename = (path + name + "_MetaPaths/" +
+#		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+#	if os.path.isfile(prename + '.gz') :
+#		fname = (path + name + "_MetaPaths/" +
+#		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+#	elif os.path.isfile(prename + '.txt') :
+#		fname = (path + name + "_MetaPaths/" +
+#		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+#	else :
+#		# ERROR CHECK: verify file exists
+#		print ( "ERROR: Specified file doesn't exist:" +
+#			" {}".format(fname) )
+#		sys.exit()
+#	#end if
+#
+#	# Load the matrix
+##	matrix = np.load(fname)
+##	matrix = np.loadtxt(fname)
+#
+#	# Declare the matrix
+##	if speedVsMemory :
+#	matrix = np.zeros([sizeOf, sizeOf])
+##	else :
+##		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+##	#end if
+#
+#	# Read in the file, placing values into matrix
+#	row = 0
+#	with gzip.open(fname, 'rb') as fin :
+#		for line in fin :
+#			line = line.rstrip()
+#			ml = line.split()
+#			matrix[row,:] = ml[:]
+#			row += 1
+#	#end with
+#
+#	# Convert to transpose if flag==True
+#	if mpTuple[1] :
+#		return np.transpose(matrix)
+#	else :
+#		return matrix
+##end def ######## ######## ######## 
 
 
 
@@ -945,8 +964,18 @@ def getPathMatrix(mpTuple, path, name) :
 #	scores, float list: G P S for each gene not in sample
 def applyGroupPathSim(path, name, mpTuple, sample) :
 
+	# Get expected matrix size
+#TODO: pack this into a function
+	fname = (path + name + "_MetaPaths/" +
+		"{}.gz".format(str(0).zfill(keyZPad)) )
+	sizeOf = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			sizeOf += 1
+	#end with
+
 	# Get the corresponding path matrix
-	matrix = getPathMatrix(mpTuple, path, name)
+	matrix = getPathMatrix(mpTuple, path, name, sizeOf)
 
 	# Apply the modified Group PathSim
 
