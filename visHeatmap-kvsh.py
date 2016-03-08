@@ -96,8 +96,8 @@ geneDict = mp.readFileAsIndexDict(nDir+'genes.txt')
 
 # Get the primary path matrices & names
 #mpDir = nDir[0:-1]+'-Primaries/'
-pathList = pp.readPrimaryMatrices(nPath, nFolder)
-eTypes = pathList.keys()
+pathDict = pp.readPrimaryMatrices(nPath, nFolder)
+eTypes = pathDict.keys()
 eTypes.sort()
 
 # Define the matrix to hold the path counts (the heatmap)
@@ -115,9 +115,9 @@ for et in eTypes :
 
 
 	# reduce the path matrix to the desired columns
-	#avgCounts = np.mean( pathList[et][:,indices], axis=1 )
-	sumCounts = np.sum( pathList[et][:,indices], axis=1 )
-	#print len(avgCounts), pathList[et].shape[0]
+	#avgCounts = np.mean( pathDict[et][:,indices], axis=1 )
+	sumCounts = np.sum( pathDict[et][:,indices], axis=1 )
+	#print len(avgCounts), pathDict[et].shape[0]
 	# for each gene in gOrder, get the avg path count w/in this set
 	#gOrder['pcount'] = [avgCounts[geneDict[g]] for g in gOrder['name']]
 	gOrder['pcount'] = [sumCounts[geneDict[g]] for g in gOrder['name']]
@@ -129,7 +129,7 @@ for et in eTypes :
 	for x in xrange(len(gOrder)) :
 		for y in xrange(x,len(gOrder)) :
 
-			hmap[x,y] = (pathList[et][ geneDict[gOrder['name'][x]],
+			hmap[x,y] = (pathDict[et][ geneDict[gOrder['name'][x]],
 				geneDict[gOrder['name'][y]] ])
 
 			if x != y :
@@ -164,11 +164,75 @@ for et in eTypes :
 	plt.plot([len(gOrder) - len(sGenes),len(gOrder) - len(sGenes)],[0,len(gOrder)], 'lightgrey')
 	plt.plot([len(gOrder) - len(kGenes),len(gOrder) - len(kGenes)],[0,len(gOrder)], 'lightgrey')
 	plt.subplots_adjust(left=0.2)
+	print "  saving Heatmap of {}".format(et)
 	plt.savefig(pDir+'Heatmap_'+et+'.png')
 #	plt.show()
 	plt.close()
 
 #end loop
+
+
+
+# Get the top paths from this prediction
+topPaths, topPathScores = vl.getTopRankedItems(pDir+'ranked_paths.txt', 10, 0)
+#print topPaths, topPathScores
+
+pathTuples = mp.readKeyFile(nPath, nFolder)
+
+matrixSize = (pathDict[et]).shape[0]
+#print matrixSize
+for pt in topPaths :
+
+	matrix = mp.getPathMatrix(pathTuples[pt], nPath, nFolder, matrixSize)
+
+	# reduce the path matrix to the desired columns
+	sumCounts = np.sum( matrix[:,indices], axis=1 )
+	# for each gene in gOrder, get the avg path count w/in this set
+	gOrder['pcount'] = [sumCounts[geneDict[g]] for g in gOrder['name']]
+
+	gOrder.sort(order=['order', 'pcount'])
+
+	# Fill the heatmap with values from path matrix
+	for x in xrange(len(gOrder)) :
+		for y in xrange(x,len(gOrder)) :
+
+			hmap[x,y] = (matrix[ geneDict[gOrder['name'][x]],
+				geneDict[gOrder['name'][y]] ])
+
+			if x != y :
+				hmap[y,x] = hmap[x,y]
+	#end loop
+	hmax = np.amax(hmap)
+
+
+	# Plot the figure
+	plt.pcolor(hmap, cmap=plt.cm.Reds)
+	plt.suptitle('Heatmap of '+pFolder+' for '+pt)
+	plt.title('max count = {}'.format(int(hmax)))
+	# omit whitespace & reverse the order of the axes
+	plt.axis([0, len(gOrder), 0, len(gOrder)])
+	plt.gca().invert_xaxis()
+	plt.gca().invert_yaxis()
+	# label the axis labels and ticks
+#	plt.yticks(range(len(gOrder)), gOrder['name'], fontsize=5)
+	plt.yticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
+		len(gOrder)], ['outside set', 'hidden', 'known'],
+		ha='right', va='bottom', rotation='70')
+	plt.ylabel('genes: ascending by avg connections within this set')
+	plt.xticks([len(gOrder) - len(sGenes), len(gOrder) - len(kGenes),
+		len(gOrder)], ['outside set', 'hidden', 'known'], ha='left', rotation='-20')
+	plt.plot([0,len(gOrder)],[len(gOrder) - len(sGenes),len(gOrder) - len(sGenes)], 'lightgrey')
+	plt.plot([0,len(gOrder)],[len(gOrder) - len(kGenes),len(gOrder) - len(kGenes)], 'lightgrey')
+	plt.plot([len(gOrder) - len(sGenes),len(gOrder) - len(sGenes)],[0,len(gOrder)], 'lightgrey')
+	plt.plot([len(gOrder) - len(kGenes),len(gOrder) - len(kGenes)],[0,len(gOrder)], 'lightgrey')
+	plt.subplots_adjust(left=0.2)
+	print "  saving Heatmap of {}".format(pt)
+	plt.savefig(pDir+'Heatmap_'+pt+'.png')
+#	plt.show()
+	plt.close()
+
+#end loop
+
 
 
 print "\nDone.\n"
