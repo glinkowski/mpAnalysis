@@ -23,6 +23,7 @@ from os import listdir
 import sys
 import numpy as np
 import random
+import gzip
 
 
 
@@ -100,7 +101,7 @@ def setParamFileZeroPad(newMval, newOval) :
 
 
 ######## ######## ######## ########
-# Function: read in the first column of a file
+# Function: read in the desired column of a file
 #	(typically a list of genes), skip N header rows
 # Input ----
 #	fname, str: path & filename of file to read
@@ -136,8 +137,8 @@ def readFileColumnAsString(fname, iCol, nSkip) :
 
 		# ERROR CHECK: verify iCol is within range
 		if (firstWarn == True) and (iCol >= len(lv)) :
-			print( "WARNING: File contains {} columns, but col " +
-				" {} was requested.".format(len(lv), iCol) )
+			print( "WARNING: File contains {} columns,".format(len(lv)) +
+				" but col {} was requested.".format(iCol) )
 			print( "    Note: Indexing starts at 0.")
 			print( "    Returning last column. ")
 			iCol = len(lv) - 1
@@ -259,4 +260,127 @@ def getTopRankedItems(fname, nItems, nSkip) :
 	#end if
 
 	return topNPaths, rankScore
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ########
+# Function: count the number of lines in a file
+# Input ----
+#	fname, str: path & filename of file to read
+# Returns ----
+#	cRows, int: total # of lines in the file
+#	cColMin, int: minimum # of columns in the file
+#	cColMax, int: maximum # of columns in the file
+def countLinesInFile(fname) :
+
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	cRows = 0
+	cColMin = -1
+	cColMax = 0
+
+	if fname[-3:0] == '.gz' : 
+		with gzip.open(fname, 'rb') as fin :
+			for line in fin :
+				lv = line.split(textDelim)
+				lineLength = len(lv)
+
+				cRows += 1
+				
+				if cColMax < lineLength :
+					cColMax = lineLength
+
+				if cColMin == -1 :
+					cColMin = lineLength
+				elif cColMin > lineLength :
+					cColMin = lineLength
+			#end loop
+		#end with
+	else :
+		fin = open(fname, 'rb')
+		for line in fin :
+			lv = line.split(textDelim)
+			lineLength = len(lv)
+
+			cRows += 1
+			
+			if cColMax < lineLength :
+				cColMax = lineLength
+
+			if cColMin == -1 :
+				cColMin = lineLength
+			elif cColMin > lineLength :
+				cColMin = lineLength
+		#end loop
+		fin.close()
+	#end if
+
+	return cRows, cColMin, cColMax
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ########
+# Function: calculate Recall (TPR), FPR, & Precision
+# Input ----
+#	fname, str: path & filename of file to read
+# Returns ----
+#	recall, 
+#	FPR, 
+#	precision, 
+def getAUCstats(path) :
+
+	# Read in the ranked genes
+	gHidden = readFileColumnAsString(path+'concealed.txt', 0, 0)
+	gHidSet = set(gHidden)
+
+
+	# Declare the confusion matrix
+	rows, colMin, colMax = countLinesInFile(path+'ranked_genes.txt')
+	posActual = len(gHidden)
+	negActual = rows - posActual
+	confusion = np.zeros([2,rows])	# TP, FP
+
+
+	# Create the matrix by reading in the file
+	#	matrix is running count of: True Positives, False Positives
+	fin = open(path+'ranked_genes.txt')
+	col = 0
+	TP = 0
+	FP = 0
+	for line in fin :
+		line = line.rstrip()
+		lv = line.split(textDelim)
+
+		if lv[1] in gHidSet :
+			TP += 1
+		else :
+			FP += 1
+		#end if
+		confusion[:,col] = [TP, FP]
+
+		col += 1
+	#end loop
+	fin.close()
+
+
+	# Convert into FPR, Recall (TPR), & Precision
+	# TPR = TP / allP = confusion[0,i] / posActual
+	# FPR = FP / allN = confusion[1,i] / negActual
+	# recall = TPR
+	# precision = TP / (TP + FP) = confusion[0,i] / (confusion[0,i] + confusion[1,i])
+	recall = confusion[0,:] / posActual		# aka TPR
+	FPR = confusion[1,:] / negActual
+	precision = confusion[0,:] / (confusion[0,:] + confusion[1,:])
+
+
+	return FPR, recall, precision
 #end def ######## ######## ######## 
