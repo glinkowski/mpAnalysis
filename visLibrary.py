@@ -122,12 +122,12 @@ def readFileColumnAsString(fname, iCol, nSkip) :
 
 	# Read in from the file
 	theFile = open(fname, 'rb')
-	count = 1
+	count = 0
 	firstWarn = True
 	lvLen = -1
 	for line in theFile :
 		# Skip first nSkip number of rows
-		if count <= nSkip :
+		if count < nSkip :
 			continue
 		#end if
 
@@ -153,6 +153,7 @@ def readFileColumnAsString(fname, iCol, nSkip) :
 		lvLen = len(lv)
 
 		theList.append( str(lv[iCol]) )
+		count += 1
 	#end loop
 	theFile.close()
 
@@ -193,4 +194,69 @@ def randSelectWithExclude(itemList, excludeSet, quantity) :
 	theList.sort()
 
 	return theList
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ########
+# Function: read in the top N items from a file
+# Input ----
+#	fname, str: path & filename of file to read
+#		FORMAT: Col 0 is score/rank, Col 1 is the items
+#	nItems, int: number of paths to return
+#	nSkip, int; number of rows to skip at the top
+# Returns ----
+#	topNPaths, str list: list of top N paths, ordered by rank
+#	rankScore, int? list: list of corresponding scores or ranks
+def getTopRankedItems(fname, nItems, nSkip) :
+
+	# ERROR CHECK: verify file exists
+	if not os.path.isfile(fname) :
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}".format(fname) )
+		sys.exit()
+	#end if
+
+	# The items to return
+	topNPaths = list()
+	rankScore = list()
+
+
+	# Read in from the file
+	theFile = open(fname, 'rb')
+	count = 0
+	for line in theFile :
+		# Skip first nSkip number of rows
+		if count < nSkip :
+			continue
+		# Exit if all desired items have been collected
+		if count >= nItems :
+			break
+		#end if
+
+		line = line.rstrip()
+		lv = line.split(textDelim)
+
+		# ERROR CHECK: verify expected columns exist
+		if len(lv) < 2 :
+			print ( "ERROR: The file is expected to contain at least " +
+				"2 columns; {}".format(fname) )
+			sys.exit()
+		#end if
+
+		topNPaths.append(lv[1])
+		rankScore.append(lv[0])
+		count += 1
+	#end loop
+	theFile.close()
+
+
+	# ERROR CHECK: Warn if less items exist than asked for
+	if count < nItems :
+		print ( "WARNING: {} items were requested, but only ".format(count) +
+			"{} exist in {}.".format(nItems, fname) )
+	#end if
+
+	return topNPaths, rankScore
 #end def ######## ######## ######## 
