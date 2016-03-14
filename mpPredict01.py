@@ -49,8 +49,8 @@ else :
 #	eName = 'toy2_p3gz'
 	eName = 'all_v1_g2e11t0'
 	ePath = '../Dropbox/mp/networks/'
-#	sName = 'BERTUCCI_MEDULLARY_VS_DUCTAL_BREAST_CANCER'
-	sName = 'CAMPS_COLON_CANCER_COPY_NUMBER'
+	sName = 'BERTUCCI_MEDULLARY_VS_DUCTAL_BREAST_CANCER'
+#	sName = 'CAMPS_COLON_CANCER_COPY_NUMBER'
 	sPath = '../Dropbox/mp/samplesMSIG/'
 #end if
 
@@ -59,8 +59,9 @@ else :
 oRoot = '../Dropbox/mp/output/'
 oDirPrefix = 'pred01-' + sName[0:8]
 
-# options for Node Binning 
-nodeBins = [0.25, 0.5, 0.75]
+# options for Node Binning
+useBinning = True
+nodeBins = [0.3, .9]
 binType = 'all'
 
 ####### ####### ####### ####### 
@@ -122,10 +123,13 @@ geneIndex = mp.readGenesFile(ePath, eName)
 # Create N random samples
 print ("Choosing {} random samples of".format(nRandSamp) +
 	" length {} ...".format(len(gKnown)) )
-#randSamps = mp.createRandomSamplesArray(nRandSamp,
-#	len(gKnown), len(geneIndex))
-randSamps = mp.createRandomSamplesBinned(ePath, eName,
-	gKnown, geneIndex, nodeBins, 'all', nRandSamp)
+if useBinning :
+	randSamps = mp.createRandomSamplesBinned(ePath, eName,
+		gKnown, geneIndex, nodeBins, 'all', nRandSamp)
+else :
+	randSamps = mp.createRandomSamplesArray(nRandSamp,
+		len(gKnown), len(geneIndex))
+#end if
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
