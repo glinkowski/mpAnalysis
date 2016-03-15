@@ -11,10 +11,8 @@
 # ---------------------------------------------------------
 
 import matplotlib.pyplot as plt
-import numpy as np
 import visLibrary as vl
-import mpLibrary as mp
-import preProcFuncs as pp
+import os
 
 
 
@@ -23,19 +21,8 @@ import preProcFuncs as pp
 
 # Paths to network files & sample prediction files
 pPath = '../Dropbox/mp/output/'
-pFolder = 'pred01-CAMPS_CO-006'
+pFolderPrefix = 'pred01-'
 
-
-if pFolder.endswith('/') :
-	pDir = pPath + pFolder
-else :
-	pDir = pPath + pFolder + '/'
-
-# Data type used by preProcessing when reading in nodes
-nodeDT = np.dtype('a30')
-
-
-textDelim = '\t'
 ####### ####### ####### ####### 
 
 
@@ -45,53 +32,61 @@ textDelim = '\t'
 print ""
 
 
-## Read in the hidden genes
-#gHidden = vl.readFileColumnAsString(pDir+'concealed.txt', 1, 0)
-##print gHidden
-
-#
-## Declare the confusion matrix
-#rows, colMin, colMax = vl.countLinesInFile(pDir+'ranked_genes.txt')
-##print rows, colMin, colMax
-#posActual = len(gHidden)
-#negActual = rows - posActual
-#confusion = np.zeros([2,rows])	# TP, FP
-#
-## Read in the ranked genes
-#gHidSet = set(gHidden)
-#
-#fin = open(pDir+'ranked_genes.txt')
-#col = 0
-#for line in fin :
-#
-#	line = line.rstrip()
-#	lv = line.split(textDelim)
-#
-#	if lv[1] in gHidSet :
-#		confusion[0,col] += 1
-#	else :
-#		confusion[1,col] += 1
-#	#end if
-#
-#	col += 1
-##end loop
-#fin.close()
-
-#
-## Convert into Recall (FPR), TPR, & Precision
-## TPR = TP / allP = confusion[0,i] / posActual
-## FPR = FP / allN = confusion[1,i] / negActual
-## recall = TPR
-## precision = TP / TP + FP = confusion[0,i] / (confusion[0,i] + confusion[1,i])
-#recall = confusion[0,i] / posActual		# aka TPR
-#FPR = confusion[1,i] / negActual
-#precision = confusion[0,i] / (confusion[0,i] + confusion[1,i])
+# Get the list of subdirectories in pPath
+allItems = os.listdir(pPath)
+subDirs = [x for x in allItems if os.path.isdir(pPath+x)]
 
 
-# Get the curve statistics from the ranked_genes file
-FPR, recall, precision = vl.getAUCstats(pDir)
-print recall
-print FPR
-print precision
+# Create the figure for each valid prediction
+for pFolder in subDirs :
+	# Skip folders that don't start with desired prefix
+	if not pFolder.startswith(pFolderPrefix) :
+		continue
+	#end if
 
-# plot the results
+
+	if pFolder.endswith('/') :
+		pDir = pPath + pFolder
+	else :
+		pDir = pPath + pFolder + '/'
+	#end if
+
+
+	# Get the curve statistics from the ranked_genes file
+	FPR, recall, precision, numHid = vl.getAUCstats(pDir)
+
+
+	# Plot the results
+	fig = plt.figure()
+
+	# Plot the ROC curve
+	plt.subplot(1, 2, 1)
+	plt.plot(FPR, recall)
+	plt.plot([0,1], [0,1], 'lightgrey')
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+
+	# Plot the Precision-Recall curve
+	plt.subplot(1, 2, 2)
+	plt.plot(recall, precision)
+	plt.xlabel('Recall')
+	plt.ylabel('Precision')
+#TODO: why is P-R line so jagged?
+
+	# Final touches
+	plt.suptitle(pFolder+', concealed = {}'.format(numHid))
+#	plt.tight_layout()
+	plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=.4, hspace=None)
+
+	# Save the figure
+#	plt.show()
+	plt.savefig(pDir+'AUC_'+pFolder+'.png')
+	plt.close()
+
+#end loop
+
+
+#TODO: ? Create an overlay of the different methods?
+
+
+print "\nDone.\n"

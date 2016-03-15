@@ -336,11 +336,13 @@ def countLinesInFile(fname) :
 #	recall, 
 #	FPR, 
 #	precision, 
+#	nHidden
 def getAUCstats(path) :
 
 	# Read in the ranked genes
 	gHidden = readFileColumnAsString(path+'concealed.txt', 0, 0)
 	gHidSet = set(gHidden)
+	nHidden = len(gHidden)
 
 
 	# Declare the confusion matrix
@@ -382,5 +384,5 @@ def getAUCstats(path) :
 	precision = confusion[0,:] / (confusion[0,:] + confusion[1,:])
 
 
-	return FPR, recall, precision
+	return FPR, recall, precision, nHidden
 #end def ######## ######## ######## 
