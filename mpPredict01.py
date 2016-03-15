@@ -38,13 +38,14 @@ topKGenes = 100		# number of genes to predict
 
 # Input/Output names & locations
 
-useNtwk = 1		# network & samples to use (0 means fake)
+useNtwk = 0		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
 	ePath = 'networks/'
-	sName = 'sample01'
+	sName = 'sample03'
 	sPath = 'samplesFake/'
+	retCutoffs = [2, 3, 5, 9, 13]
 else :
 #	eName = 'toy2_p3gz'
 	eName = 'all_v1_g2e11t0'
@@ -52,6 +53,7 @@ else :
 	sName = 'BERTUCCI_MEDULLARY_VS_DUCTAL_BREAST_CANCER'
 #	sName = 'CAMPS_COLON_CANCER_COPY_NUMBER'
 	sPath = '../Dropbox/mp/samplesMSIG/'
+	retCutoffs = [50, 100, 200, 500, 1000]
 #end if
 
 # Path & new directory to save output (& temp files)
@@ -186,6 +188,12 @@ outFile = mp.writeItemRanks(oPath, simArray, geneIndex, sampIndex, bestPaths)
 print "Saving gene predictions to {}".format(outFile)
 print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
+mp.writeRankedGenes(oPath, simArray, geneIndex, sampIndex, gHidden, retCutoffs)
+
+#TODO: write ranked_paths.txt
+#TODO: write ranked_genes.txt
+#TODO: write node_bins.txt
+#TODO: ? write returned_genes.txt
 
 
 print "\nDone.\n"

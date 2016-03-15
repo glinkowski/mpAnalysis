@@ -29,7 +29,7 @@ fnConcealedGenes = 'concealed.txt'
 fnLeftOutGenes = 'ignored.txt'
 
 ## Data type used when loading edge file to memory:
-#nodeDT = np.dtype('a30')
+nodeDT = np.dtype('a30')
 
 # Length to pad the matrix file names:
 keyZPad = 5
@@ -991,6 +991,7 @@ def applyGroupPathSim(path, name, mpTuple, sample) :
 	# Get the indices for all genes not in the test sample
 	notSample = ([n for n in range(matrix.shape[0])
 		if n not in sample])
+	notSample.sort()	# maybe redundant, but want to be sure
 
 	for i in notSample :
 		# Number of paths connecting gene to self:
@@ -1020,8 +1021,7 @@ def applyGroupPathSim(path, name, mpTuple, sample) :
 
 
 ######## ######## ######## ######## 
-# Function: Calculate the Group PathSim for all genes not
-#	in the test sample
+# Function: Write the file listing the items & rankings
 # Input ----
 #	path, str: directory to write output file
 #	statArray, float array: the stat used to rank the items
@@ -1032,17 +1032,20 @@ def applyGroupPathSim(path, name, mpTuple, sample) :
 #		which the rest of the items (hidden/concealed) are ranked
 # Returns ----
 #	filename, str: path & filename to output file
+# Creates ----
+#	pathlist-###.txt: original version of the output file
 def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 
 
 	statSum = np.sum(statArray, axis=1)
 	statAvg = np.mean(statArray, axis=1)
 
+	# Write the file header
 	delim = '\t'
 	filename = path + 'scores.txt'
 	fs = open(filename, 'wb')
 	fs.write('')
-	fs.write('Genes scored by similarty to sample ...\n')
+	fs.write('{}Genes scored by similarty to sample ...\n'.format(textDelim))
 #	fs.write('network:{}{}\n'.format(delim, eName))
 #	fs.write('sample:{}{}\n'.format(delim, sName))
 #	fs.write('known:{}{}\n'.format(delim, len(gKnown)))
@@ -1243,4 +1246,79 @@ def createRandomSamplesBinned(path, name, sample,
 
 
 	return rSamples
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Write a simple ranked_genes.txt file
+# Input ----
+#	path, str: directory to write output file
+#	statArray, float array: the stat used to rank the items
+#	itemDict, {str: int} dict:
+#		key, str - name of the item
+#		value, int - index of the item within a sorted list
+#	itemIndex, int list: indices of items (known/test) against
+#		which the rest of the items (hidden/concealed) are ranked
+#	hiddenSet, str list: names of the genes which were concealed
+#	cutoffs, int list: number of genes which might be returned at once
+# Returns ----
+#	nothing
+# Creates ----
+#	ranked_genes.txt: original version of the output file
+#	returned_cutoffs.txt: shows how many desired genes exist within N predicted
+def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
+
+	rankedFile = 'ranked_genes.txt'
+	cutoffFile = 'returned_cutoffs.txt'
+
+	# Create the numpy record/structured array
+	rankList = np.recarray(statArray.shape[0],
+		dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', nodeDT)])
+	# The scores come from the average of the score array
+	statAvg = np.mean(statArray, axis=1)
+	rankList['score'] = statAvg
+	rankList['inverse'] = 1 - statAvg
+	# The gene names exclude the known/test sample
+#	itemOutdex = [n for n in xrange(len(itemDict)) if not in itemIndex]
+#	itemOutdex.sort()
+	itemNames = itemDict.keys()
+	itemNames.sort()
+#	rankList['index'] = itemNames[itemOutdex]
+#	rankList['names'] = itemNames[n for n in range(len(itemDict)) if n not in itemIndex]
+	rankList['names'] = [itemNames[n] for n in range(len(itemDict)) if n not in itemIndex]
+
+	# Sort by the score
+	rankList.sort(order=['inverse', 'names'])
+
+
+	# Open the files to write
+	fouta = open(path+rankedFile, 'wb')
+	foutb = open(path+cutoffFile, 'wb')
+
+	# Write the header for the cutoffs file
+	foutb.write("Number of True Positives returned in top N predicted...")
+	foutb.write("\ncutoff{}true".format(textDelim))
+
+	foundCount = 0
+	firstLine = True
+	for i in xrange(len(rankList)) :
+
+		# Write the body of the ranked file
+		if not firstLine :
+			fouta.write("\n")
+		firstLine = False
+		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
+
+		# Write the body of the cutoffs file
+		if rankList['names'][i] in hiddenSet :
+			foundCount += 1
+		if i in cutoffs :
+			foutb.write("\n{}{}{}".format(i, textDelim, foundCount))
+
+	#end loop
+	fouta.close()
+	foutb.close()
+
+	return
 #end def ######## ######## ######## 
