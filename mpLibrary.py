@@ -64,9 +64,9 @@ fnLeftOutGenes = 'ignored.txt'
 nodeDT = np.dtype('a30')
 
 # Length to pad the matrix file names:
-keyZPad = 5
+fnMatrixZPad = 5
 # Length to pad the output file names:
-fnZPad = 3
+fnOutputZPad = 3
 # Data delimiter to use in the output file:
 textDelim = '\t'
 # Whether to print non-error messages within these funcs
@@ -80,6 +80,75 @@ matrixDT = np.float32	#TODO: any considerations here?
 
 
 
+
+######## ######## ######## ########
+# Functions to set the global library parameters
+# Input ----
+#	NOTE: an input value of...
+#		-1 keeps the parameter unchanged
+#		-2 resets parameter to default
+def setParamVerbose(newVal) :
+
+	if newVal :
+		verbose = True
+	else :
+		verbose = False
+	#end if
+
+#	print verbose
+
+	return
+#end def ######## ######## ######## 
+def setParamTextDelim(newVal) :
+
+	if str(newVal == '-1') :
+		textDelim = textDelim
+	elif str(newVal == '-2') :
+		textDelim = '\t'
+	else :
+		textDelim = str(newVal)
+	#end if
+
+	return
+#end def ######## ######## ######## 
+def setParamFileZeroPad(newMval, newOval) :
+
+	if str(newMval == -1) :
+		fnMatrixZPad = fnMatrixZPad
+	elif str(newMval == -2) :
+		fnMatrixZPad = 5
+	else :
+		fnMatrixZPad = newMval
+	#end if
+	if str(newOval == -1) :
+		fnOutputZPad = fnOutputZPad
+	elif str(newOval == -2) :
+		fnOutputZPad = 3
+	else :
+		fnOutputZPad = newMval
+	#end if
+
+	return
+#end def ######## ######## ######## 
+
+
+
+
+
+######## ######## ######## ########
+# ERROR CHECK: verify directory exists
+# Input ----
+#   path, str: path to save the file
+# Returns ----
+#	nothing
+def verifyDirectory(path) :
+	if not os.path.isdir(path) :
+		print ( "ERROR: Specified path doesn't exist:" +
+			" {}".format(path) )
+		sys.exit()
+	#end if
+	return
+#end def ######## ######## ######## 
 
 
 
@@ -393,7 +462,6 @@ def readFileAsList(fname) :
 
 
 
-
 ######## ######## ######## ######## 
 # Function: Read in the dataset from a samplename
 #   Check for variants: ".txt", "_UP.txt", "_DN.txt"
@@ -477,7 +545,7 @@ def convertToIndices(names, iDict) :
 #   matrix, int array: num paths between node pairs
 def getPathMatrix(mpTuple, path, name, sizeOf) :
 
-	zpad = keyZPad
+	zpad = fnMatrixZPad
 #   fname = (path + name + "_MetaPaths/" +
 #       "{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
 
@@ -704,7 +772,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 	# Get expected matrix size
 #TODO: pack this into a function
 	fname = (path + name + "_MetaPaths/" +
-		"{}.gz".format(str(0).zfill(keyZPad)) )
+		"{}.gz".format(str(0).zfill(fnMatrixZPad)) )
 	sizeOf = 0
 	with gzip.open(fname, 'rb') as fin :
 		for line in fin :
@@ -743,7 +811,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 
 
 ######## ######## ######## ######## 
-# Function: choose an unused name for the output file
+# Function: choose an unused name for the output path
 # Input ----
 #   path, str: path to where output should be saved
 #   dirPre, str: prefix of the folder name to return
@@ -758,7 +826,7 @@ def nameOutputPath(path, dirPre) :
 		sys.exit()
 	#end if
 
-	zpad = fnZPad
+	zpad = fnOutputZPad
 
 	# Set of all sub-folders in the path
 	dirSet = [name for name in os.listdir(path)
@@ -794,7 +862,7 @@ def nameOutputFile(path, name) :
 		sys.exit()
 	#end if
 
-	zpad = fnZPad
+	zpad = fnOutputZPad
 
 	# Set of all files in the directory
 	fileSet = set(os.listdir(path))
@@ -937,7 +1005,7 @@ def applyGroupPathSim(path, name, mpTuple, sample) :
 	# Get expected matrix size
 #TODO: pack this into a function
 	fname = (path + name + "_MetaPaths/" +
-		"{}.gz".format(str(0).zfill(keyZPad)) )
+		"{}.gz".format(str(0).zfill(fnMatrixZPad)) )
 	sizeOf = 0
 	with gzip.open(fname, 'rb') as fin :
 		for line in fin :
@@ -1077,6 +1145,8 @@ def writeItemRanks(path, statArray, itemDict, itemIndex, colHeader) :
 #   rSamples, int array: 
 def createRandomSamplesBinned(path, name, sample,
 	indexDict, cutoffPercent, eType, numRandSamples) :
+
+#	print "verbosity = {}".format(verbose)
 
 	fname = path + name + '/node-degree.txt'
 
@@ -1351,3 +1421,35 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 	return
 #end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Create a list of samples contained in folder
+# Input ----
+#	sPath, str: path where samples stored
+# Returns ----
+#	sNames, str list: sorted list of sample names
+def getSampleNamesFromFolder(path) :
+
+	verifyDirectory(path)
+
+	# Get list of all text files in folder
+	fNames = [f for f in listdir(path) if f.endswith('.txt')]
+	print fNames
+
+	# Identify & create list of sample names in folder
+	sNames = list()
+	for item in fNames :
+		# Strip the extension and any "_UP" or "_DN"
+		newItem = item[:-4]
+		if newItem.endswith('_UP') or newItem.endswith('_DN') :
+			newItem = newItem[:-3]
+		#end if
+		sNames.append(newItem)
+	#end loop
+
+	sNames = np.unique(sNames)	# also sorts list
+	return sNames
+	#end def ######## ######## ######## 
