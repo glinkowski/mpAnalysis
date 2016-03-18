@@ -6,6 +6,38 @@
 # 
 # functions used by the Metapath Analysis scripts
 #
+#
+# Functions provided:
+#	saveListToText(path, name, theList)
+#	checkGenesInNetwork(path, name, geneList)
+#	partitionSample(nPath, nName, oPath, sample, percent)
+#	readKeyFile(path, name)
+#	readFileAsIndexDict(fname)
+#	readGenesFile(path, name)
+#	createRandomSamplesArray(numRows, numCols, numItems)
+#	readFileAsList(fname)
+#	readSampleFiles(sfile, up, down)
+#	convertToIndices(names, iDict)
+#	getPathMatrix(mpTuple, path, name, sizeOf)
+#	removeInvertedPaths(mpDict)
+#	getPathCountOne(sample, matrix)
+#	getPathCountList(samples, matrix)
+#	getPathMeans(rSamples, matrix)
+#	getPercentile(oCount, rSamples, matrix)
+#	calculateStatistics(sample, rSamples, mpDict, path, name)
+#	nameOutputPath(path, dirPre)
+#	nameOutputFile(path, name)
+#	writeOutputOneSample(path, name, nName, sName, mpDict, 
+#		counts, means, stdevs, scores, percents, leftout)
+#	chooseTopKPathsSimple(k, ranker, mpDict)
+#	applyGroupPathSim(path, name, mpTuple, sample)
+#	writeItemRanks(path, statArray, itemDict, itemIndex, colHeader)
+#	createRandomSamplesBinned(path, name, sample,
+#		indexDict, cutoffPercent, eType, numRandSamples)
+#	writeRankedGenes(path, statArray, itemDict, itemIndex,
+#		hiddenSet, cutoffs)
+#	writeRankedPaths(path, ranker, mpDict)
+#	
 # ---------------------------------------------------------
 
 import os.path
