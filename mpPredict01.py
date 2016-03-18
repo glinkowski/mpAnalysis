@@ -31,7 +31,7 @@ random.seed(42)
 
 # Variables/Quantities
 percHide = .25		# percent of genes to conceal
-nRandSamp = 100		# number of random samples to compare
+nRandSamp = 200		# number of random samples to compare
 topKPaths = 10		# number of metapaths to consider
 topKGenes = 100		# number of genes to predict
 
@@ -157,6 +157,9 @@ outFile = mp.writeOutputOneSample(oPath, 'pathlist', eName,
 	('known-' + sName), pathDict, sCount, rMeans, rStDev,
 	zScore, percList, list([]) )
 #print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
+mp.writeRankedPaths(oPath, percList, pathDict)
+
 
 
 

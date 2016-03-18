@@ -890,68 +890,6 @@ def chooseTopKPathsSimple(k, ranker, mpDict) :
 
 
 
-######### ######## ######## ######## 
-## Function: Load the matrix containing the number of paths
-##	of this type which join the nodes in the network
-## Input ----
-##	mpTuple [int, bool]: indicates which matrix file to use
-##	path, str: path to the network files
-##	name, str: name of the network to use
-## Returns ----
-##	matrix, int array: num paths between node pairs
-#def getPathMatrix(mpTuple, path, name, sizeOf) :
-#
-##TODO: Are there two of this function!!??
-#
-#	zpad = keyZPad
-##	fname = (path + name + "_MetaPaths/" +
-##		"{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
-#
-#	prename = (path + name + "_MetaPaths/" +
-#		"{}".format(str(mpTuple[0]).zfill(zpad)) )
-#	if os.path.isfile(prename + '.gz') :
-#		fname = (path + name + "_MetaPaths/" +
-#		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
-#	elif os.path.isfile(prename + '.txt') :
-#		fname = (path + name + "_MetaPaths/" +
-#		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
-#	else :
-#		# ERROR CHECK: verify file exists
-#		print ( "ERROR: Specified file doesn't exist:" +
-#			" {}".format(fname) )
-#		sys.exit()
-#	#end if
-#
-#	# Load the matrix
-##	matrix = np.load(fname)
-##	matrix = np.loadtxt(fname)
-#
-#	# Declare the matrix
-##	if speedVsMemory :
-#	matrix = np.zeros([sizeOf, sizeOf])
-##	else :
-##		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
-##	#end if
-#
-#	# Read in the file, placing values into matrix
-#	row = 0
-#	with gzip.open(fname, 'rb') as fin :
-#		for line in fin :
-#			line = line.rstrip()
-#			ml = line.split()
-#			matrix[row,:] = ml[:]
-#			row += 1
-#	#end with
-#
-#	# Convert to transpose if flag==True
-#	if mpTuple[1] :
-#		return np.transpose(matrix)
-#	else :
-#		return matrix
-##end def ######## ######## ######## 
-
-
-
 ######## ######## ######## ######## 
 # Function: Calculate the Group PathSim for all genes not
 #	in the test sample
@@ -1298,7 +1236,7 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 
 	# Write the header for the cutoffs file
 	foutb.write("Number of True Positives returned in top N predicted...")
-	foutb.write("\ncutoff{}true".format(textDelim))
+	foutb.write("\nReturned{}TruePos".format(textDelim))
 
 	foundCount = 0
 	firstLine = True
@@ -1319,6 +1257,65 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 	#end loop
 	fouta.close()
 	foutb.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Write a simple ranked_paths.txt file
+# Input ----
+#	path, str: directory to write output file
+#   ranker, float list: stat ordered by mp name
+#   mpDict, {str: [int, bool]} dict:
+#       key, str - name of the metapath
+#       value, [int, bool] - which matrix file to use, and 
+#           whether to use the transpose (inverse path)
+# Returns ----
+#	nothing
+# Creates ----
+#	ranked_paths.txt: original version of the output file
+def writeRankedPaths(path, ranker, mpDict) :
+
+	rankedFile = 'ranked_paths.txt'
+
+	# The ordered list of metapaths
+	mpList = removeInvertedPaths(mpDict)
+
+	if len(mpList) != len(ranker) :
+		print ( "WARNING: The list of paths ({}) ".format(len(mpList)) +
+			"and scores ({}) are unequal length.".format(len(mpList)) )
+	#end if
+
+
+	# Create an array of the paths & stats to rank
+	pathArray = np.recarray( len(ranker), dtype=[('name', nodeDT),
+		('stat', 'f4'), ('length', 'u1'), ('stat_inverse', 'f4')] )
+
+	rankMax = np.amax(ranker)
+	for i in range(len(ranker)) :
+		length = mpList[i].count('-') + 1
+		invertRank = rankMax - ranker[i]
+		pathArray[i] = (mpList[i], ranker[i], length, invertRank)
+	#end loop
+
+	# Sort array DESCENDING by rank and ASCENDING by length
+	pathArray = np.sort(pathArray, order=['stat_inverse', 'length', 'name'])
+
+
+	# Write to file
+	fout = open(path+rankedFile, 'wb')
+	firstLine = True
+	for i in range(len(pathArray)) :
+		if not firstLine :
+			fout.write("\n")
+		firstLine = False
+		fout.write("{1}{0}{2}{0}{3}".format(textDelim, pathArray['stat'][i],
+			pathArray['name'][i], pathArray['length'][i]))
+	#end loop
+	fout.close()
+
 
 	return
 #end def ######## ######## ######## 
