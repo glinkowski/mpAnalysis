@@ -88,6 +88,7 @@ matrixDT = np.float32	#TODO: any considerations here?
 #		-1 keeps the parameter unchanged
 #		-2 resets parameter to default
 def setParamVerbose(newVal) :
+	global verbose
 
 	if newVal :
 		verbose = True
@@ -95,11 +96,10 @@ def setParamVerbose(newVal) :
 		verbose = False
 	#end if
 
-#	print verbose
-
 	return
 #end def ######## ######## ######## 
 def setParamTextDelim(newVal) :
+	global textDelim
 
 	if str(newVal == '-1') :
 		textDelim = textDelim
@@ -112,6 +112,8 @@ def setParamTextDelim(newVal) :
 	return
 #end def ######## ######## ######## 
 def setParamFileZeroPad(newMval, newOval) :
+	global fnMatrixZPad
+	global fnOutputZPad
 
 	if str(newMval == -1) :
 		fnMatrixZPad = fnMatrixZPad
