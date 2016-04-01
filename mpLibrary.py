@@ -8,6 +8,7 @@
 #
 #
 # Functions provided:
+#	verifyDirectory(path, create)
 #	saveListToText(path, name, theList)
 #	checkGenesInNetwork(path, name, geneList)
 #	partitionSample(nPath, nName, oPath, sample, percent)
@@ -37,6 +38,7 @@
 #	writeRankedGenes(path, statArray, itemDict, itemIndex,
 #		hiddenSet, cutoffs)
 #	writeRankedPaths(path, ranker, mpDict)
+#	writeGenericLists(path, fname, columnList)
 #	
 # ---------------------------------------------------------
 
@@ -141,13 +143,18 @@ def setParamFileZeroPad(newMval, newOval) :
 # ERROR CHECK: verify directory exists
 # Input ----
 #   path, str: path to save the file
+#	create, boolean: whether to create missing dir
 # Returns ----
 #	nothing
-def verifyDirectory(path) :
+def verifyDirectory(path, create) :
 	if not os.path.isdir(path) :
-		print ( "ERROR: Specified path doesn't exist:" +
-			" {}".format(path) )
-		sys.exit()
+		if create :
+			print("Creating path: {}".format(path))
+			os.makedirs(path)
+		else :
+			print ( "ERROR: Specified path doesn't exist:" +
+				" {}".format(path) )
+			sys.exit()
 	#end if
 	return
 #end def ######## ######## ######## 
@@ -1435,7 +1442,7 @@ def writeRankedPaths(path, ranker, mpDict) :
 #	sNames, str list: sorted list of sample names
 def getSampleNamesFromFolder(path) :
 
-	verifyDirectory(path)
+	verifyDirectory(path, False)
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
@@ -1455,3 +1462,40 @@ def getSampleNamesFromFolder(path) :
 	sNames = np.unique(sNames)	# also sorts list
 	return sNames
 	#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Write a text file where the columns are given as lists
+# Input ----
+#	path, str: directory to write output file
+#	fname, str: name of the file to write
+#	columnList, list of str lists:
+#		each entry in columnList represents a column
+#		where each entry is a string to write to the file
+# Returns ----
+#	nothing
+# Creates ----
+#	ranked_paths.txt: original version of the output file
+def writeGenericLists(path, fname, columnList) :
+
+	verifyDirectory(path, True)
+
+# ASSUME: the contained lists are of equal length
+
+	fout = open(path+fname, 'wb')
+
+	for i in xrange(len(columnList[0])) :
+		fout.write("{}".format(columnList[0][i]))
+
+		for j in xrange(1, len(columnList)) :
+			fout.write("{}{}".format(textDelim, columnList[j][i]))
+		#end loop
+
+		fout.write("\n")
+	#end if
+
+	fout.close()
+
+	return
+#end def ######## ######## ######## 
