@@ -45,7 +45,7 @@ percHide = [0, 10, 25, 33, 50]		# percent of genes to conceal
 
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -54,7 +54,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v1_g2e11t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesMSIG/'
+	sPath = '../Dropbox/mp/samples-test2/'
 #end if
 
 # Output path
@@ -198,43 +198,46 @@ for pi in xrange(len(pathList)) :
 print("Finished examining metapaths.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
+
 # Save the path counts to file(s)
+
+# Write Pyy to file
+fname = 'Pyy.txt'
+fname2 = 'Pyy-mod.txt'
+fout = open(oPath+fname, 'wb')
+fout2 = open(oPath+fname2, 'wb')
+firstRow = True
+for r in xrange(Pyy.shape[0]) :
+	if firstRow :
+		firstRow = False
+	else :
+		fout.write('\n')
+		fout2.write('\n')
+	#end if
+
+	firstCol = True
+	for c in xrange(Pyy.shape[1]) :
+		if firstCol :
+			firstCol = False
+		else :
+			fout.write('{}'.format(textDelim))
+			fout2.write('{}'.format(textDelim))
+		#end if
+
+		fout.write('{}'.format(Pyy[r,c]))
+		fout2.write('{}'.format( (Pyy[r,c] + 1) ))
+#end loop
+fout.close()
+fout2.close()
+
+
 for si in xrange(len(oSubDirList)) :
 
 	path = oSubDirList[si]
 
-	# Write Pyy to file
-	fname = 'Pyy.txt'
-	fname2 = 'Pyy-mod.txt'
-	fout = open(path+fname, 'wb')
-	fout2 = open(path+fname2, 'wb')
-	firstRow = True
-	for r in xrange(Pyy.shape[0]) :
-		if firstRow :
-			firstRow = False
-		else :
-			fout.write('\n')
-			fout2.write('\n')
-		#end if
-
-		firstCol = True
-		for c in xrange(Pyy.shape[1]) :
-			if firstCol :
-				firstCol = False
-			else :
-				fout.write('{}'.format(textDelim))
-				fout2.write('{}'.format(textDelim))
-			#end if
-
-			fout.write('{}'.format(Pyy[r,c]))
-			fout2.write('{}'.format( (Pyy[r,c] + 1) ))
-	#end loop
-	fout.close()
-	fout2.close()
-
 	# Write Pxx to file
 	fname = 'Pxx.txt'
-	fout = open(path+fname, 'wb')
+	fout = open(op+fname, 'wb')
 	firstCol = True
 	for c in xrange(Pxx.shape[1]) :
 		if firstCol :
