@@ -237,7 +237,7 @@ for si in xrange(len(oSubDirList)) :
 
 	# Write Pxx to file
 	fname = 'Pxx.txt'
-	fout = open(op+fname, 'wb')
+	fout = open(oPath+fname, 'wb')
 	firstCol = True
 	for c in xrange(Pxx.shape[1]) :
 		if firstCol :
