@@ -25,11 +25,6 @@ import numpy as np
 import gzip
 
 
-# For testing & verification
-#import random
-#random.seed(42)
-
-
 
 ####### ####### ####### ####### 
 # PARAMETERS
@@ -115,7 +110,6 @@ for s in sNames :
 
 		# Need a folder for each sample set
 		oSubDir = oPath+'{0:03d}'.format(p)+'-'+s+'/'
-#		oSubDir = oPath+p.zfill(3)+s+'/'
 		oSubDirList.append(oSubDir)
 
 		# Read genes from sample & partition into test/train
@@ -123,14 +117,15 @@ for s in sNames :
 		gKnown, gHidden = mp.partitionSample(ePath, eName,
 			oSubDir, gAll, p)
 
-#		print "Analyzing metapaths in sample: {}".format(s)
-#		print ( "  partitioned into {} known".format(len(gKnown)) +
-#			" and {} concealed genes ...".format(len(gHidden)) )
+		if newVerbose :
+			print "Analyzing metapaths in sample: {}".format(s)
+			print ( "  partitioned into {} known".format(len(gKnown)) +
+				" and {} concealed genes ...".format(len(gHidden)) )
+		#end if
 
 		# Convert sample into list of indices
 		gIndices = mp.convertToIndices(gKnown, geneDict)
 		oSampLists.append(gIndices)
-
 #end loop
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
@@ -158,6 +153,11 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 # 5) Calculate path counts 
 
+#TODO: Break out into separate function
+# need to pass: pathDict (can get pathList), oSubDirList, geneDict, oPath
+#	? anything else ?
+# TODO: pack get mxsize into this func
+
 textDelim = '\t'
 
 Pxx = np.zeros([len(oSubDirList), len(pathList)])
@@ -175,7 +175,6 @@ for pi in xrange(len(pathList)) :
 
 	# Pyy is the diagonal of the path matrix
 	Pyy[:,pi] = matrix.diagonal()
-#	print "Pyy: ", Pyy
 
 	# Calculate the path counts & sums
 	for si in xrange(len(oSubDirList)) :
@@ -184,11 +183,9 @@ for pi in xrange(len(pathList)) :
 
 		# Pxx is the number of connections of the sample to itself
 		Pxx[si,pi] = sRows[:,oSampLists[si]].sum()
-#		print "Pxx: ", Pxx
 
 		# Pxy is the number of connections of sample to/from a given gene
 		Pxy[:,pi,si] = sRows.sum(axis=0) + sCols.sum(axis=1)
-
 
 		# Find PathSim for each gene-gene pair
 		for gi in xrange(Pyy.shape[0]) :
@@ -197,12 +194,6 @@ for pi in xrange(len(pathList)) :
 		# SxySum is PathSim summed over the set X
 		SxyCols = matrix[:,oSampLists[si]]
 		SxySum[:,pi,si] = SxyCols.sum(axis=1)
-
-
-#		for y in Pyy[:,pi] :
-#			Sxy[:,] = Pxy[:, pi, si] / (Pyy[:] + y)
-#		SxySum[:, pi, si] = Sxy.sum(axis=0)
-
 	#end loop
 
 	if newVerbose :
@@ -221,18 +212,20 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 # Save the path counts to file(s)
+tstart2 = time.time()
 
 # Write Pyy to file
-fname = 'Pyy.gz'
+fname1 = 'Pyy.gz'
+fout1 = gzip.open(oPath+fname1, 'wb')
 fname2 = 'Pyy-mod.gz'
-fout = gzip.open(oPath+fname, 'wb')
 fout2 = gzip.open(oPath+fname2, 'wb')
+
 firstRow = True
 for r in xrange(Pyy.shape[0]) :
 	if firstRow :
 		firstRow = False
 	else :
-		fout.write('\n')
+		fout1.write('\n')
 		fout2.write('\n')
 	#end if
 
@@ -241,17 +234,17 @@ for r in xrange(Pyy.shape[0]) :
 		if firstCol :
 			firstCol = False
 		else :
-			fout.write('{}'.format(textDelim))
+			fout1.write('{}'.format(textDelim))
 			fout2.write('{}'.format(textDelim))
 		#end if
 
-		fout.write('{}'.format(Pyy[r,c]))
+		fout1.write('{}'.format(Pyy[r,c]))
 		fout2.write('{}'.format( (Pyy[r,c] + 1) ))
 #end loop
-fout.close()
+fout1.close()
 fout2.close()
 
-
+# write Pxx, Pxy, SxySum; one for each sample (si)
 for si in xrange(len(oSubDirList)) :
 
 	path = oSubDirList[si]
@@ -259,6 +252,7 @@ for si in xrange(len(oSubDirList)) :
 	# Write Pxx to file
 	fname = 'Pxx.gz'
 	fout = gzip.open(oPath+fname, 'wb')
+
 	firstCol = True
 	for c in xrange(Pxx.shape[1]) :
 		if firstCol :
@@ -270,38 +264,32 @@ for si in xrange(len(oSubDirList)) :
 	#end loop
 	fout.close()
 
-
 	# Write Pxy to file, along with normed version(s)
-
-	fname = 'Pxy.gz'
-	fout = gzip.open(path+fname, 'wb')
-
+	fname1 = 'Pxy.gz'
+	fout1 = gzip.open(path+fname1, 'wb')
 	fname2 = 'Pxy-mod.gz'
 	fout2 = gzip.open(path+fname2, 'wb')
-
-#	PxyMod = np.divide(Pxy[:,:,si], np.add(Pyy, 1) )
-	PxyMod = np.divide(Pxy[:,:,si], (Pyy + 1) )
-#	print Pxy[0,0,si], PxyMod[0,0], (Pyy[0,0] + 1)
-	PxyColMax = np.add( np.amax(Pxy[:,:,si], axis=0), 0.0001)
-	PxyModColMax = np.add( np.amax(PxyMod, axis=0), 0.0001)
-#	print Pxy.shape, PxyColMax.shape
-#TODO: further vectorization
-
 	fname3 = 'Pxy-norm.gz'
 	fout3 = gzip.open(path+fname3, 'wb')
-
 	fname4 = 'Pxy-mod-norm.gz'
 	fout4 = gzip.open(path+fname4, 'wb')
-
 	fname5 = 'SxySum.gz'
 	fout5 = gzip.open(path+fname5, 'wb')
+
+#TODO: ? further vectorization ?
+#	PxyMod = np.divide(Pxy[:,:,si], (Pyy + 1) )
+	PxyMod = np.divide( Pxy[:,:,si], np.add( Pyy, 1 ) )
+	PxyColMax = np.add( np.amax(Pxy[:,:,si], axis=0), 0.0001 )
+	PxyColMax = np.multiply( PxyColMax, 100 )
+	PxyModColMax = np.add( np.amax(PxyMod, axis=0), 0.0001 )
+	PxyModColMax = np.multiply( PxyModColMax, 100 )
 
 	firstRow = True
 	for r in xrange(Pxy.shape[0]) :
 		if firstRow :
 			firstRow = False
 		else :
-			fout.write('\n')
+			fout1.write('\n')
 			fout2.write('\n')
 			fout3.write('\n')
 			fout4.write('\n')
@@ -313,29 +301,30 @@ for si in xrange(len(oSubDirList)) :
 			if firstCol :
 				firstCol = False
 			else :
-				fout.write('{}'.format(textDelim))
+				fout1.write('{}'.format(textDelim))
 				fout2.write('{}'.format(textDelim))
 				fout3.write('{}'.format(textDelim))
 				fout4.write('{}'.format(textDelim))
 				fout5.write('{}'.format(textDelim))
 			#end if
 
-			fout.write('{}'.format(Pxy[r,c,si]))
-#			fout2.write('{}'.format( (Pxy[r,c,si] / (Pyy[r,c] + 1)) ))
+			fout1.write('{}'.format(Pxy[r,c,si]))
 			fout2.write('{}'.format( PxyMod[r,c] ))
-			fout3.write('{}'.format( int(round(Pxy[r,c,si] / PxyColMax[c] * 100 ) )))
-			fout4.write('{}'.format( int(round(PxyMod[r,c] / PxyModColMax[c] * 100 ) )))
+#			fout3.write('{}'.format( int(round(Pxy[r,c,si] / PxyColMax[c] * 100 ) )))
+#			fout4.write('{}'.format( int(round(PxyMod[r,c] / PxyModColMax[c] * 100 ) )))
+			fout3.write('{}'.format( int(round( Pxy[r,c,si] / PxyColMax[c] )) ))
+			fout4.write('{}'.format( int(round( PxyMod[r,c] / PxyModColMax[c] )) ))
 			fout5.write('{}'.format( SxySum[r,c,si] ))
 	#end loop
-	fout.close()
+	fout1.close()
 	fout2.close()
 	fout3.close()
 	fout4.close()
 	fout5.close()
 #end loop
 print("Finished writing path counts.")
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart2))
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-
 
 
 
