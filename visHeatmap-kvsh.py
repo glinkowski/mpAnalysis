@@ -27,9 +27,10 @@ import preProcFuncs as pp
 
 # Paths to network files & sample prediction files
 nPath = '../Dropbox/mp/networks/'
-nFolder = 'toy2_p3gz'
+nFolder = 'all_v1_g2e11t0'
 pPath = '../Dropbox/mp/output/'
-pFolder = 'pred01-CAMPS_CO-002'
+pFolder = 'pred02-batch-020/'
+pFolder = pFolder + 'LEE_LIVER_CANCER_ACOX1'
 
 # Number of random genes to select
 numRand = 200

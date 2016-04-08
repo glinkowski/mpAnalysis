@@ -65,12 +65,14 @@ for pFolder in subDirs :
 	plt.plot([0,1], [0,1], 'lightgrey')
 	plt.xlabel('False Positive Rate')
 	plt.ylabel('True Positive Rate')
+	plt.axis([0, 1, 0, 1])
 
 	# Plot the Precision-Recall curve
 	plt.subplot(1, 2, 2)
 	plt.plot(recall, precision)
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
+	plt.axis([0, 1, 0, 1])
 #TODO: why is P-R line so jagged?
 
 	# Final touches

@@ -22,8 +22,8 @@ import gzip
 
 
 # For testing & verification
-import random
-random.seed(42)
+#import random
+#random.seed(42)
 
 
 
@@ -41,7 +41,7 @@ binType = 'all'
 
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -50,7 +50,8 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v1_g2e11t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesMSIG/'
+	sPath = '../Dropbox/mp/samples-subset5/'
+#	sPath = '../Dropbox/mp/samplesMSIG/'
 #end if
 
 # Output path
@@ -92,7 +93,7 @@ geneDict = mp.readGenesFile(ePath, eName)
 
 # 2) Get list of all samples in folder
 sNames = mp.getSampleNamesFromFolder(sPath)
-print sNames
+#print sNames
 
 
 # 3) Read the samples & create random sample sets
@@ -164,8 +165,10 @@ print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 pathScores = np.zeros([len(pathList), len(sNames)])
 for i in xrange(len(pathList)) :
 
+	print "Loading matrix {}, {}, {}".format(i, pathList[i], pathDict[pathList[i]])
 	# Load a metapath matrix into memory
 	matrix = mp.getPathMatrix(pathDict[pathList[i]], ePath, eName, mxSize)
+	print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 	# Get the percentile/score for this path, per sample
 	for j in xrange(len(sNames)) :
