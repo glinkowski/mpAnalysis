@@ -173,6 +173,11 @@ for pi in xrange(len(pathList)) :
 	# Load a metapath matrix into memory
 	matrix = mp.getPathMatrix(pathDict[pathList[pi]], ePath, eName, mxSize)
 
+	if newVerbose :
+		print("  Loaded path {}".format(pathList[pi]))
+		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+	# end if
+
 	# Pyy is the diagonal of the path matrix
 	Pyy[:,pi] = matrix.diagonal()
 
@@ -185,19 +190,31 @@ for pi in xrange(len(pathList)) :
 		Pxx[si,pi] = sRows[:,oSampLists[si]].sum()
 
 		# Pxy is the number of connections of sample to/from a given gene
-		Pxy[:,pi,si] = sRows.sum(axis=0) + sCols.sum(axis=1)
+#		Pxy[:,pi,si] = sRows.sum(axis=0) + sCols.sum(axis=1)
+		Pxy[:,pi,si] = np.add( sRows.sum(axis=0), sCols.sum(axis=1) )
 
-		# Find PathSim for each gene-gene pair
-		for gi in xrange(Pyy.shape[0]) :
-			# Sxy is the original PathSim metric b/t individual genes
-			Sxy[:,gi] = matrix[:,gi] / (Pyy[:,pi] + Pyy[gi,pi] + 1)
-		# SxySum is PathSim summed over the set X
-		SxyCols = matrix[:,oSampLists[si]]
-		SxySum[:,pi,si] = SxyCols.sum(axis=1)
+		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+
+#		# Find PathSim for each gene-gene pair
+##		for gi in xrange(Pyy.shape[0]) :
+#			# Sxy is the original PathSim metric b/t individual genes
+##			Sxy[:,gi] = np.divide( matrix[:,gi], np.add( Pyy[:,pi], (Pyy[gi,pi] + 1)) )
+##			Sxy[:,gi] = matrix[:,gi] / (Pyy[:,pi] + Pyy[gi,pi] + 1)
+#		# SxySum is PathSim summed over the set X
+#		PyyRow = Pyy[:,pi].reshape([1,Pyy.shape[0]])
+#		PyyPxx = np.add(Pyy[:,pi], PyyRow)
+#		PyyPxx = np.add(PyyPxx, 1)
+#		Sxy = np.add( matrix, matrix.transpose() )
+#		Sxy = np.divide( Sxy, PyyPxx )
+##		SxyCols = matrix[:,oSampLists[si]]
+#		SxyCols = Sxy[:,oSampLists[si]]
+#		SxySum[:,pi,si] = SxyCols.sum(axis=1)
+
+		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 	#end loop
 
 	if newVerbose :
-		print("  Examined path {}".format(pathList[pi]))
+		print("  Examined path {}, {}".format(count, pathList[pi]))
 		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 	elif not (count % 25) :
 		print("  Examined {} of {} paths...".format(count, len(pathList)))
