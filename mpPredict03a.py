@@ -31,12 +31,6 @@ import gzip
 
 # Variables/Quantities
 percHide = [0, 10, 25, 33, 50]		# percent of genes to conceal
-#nRandSamp = 200		# number of random samples to compare
-
-# options for Node Binning
-#useBinning = True
-#nodeBins = [0.3, .66]
-#binType = 'all'
 
 
 # Input names & locations
@@ -55,7 +49,6 @@ else :
 #end if
 
 # Output path
-#oRoot = 'outputFake/'
 oDirPrefix = 'pred03-batch'
 
 
@@ -174,11 +167,6 @@ for pi in xrange(len(pathList)) :
 	# Load a metapath matrix into memory
 	matrix = mp.getPathMatrix(pathDict[pathList[pi]], ePath, eName, mxSize)
 
-#	if newVerbose :
-#		print("  Loaded path {}".format(pathList[pi]))
-#		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-#	# end if
-
 	# Pyy is the diagonal of the path matrix
 	Pyy[:,pi] = matrix.diagonal()
 
@@ -200,28 +188,12 @@ for pi in xrange(len(pathList)) :
 		Pxx[si,pi] = sRows[:,oSampLists[si]].sum()
 
 		# Pxy is the number of connections of sample to/from a given gene
-#		Pxy[:,pi,si] = sRows.sum(axis=0) + sCols.sum(axis=1)
 		Pxy[:,pi,si] = np.add( sRows.sum(axis=0), sCols.sum(axis=1) )
-
-#		print("\n    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-
-#		# Find PathSim for each gene-gene pair
-##		for gi in xrange(Pyy.shape[0]) :
-#			# Sxy is the original PathSim metric b/t individual genes
-##			Sxy[:,gi] = np.divide( matrix[:,gi], np.add( Pyy[:,pi], (Pyy[gi,pi] + 1)) )
-##			Sxy[:,gi] = matrix[:,gi] / (Pyy[:,pi] + Pyy[gi,pi] + 1)
-#		PyyRow = Pyy[:,pi].reshape([1,Pyy.shape[0]])
-#		PyyPxx = np.add(Pyy[:,pi], PyyRow)
-#		PyyPxx = np.add(PyyPxx, 1)
-#		Sxy = np.add( matrix, matrix.transpose() )
-#		Sxy = np.divide( Sxy, PyyPxx )
-##		SxyCols = matrix[:,oSampLists[si]]
 
 		# SxySum is PathSim summed over the set X
 		SxyCols = Sxy[:,oSampLists[si]]
 		SxySum[:,pi,si] = SxyCols.sum(axis=1)
 
-#		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 	#end loop
 
 	if newVerbose :
@@ -233,10 +205,6 @@ for pi in xrange(len(pathList)) :
 #end loop
 print("Finished examining metapaths.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-
-#print("matrix: {}".format(matrix))
-#print("Pyy: {}".format(Pyy[:,pi]))
-#print("Sxy: {}".format(Sxy))
 
 
 # Save the path counts to file(s)
@@ -304,8 +272,6 @@ for si in xrange(len(oSubDirList)) :
 	fname5 = 'SxySum.gz'
 	fout5 = gzip.open(path+fname5, 'wb')
 
-#TODO: ? further vectorization ?
-#	PxyMod = np.divide(Pxy[:,:,si], (Pyy + 1) )
 	PxyMod = np.divide( Pxy[:,:,si], np.add( Pyy, 1 ) )
 	PxyColMax = np.add( np.amax(Pxy[:,:,si], axis=0), 0.0001 )
 	PxyColMax = np.multiply( PxyColMax, 100 )
@@ -338,8 +304,6 @@ for si in xrange(len(oSubDirList)) :
 
 			fout1.write('{}'.format(Pxy[r,c,si]))
 			fout2.write('{}'.format( PxyMod[r,c] ))
-#			fout3.write('{}'.format( int(round(Pxy[r,c,si] / PxyColMax[c] * 100 ) )))
-#			fout4.write('{}'.format( int(round(PxyMod[r,c] / PxyModColMax[c] * 100 ) )))
 			fout3.write('{}'.format( int(round( Pxy[r,c,si] / PxyColMax[c] )) ))
 			fout4.write('{}'.format( int(round( PxyMod[r,c] / PxyModColMax[c] )) ))
 			fout5.write('{}'.format( SxySum[r,c,si] ))
