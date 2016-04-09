@@ -159,12 +159,13 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 # TODO: pack get mxsize into this func
 
 textDelim = '\t'
+matrixDT = np.float32
 
-Pxx = np.zeros([len(oSubDirList), len(pathList)])
-Pyy = np.zeros([len(geneDict), len(pathList)])
-Pxy = np.zeros([len(geneDict), len(pathList), len(oSubDirList)])
-Sxy = np.zeros([len(geneDict), len(geneDict)])
-SxySum = np.zeros([len(geneDict), len(pathList), len(oSubDirList)])
+Pxx = np.zeros([len(oSubDirList), len(pathList)], dtype=matrixDT)
+Pyy = np.zeros([len(geneDict), len(pathList)], dtype=matrixDT)
+Pxy = np.zeros([len(geneDict), len(pathList), len(oSubDirList)], dtype=matrixDT)
+Sxy = np.zeros([len(geneDict), len(geneDict)], dtype=matrixDT)
+SxySum = np.zeros([len(geneDict), len(pathList), len(oSubDirList)], dtype=matrixDT)
 #pathScores = np.zeros([len(pathList), len(sNames)])
 count = 0
 for pi in xrange(len(pathList)) :
@@ -173,13 +174,22 @@ for pi in xrange(len(pathList)) :
 	# Load a metapath matrix into memory
 	matrix = mp.getPathMatrix(pathDict[pathList[pi]], ePath, eName, mxSize)
 
-	if newVerbose :
-		print("  Loaded path {}".format(pathList[pi]))
-		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-	# end if
+#	if newVerbose :
+#		print("  Loaded path {}".format(pathList[pi]))
+#		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+#	# end if
 
 	# Pyy is the diagonal of the path matrix
 	Pyy[:,pi] = matrix.diagonal()
+
+
+	# Sxy is the original PathSim metric b/t individual genes
+	Sxy = matrix.transpose()
+	Sxy = np.add( matrix, Sxy )
+	PyyPxx = np.reshape( Pyy[:,pi], [1,Pyy[:,pi].shape[0]])
+	PyyPxx = np.add( Pyy[:,pi], PyyPxx )
+	PyyPxx = np.add( PyyPxx, 1 )
+	Sxy = np.divide( Sxy, PyyPxx )
 
 	# Calculate the path counts & sums
 	for si in xrange(len(oSubDirList)) :
@@ -193,24 +203,25 @@ for pi in xrange(len(pathList)) :
 #		Pxy[:,pi,si] = sRows.sum(axis=0) + sCols.sum(axis=1)
 		Pxy[:,pi,si] = np.add( sRows.sum(axis=0), sCols.sum(axis=1) )
 
-		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+#		print("\n    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 #		# Find PathSim for each gene-gene pair
 ##		for gi in xrange(Pyy.shape[0]) :
 #			# Sxy is the original PathSim metric b/t individual genes
 ##			Sxy[:,gi] = np.divide( matrix[:,gi], np.add( Pyy[:,pi], (Pyy[gi,pi] + 1)) )
 ##			Sxy[:,gi] = matrix[:,gi] / (Pyy[:,pi] + Pyy[gi,pi] + 1)
-#		# SxySum is PathSim summed over the set X
 #		PyyRow = Pyy[:,pi].reshape([1,Pyy.shape[0]])
 #		PyyPxx = np.add(Pyy[:,pi], PyyRow)
 #		PyyPxx = np.add(PyyPxx, 1)
 #		Sxy = np.add( matrix, matrix.transpose() )
 #		Sxy = np.divide( Sxy, PyyPxx )
 ##		SxyCols = matrix[:,oSampLists[si]]
-#		SxyCols = Sxy[:,oSampLists[si]]
-#		SxySum[:,pi,si] = SxyCols.sum(axis=1)
 
-		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+		# SxySum is PathSim summed over the set X
+		SxyCols = Sxy[:,oSampLists[si]]
+		SxySum[:,pi,si] = SxyCols.sum(axis=1)
+
+#		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 	#end loop
 
 	if newVerbose :

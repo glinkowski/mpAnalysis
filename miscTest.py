@@ -15,6 +15,16 @@ import re
 import os
 
 
+
+A = [1, 2, 3]
+print(A)
+B = [1, 2, 3]
+print(B)
+B = np.reshape(B, [3,1])
+print(B)
+C = np.add(A, B)
+print(C)
+
 humanRegex = ['ENSG', 'LGI_']
 keep = list()
 for gene in ['ENSG09483', 'LGI_43287', 'tomato'] :
