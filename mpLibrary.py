@@ -9,6 +9,7 @@
 #
 # Functions provided:
 #	verifyDirectory(path, create)
+#	verifyFile(path, name, quiet)
 #	saveListToText(path, name, theList)
 #	checkGenesInNetwork(path, name, geneList)
 #	partitionSample(nPath, nName, oPath, sample, percent)
@@ -39,6 +40,10 @@
 #		hiddenSet, cutoffs)
 #	writeRankedPaths(path, ranker, mpDict)
 #	writeGenericLists(path, fname, columnList)
+#	getSubDirectoryList(root)
+#	getMatrixDimensions(path, name)
+#	
+#	
 #	
 # ---------------------------------------------------------
 
@@ -144,20 +149,56 @@ def setParamFileZeroPad(newMval, newOval) :
 # Input ----
 #   path, str: path to save the file
 #	create, boolean: whether to create missing dir
+#	quiet, boolean: whether to quietly return T/F
 # Returns ----
-#	nothing
-def verifyDirectory(path, create) :
+#	exists, boolean: indicates existence of directory
+def verifyDirectory(path, create, quiet) :
+	exists = True
 	if not os.path.isdir(path) :
 		if create :
 			print("Creating path: {}".format(path))
 			os.makedirs(path)
+		elif quiet :
+			exists = False
 		else :
 			print ( "ERROR: Specified path doesn't exist:" +
 				" {}".format(path) )
 			sys.exit()
 	#end if
-	return
+	return exists
 #end def ######## ######## ######## 
+######## ######## ######## ########
+# ERROR CHECK: verify file exists
+# Input ----
+#   path, str: path to save the file
+#	name, str: name of the file (w/ extension)
+#	create, boolean: whether to create missing dir
+#	quiet, boolean: whether to quietly return T/F
+# Returns ----
+#	exists, boolean: indicates existence of file
+def verifyFile(path, name, quiet) :
+	exists = True
+
+	# First check the directory
+	exists = verifyDirectory(path, False, quiet)
+
+	# Then look for the file
+	if not path.endswith('/') :
+		path = path+'/'
+	#end if
+	if not os.path.isfile(path+name) :
+		if quiet:
+			exists = False
+		else :
+			print ( "ERROR: Specified file doesn't exist:" +
+				" {}".format(path) )
+			sys.exit()
+	#end if
+
+	return exists
+#end def ######## ######## ######## 
+
+
 
 
 
@@ -1442,7 +1483,7 @@ def writeRankedPaths(path, ranker, mpDict) :
 #	sNames, str list: sorted list of sample names
 def getSampleNamesFromFolder(path) :
 
-	verifyDirectory(path, False)
+	verifyDirectory(path, False, False)
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
@@ -1461,7 +1502,7 @@ def getSampleNamesFromFolder(path) :
 
 	sNames = np.unique(sNames)	# also sorts list
 	return sNames
-	#end def ######## ######## ######## 
+#end def ######## ######## ######## 
 
 
 
@@ -1479,7 +1520,7 @@ def getSampleNamesFromFolder(path) :
 #	ranked_paths.txt: original version of the output file
 def writeGenericLists(path, fname, columnList) :
 
-	verifyDirectory(path, True)
+	verifyDirectory(path, True, False)
 
 # ASSUME: the contained lists are of equal length
 
@@ -1498,4 +1539,123 @@ def writeGenericLists(path, fname, columnList) :
 	fout.close()
 
 	return
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Return list of paths to folders in the 
+#	given root directory
+# Input ----
+#	root, str: path where the folders reside
+# Returns ----
+#	subDirs, str list: sorted list of subdirectories
+#		contains full path: root+subdir
+def getSubDirectoryList(root) :
+
+	verifyDirectory(root, False, False)
+
+	if not root.endswith('/') :
+		root = root+'/'
+	subDirs = [(root+d+'/') for d in os.listdir(root) if os.path.isdir(root+d)]
+	subDirs.sort()
+
+	return subDirs
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Return expected height/width of matrix
+#	Used for pre-allocating memory
+# Input ----
+#	path, str: path to the matrix
+#	name, str: matrix file name (w/ extension)
+# Returns ----
+#	nRows, nCols, int: number of rows & columns
+# ASSUMES: no header/footer -- matrix is the entire file
+def getMatrixDimensions(path, name) :
+
+#	verifyDirectory(path, False, False)
+	verifyFile(path, name, False)
+
+	nRows = 0
+	nCols = -1
+
+	if name.endswith('.gz') :
+		with gzip.open(path+name, 'rb') as fin :
+			for line in fin :
+				nRows += 1
+				temp = len( line.split(textDelim) )
+				if temp == 0 :
+					break
+				#end if
+				if nCols == -1 :
+					nCols = temp
+				else :
+					nCols = min(temp, nCols)
+		#end with
+	elif name.endswith('.txt') :
+		with open(path+name, 'rb') as fin :
+			for line in fin :
+				nRows += 1
+				temp = len( line.split(textDelim) )
+				if temp == 0 :
+					break
+				#end if
+				if nCols == -1 :
+					nCols = temp
+				else :
+					nCols = min(temp, nCols)
+		#end with
+	else :
+		print("  ERROR: Expected either '.gz' or '.txt' as extension: {}".format(name))
+		sys.exit()
+	#end if
+
+	return nRows, nCols
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Read contents of file into a matrix
+# Input ----
+#	path, str: path where the file resides
+#	name, str: name of the file
+# Returns ----
+#	matrix, numpy matrixDT: the 2D matrix
+def readFileAsMatrix(path, name) :
+
+	# Declare the matrix (get size)
+	nRows, nCols = getMatrixDimensions(path, name)
+	matrix = np.zeros([nRows, nCols], dtype=matrixDT)
+
+	# Read in the file
+	if name.endswith('.gz') :
+		with gzip.open(path+name, 'rb') as fin :
+			count = 0
+			for line in fin :
+				line = line.rstrip('\n')
+				lv = line.split(textDelim)
+				matrix[count,:] = lv[:]
+				count += 1
+		#end with
+	elif name.endswith('.txt') :
+		with open(path+name, 'rb') as fin :
+			for line in fin :
+				line = line.rstrip('\n')
+				lv = line.split(textDelim)
+				matrix[count,:] = lv[:]
+				count += 1
+		#end with
+#	else :
+#		print("  ERROR: Expected either '.gz' or '.txt' as extension: {}".format(name))
+#		sys.exit()
+	#end if
+
+	return matrix
 #end def ######## ######## ######## 
