@@ -34,7 +34,8 @@ percHide = [0, 10, 25, 33, 50]		# percent of genes to conceal
 
 
 # Input names & locations
-useNtwk = 1		# network & samples to use (0 means fake)
+useNtwk = 0		# network & samples to use (0 means fake)
+
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -50,6 +51,11 @@ else :
 
 # Output path
 oDirPrefix = 'pred03-batch'
+
+
+# Output file extension (.txt vs .gz)
+fileExt = '.gz'
+#TODO: add if statement below to handle writing .gz vs .txt
 
 
 # verbose feedback ?
@@ -211,10 +217,14 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 tstart2 = time.time()
 
 # Write Pyy to file
-fname1 = 'Pyy.gz'
+fname1 = 'Pyy'+fileExt
 fout1 = gzip.open(oPath+fname1, 'wb')
-fname2 = 'Pyy-mod.gz'
+#fout1 = open(oPath+fname1, 'wb')
+fname2 = 'Pyy-mod'+fileExt
 fout2 = gzip.open(oPath+fname2, 'wb')
+#fout2 = open(oPath+fname2, 'wb')
+#TODO: PyyMod = add(Pyy, 1)
+#	Then discard Pyy, remove +1 in later steps
 
 firstRow = True
 for r in xrange(Pyy.shape[0]) :
@@ -246,7 +256,7 @@ for si in xrange(len(oSubDirList)) :
 	path = oSubDirList[si]
 
 	# Write Pxx to file
-	fname = 'Pxx.gz'
+	fname = 'Pxx'+fileExt
 	fout = gzip.open(oPath+fname, 'wb')
 
 	firstCol = True
@@ -261,22 +271,29 @@ for si in xrange(len(oSubDirList)) :
 	fout.close()
 
 	# Write Pxy to file, along with normed version(s)
-	fname1 = 'Pxy.gz'
+	fname1 = 'Pxy'+fileExt
 	fout1 = gzip.open(path+fname1, 'wb')
-	fname2 = 'Pxy-mod.gz'
+#	fout1 = open(path+fname1, 'wb')
+	fname2 = 'Pxy-mod'+fileExt
+#	fout2 = open(path+fname2, 'wb')
 	fout2 = gzip.open(path+fname2, 'wb')
-	fname3 = 'Pxy-norm.gz'
+	fname3 = 'Pxy-norm'+fileExt
 	fout3 = gzip.open(path+fname3, 'wb')
-	fname4 = 'Pxy-mod-norm.gz'
+#	fout3 = open(path+fname3, 'wb')
+	fname4 = 'Pxy-mod-norm'+fileExt
 	fout4 = gzip.open(path+fname4, 'wb')
-	fname5 = 'SxySum.gz'
+#	fout4 = open(path+fname4, 'wb')
+	fname5 = 'SxySum'+fileExt
 	fout5 = gzip.open(path+fname5, 'wb')
+#	fout5 = open(path+fname5, 'wb')
 
 	PxyMod = np.divide( Pxy[:,:,si], np.add( Pyy, 1 ) )
 	PxyColMax = np.add( np.amax(Pxy[:,:,si], axis=0), 0.0001 )
-	PxyColMax = np.multiply( PxyColMax, 100 )
+#	PxyColMax = np.multiply( PxyColMax, 100 )
+	PxyColMax = np.divide( 100, PxyColMax )
 	PxyModColMax = np.add( np.amax(PxyMod, axis=0), 0.0001 )
-	PxyModColMax = np.multiply( PxyModColMax, 100 )
+#	PxyModColMax = np.multiply( PxyModColMax, 100 )
+	PxyModColMax = np.divide( 100, PxyModColMax )
 
 	firstRow = True
 	for r in xrange(Pxy.shape[0]) :
@@ -304,8 +321,12 @@ for si in xrange(len(oSubDirList)) :
 
 			fout1.write('{}'.format(Pxy[r,c,si]))
 			fout2.write('{}'.format( PxyMod[r,c] ))
-			fout3.write('{}'.format( int(round( Pxy[r,c,si] / PxyColMax[c] )) ))
-			fout4.write('{}'.format( int(round( PxyMod[r,c] / PxyModColMax[c] )) ))
+#TODO: If I don't want to do this entry-wise, and I don't want to make
+#	more matricies, I can at least to this row-wise:
+#			fout3.write('{}'.format( int(round( Pxy[r,c,si] / PxyColMax[c] )) ))
+#			fout4.write('{}'.format( int(round( PxyMod[r,c] / PxyModColMax[c] )) ))
+			fout3.write('{}'.format( int(round( Pxy[r,c,si] * PxyColMax[c] )) ))
+			fout4.write('{}'.format( int(round( PxyMod[r,c] * PxyModColMax[c] )) ))
 			fout5.write('{}'.format( SxySum[r,c,si] ))
 	#end loop
 	fout1.close()
@@ -315,8 +336,8 @@ for si in xrange(len(oSubDirList)) :
 	fout5.close()
 #end loop
 print("Finished writing path counts.")
-print("    --elapsed time: {:.3} (s)".format(time.time()-tstart2))
-print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+print("    --this step: {:.3} (s)".format(time.time()-tstart2))
+print("    --total elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
