@@ -20,6 +20,7 @@ import mpLibrary as mp
 import time
 import numpy as np
 import gzip
+from sklearn import linear_model as lm
 
 
 
@@ -56,6 +57,13 @@ fGroupNorm = 'Pxy-mod-norm.gz'
 fOrigSum = 'SxySum.gz'
 
 
+# LASSO params
+lAlpha = 0.0001
+lMaxIter = 1000
+lNorm = False
+lCopy = False
+
+
 # verbose feedback ?
 newVerbose = True
 
@@ -84,7 +92,7 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-for si in dSubDirs[0:1] :
+for si in dSubDirs[1:2] :
 #for si in dSubDirs :
 
 	# Read in the known genes
@@ -109,6 +117,10 @@ for si in dSubDirs[0:1] :
 	print targetGroup[0:3,0:10]
 
 	# Perform LASSO
+	cfier = lm.Lasso(alpha=lAlpha)
+	cfier.fit(targetGroup, np.ones(targetGroup.shape[0]))
+	print(cfier.coef_.shape, cfier.coef_)
+
 
 
 # load the genedict
