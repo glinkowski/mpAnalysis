@@ -869,6 +869,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 #   dirFull, str: name of output file (without path)
 def nameOutputPath(path, dirPre) :
 
+#TODO: replace with the verify function
 	# ERROR CHECK: verify directory exists
 	if not os.path.isdir(path) :
 		print ( "ERROR: Specified path doesn't exist:" +
@@ -905,6 +906,7 @@ def nameOutputPath(path, dirPre) :
 #   fname, str: name of output file (without path)
 def nameOutputFile(path, name) :
 
+#TODO: replace with the verify function
 	# ERROR CHECK: verify directory exists
 	if not os.path.isdir(path) :
 		print ( "ERROR: Specified path doesn't exist:" +

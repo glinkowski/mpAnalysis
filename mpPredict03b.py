@@ -21,6 +21,7 @@ import time
 import numpy as np
 import gzip
 from sklearn import linear_model as lm
+import random
 
 
 
@@ -58,10 +59,10 @@ fOrigSum = 'SxySum.gz'
 
 
 # LASSO params
-lAlpha = 0.0001
+lAlpha = 0.05
 lMaxIter = 1000
 lNorm = False
-lCopy = False
+lPos = True
 
 
 # verbose feedback ?
@@ -81,9 +82,14 @@ print("")
 mp.setParamVerbose(newVerbose)
 
 
-# 1) Load the gene-index dictionary
+# 1) Load the gene-index dictionary & path names
 print("Creating the gene-index dictionary.")
 geneDict = mp.readGenesFile(ePath, eName)
+
+print("Reading in the path names.")
+pathDict = mp.readKeyFile(ePath, eName)
+pathNames = mp.removeInvertedPaths(pathDict)
+del pathDict
 
 
 # 2) Get a list of the sample subdirectories
@@ -92,43 +98,119 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-for si in dSubDirs[1:2] :
-#for si in dSubDirs :
+#for si in dSubDirs[1:2] :
+for si in dSubDirs :
 
 	# Read in the known genes
 	print(si)
 	gKnown = mp.readFileAsList(si+'known.txt')
-	print(gKnown)
+#	print(gKnown)
 	giKnown = mp.convertToIndices(gKnown, geneDict)
-	print(giKnown)
+#	print(giKnown)
 
 	# Read in the (modified) group PathSim matrix
 	simGroup = mp.readFileAsMatrix(si, fGroupNorm)
 	simOrig = mp.readFileAsMatrix(si, fOrigSum)
-	print(simGroup.shape, simOrig.shape)
-#	print(simGroup)
-	print(np.amax(simGroup,axis=1)[0:12])
-#	print(simOrig)
-	print(np.amax(simOrig,axis=1)[0:12])
+#	print(simGroup.shape, simOrig.shape)
+#	print(np.amax(simGroup,axis=1)[0:12])
+#	print(np.amax(simOrig,axis=1)[0:12])
 
-	# Extract the rows on which to perform LASSO
-	targetGroup = simGroup[giKnown,:]
-	targetOrig = simOrig[giKnown,:]
-	print targetGroup[0:3,0:10]
+	# Extract the positive data on which to perform LASSO
+	posGroup = simGroup[giKnown,:]
+	posOrig = simOrig[giKnown,:]
+	posLabel = np.ones(len(giKnown))
+#	print(posGroup[0:3,0:10])
 
-	# Perform LASSO
-	cfier = lm.Lasso(alpha=lAlpha)
-	cfier.fit(targetGroup, np.ones(targetGroup.shape[0]))
-	print(cfier.coef_.shape, cfier.coef_)
+	# Select & extract random counter-examples
+	nExamples = min( len(giKnown), (len(geneDict) - len(giKnown)) )
+	giUnknown = [g for g in geneDict.values() if g not in giKnown]
+	giNegTrain = random.sample(giUnknown, nExamples)
+	negGroup = simGroup[giUnknown,:]
+	negOrig = simOrig[giUnknown,:]
+	negLabel = np.zeros(len(giUnknown))
+#	print(negGroup[0:3,0:10])
+
+#	print posLabel.shape, negLabel.shape
+	# Combine into the full training set
+	trainGroup = np.vstack( (posGroup, negGroup) )
+#	print trainGroup.shape
+	trainOrig = np.vstack( (posOrig, negOrig) )
+
+	trainLabel = np.vstack( (np.reshape(posLabel, (len(posLabel), 1)),
+		np.reshape(negLabel, (len(negLabel), 1))) )
+
+	# Perform LASSO (x2)
+	lGroup = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter,
+		normalize=lNorm, positive=lPos)
+	lGroup.fit(trainGroup, trainLabel)
+#	print(lGroup.coef_.shape, lGroup.coef_)
+
+	lOrig = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter,
+		normalize=lNorm, positive=lPos)
+	lOrig.fit(trainOrig, trainLabel)
+#	print(lOrig.coef_.shape, lOrig.coef_)
+
+	# Extract the weights and corresponding paths
+	nodeDT = np.dtype('a30')
+
+#	print lGroup.coef_
+
+	iCoefGroup = np.nonzero(lGroup.coef_)[0]
+#	print(iCoefGroup[0])
+#	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', nodeDT), ('weight', 'f4')] )
+	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', 'i4'), ('weight', 'f4')] )
+	row = 0
+	for c in iCoefGroup :
+#		print(c)
+#		print(pathNames[c], lGroup.coef_[c])
+#		pGroup[row] = (pathNames[c], lGroup.coef_[c])
+		pGroup[row] = (c, lGroup.coef_[c])
+		row += 1
+	pGroup[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+
+	iCoefOrig = np.nonzero(lOrig.coef_)[0]
+	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
+	row = 0
+	for c in iCoefOrig :
+#		pOrig[row] = (pathNames[c], lOrig.coef_[c])
+		pOrig[row] = (c, lOrig.coef_[c])
+		row += 1
+	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 
+	# Output the coefficients (x2)
+	textDelim = '\t'
 
-# load the genedict
-# get the sample/folder list
-# for each sample,
-#   get, convert known genes to indices
-#   perform lasso on path stats
-#   output top paths & weights
+	fPrefix = 'top_paths_Lasso-'+fGroupNorm.rstrip('.txtgz')
+	fname = mp.nameOutputFile(si, fPrefix)
+	print("Saving top paths to file {}".format(fname))
+#	print("  in directory {}".format(si))
+	with open(si+fname, 'wb') as fout :
+	#	fout = open(si+fname, 'wb')
+		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+		for row in xrange(len(pGroup)) :
+			fout.write('\n{}{}{}'.format(pGroup['weight'][row],
+				textDelim, pathNames[pGroup['path'][row]]))
+	#		fout.write('\n{}{}{}'.format(row[1], textDelim, row[0]))
+	#		fout.write('\n{}{}{}'.format(row['path'], textDelim, row['weight']))
+	#		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
+	#end with
+#	fout.close()
+
+	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
+	fname = mp.nameOutputFile(si, fPrefix)
+	print("Saving top paths to file {}".format(fname))
+#	print("  in directory {}".format(si))
+	with open(si+fname, 'wb') as fout :
+		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+		for row in xrange(len(pOrig)) :
+			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
+				textDelim, pathNames[pOrig['path'][row]]))
+	#end with
+#end loop
+
 
 # rank genes
 
