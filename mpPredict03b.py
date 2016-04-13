@@ -13,7 +13,10 @@
 #	metric to rank genes in order to influence and automate
 #	the decision of which paths to use for prediction.
 #
-# This is the second part of the process: 
+# This is the second part of the process: looking at the 
+#	gene-gene similarity metric(s), apply LASSO regression
+#	to select a small number of important paths, with
+#	corresponding weights.
 # ---------------------------------------------------------
 
 import mpLibrary as mp
@@ -33,7 +36,7 @@ import random
 
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
@@ -41,15 +44,14 @@ if useNtwk == 0 :
 	ePath = 'networks/'
 #	sPath = 'samplesFake/'
 	dRoot = '../Dropbox/mp/outputFake/'
+	dDir = 'pred03-batch-000'
 else :
 	eName = 'all_v1_g2e11t0'
 	ePath = '../Dropbox/mp/networks/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	dRoot = '../Dropbox/mp/output/'
+	dDir = 'pred03-batch-001'
 #end if
-
-# Output path
-dDir = 'pred03-batch-000'
 
 
 # File names for similarity metrics
@@ -60,7 +62,7 @@ fOrigSum = 'SxySum.gz'
 
 # LASSO params
 lAlpha = 0.05
-lMaxIter = 1000
+lMaxIter = 100
 lNorm = False
 lPos = True
 
@@ -130,6 +132,7 @@ for si in dSubDirs :
 	negLabel = np.zeros(len(giUnknown))
 #	print(negGroup[0:3,0:10])
 
+	print("  ... performing regression ...")
 #	print posLabel.shape, negLabel.shape
 	# Combine into the full training set
 	trainGroup = np.vstack( (posGroup, negGroup) )
@@ -151,7 +154,7 @@ for si in dSubDirs :
 #	print(lOrig.coef_.shape, lOrig.coef_)
 
 	# Extract the weights and corresponding paths
-	nodeDT = np.dtype('a30')
+#	nodeDT = np.dtype('a30')
 
 #	print lGroup.coef_
 
