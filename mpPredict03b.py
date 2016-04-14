@@ -61,7 +61,7 @@ fOrigSum = 'SxySum.gz'
 
 
 # LASSO params
-lAlpha = 0.09
+lAlpha = 0.05
 lMaxIter = 10000
 lNorm = True
 lPos = False
@@ -142,9 +142,10 @@ for si in dSubDirs[4:6] :
 	# Extract the vectors for the neg sets
 #TODO: best way to handle/produce negative train data ??
 	#	(as one-class) using rand sample of Unknown
-	nExamples = min( 4 * len(giKnown), (len(geneDict) - len(giKnown)) )
-#	giRandNeg = random.sample(giUnknown, nExamples)
-	giRandNeg = random.sample(giTrueNeg, nExamples)
+	nExamples = min( 2 * len(giKnown), (len(geneDict) - len(giKnown)) )
+	giRandNeg = random.sample(giUnknown, nExamples)
+#	nExamples = int( len(giTrueNeg) / 2 )
+#	giRandNeg = random.sample(giTrueNeg, nExamples)
 
 	negTrainG = vectG[giRandNeg]
 	negTestG = vectG[giTrueNeg]
@@ -224,68 +225,68 @@ for si in dSubDirs[4:6] :
 #	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
 
 
-	# ####### ####### ####### #######
-	# Output results to file
+#	# ####### ####### ####### #######
+#	# Output results to file
+#
+#	# Save the selected paths & scores/weights
+#
+#	# First metric:
+#	iCoefGroup = np.nonzero(lassoG.coef_)[0]
+##	print(iCoefGroup[0])
+##	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', nodeDT), ('weight', 'f4')] )
+#	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', 'i4'), ('weight', 'f4')] )
+#	row = 0
+#	for c in iCoefGroup :
+##		print(c)
+##		print(pathNames[c], lGroup.coef_[c])
+##		pGroup[row] = (pathNames[c], lGroup.coef_[c])
+#		pGroup[row] = (c, lassoG.coef_[c])
+#		row += 1
+#	pGroup[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+#
+#	# Output the coefficients (x2)
+#	textDelim = '\t'
+#
+#	fPrefix = 'top_paths_Lasso-'+fGroupNorm.rstrip('.txtgz')
+#	fname = mp.nameOutputFile(si, fPrefix)
+#	print("Saving top paths to file {}".format(fname))
+##	print("  in directory {}".format(si))
+#	with open(si+fname, 'wb') as fout :
+#	#	fout = open(si+fname, 'wb')
+#		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+#			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
+#			'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
+#		for row in xrange(len(pGroup)) :
+#			fout.write('\n{}{}{}'.format(pGroup['weight'][row],
+#				textDelim, pathNames[pGroup['path'][row]]))
+#	#		fout.write('\n{}{}{}'.format(row[1], textDelim, row[0]))
+#	#		fout.write('\n{}{}{}'.format(row['path'], textDelim, row['weight']))
+#	#		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
+#	#end with
+##	fout.close()
 
-	# Save the selected paths & scores/weights
-
-	# First metric:
-	iCoefGroup = np.nonzero(lassoG.coef_)[0]
-#	print(iCoefGroup[0])
-#	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', nodeDT), ('weight', 'f4')] )
-	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', 'i4'), ('weight', 'f4')] )
-	row = 0
-	for c in iCoefGroup :
-#		print(c)
-#		print(pathNames[c], lGroup.coef_[c])
-#		pGroup[row] = (pathNames[c], lGroup.coef_[c])
-		pGroup[row] = (c, lassoG.coef_[c])
-		row += 1
-	pGroup[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
-
-	# Output the coefficients (x2)
-	textDelim = '\t'
-
-	fPrefix = 'top_paths_Lasso-'+fGroupNorm.rstrip('.txtgz')
-	fname = mp.nameOutputFile(si, fPrefix)
-	print("Saving top paths to file {}".format(fname))
-#	print("  in directory {}".format(si))
-	with open(si+fname, 'wb') as fout :
-	#	fout = open(si+fname, 'wb')
-		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
-			'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
-		for row in xrange(len(pGroup)) :
-			fout.write('\n{}{}{}'.format(pGroup['weight'][row],
-				textDelim, pathNames[pGroup['path'][row]]))
-	#		fout.write('\n{}{}{}'.format(row[1], textDelim, row[0]))
-	#		fout.write('\n{}{}{}'.format(row['path'], textDelim, row['weight']))
-	#		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
-	#end with
-#	fout.close()
-
-
-	# Second metric:
-	iCoefOrig = np.nonzero(lassoO.coef_)[0]
-	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
-	row = 0
-	for c in iCoefOrig :
-#		pOrig[row] = (pathNames[c], lassoO.coef_[c])
-		pOrig[row] = (c, lassoO.coef_[c])
-		row += 1
-	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
-
-	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
-	fname = mp.nameOutputFile(si, fPrefix)
-	print("Saving top paths to file {}".format(fname))
-#	print("  in directory {}".format(si))
-	with open(si+fname, 'wb') as fout :
-		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
-		for row in xrange(len(pOrig)) :
-			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
-				textDelim, pathNames[pOrig['path'][row]]))
-	#end with
+#
+#	# Second metric:
+#	iCoefOrig = np.nonzero(lassoO.coef_)[0]
+#	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
+#	row = 0
+#	for c in iCoefOrig :
+##		pOrig[row] = (pathNames[c], lassoO.coef_[c])
+#		pOrig[row] = (c, lassoO.coef_[c])
+#		row += 1
+#	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+#
+#	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
+#	fname = mp.nameOutputFile(si, fPrefix)
+#	print("Saving top paths to file {}".format(fname))
+##	print("  in directory {}".format(si))
+#	with open(si+fname, 'wb') as fout :
+#		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+#			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+#		for row in xrange(len(pOrig)) :
+#			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
+#				textDelim, pathNames[pOrig['path'][row]]))
+#	#end with
 
 
 #end loop
