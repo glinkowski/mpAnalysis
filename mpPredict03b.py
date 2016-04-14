@@ -61,10 +61,12 @@ fOrigSum = 'SxySum.gz'
 
 
 # LASSO params
-lAlpha = 0.05
-lMaxIter = 100
-lNorm = False
+lAlpha = 0.09
+lMaxIter = 10000
+lNorm = True
 lPos = True
+lFitIcpt = True
+lSelctn = 'random' # random vs cyclic
 
 
 # verbose feedback ?
@@ -100,65 +102,107 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-#for si in dSubDirs[1:2] :
-for si in dSubDirs :
+for si in dSubDirs[4:6] :
+#for si in dSubDirs :
 
-	# Read in the known genes
-	print(si)
-	gKnown = mp.readFileAsList(si+'known.txt')
-#	print(gKnown)
-	giKnown = mp.convertToIndices(gKnown, geneDict)
-#	print(giKnown)
+	print("\n", si)
+
+
+	# ####### ####### ####### #######
+	# Prepare the test/train vectors & labels
+	print("  ... creating train & test data ...")
 
 	# Read in the (modified) group PathSim matrix
-	simGroup = mp.readFileAsMatrix(si, fGroupNorm)
-	simOrig = mp.readFileAsMatrix(si, fOrigSum)
-#	print(simGroup.shape, simOrig.shape)
-#	print(np.amax(simGroup,axis=1)[0:12])
-#	print(np.amax(simOrig,axis=1)[0:12])
+	vectG = mp.readFileAsMatrix(si, fGroupNorm)
+	vectO = mp.readFileAsMatrix(si, fOrigSum)
 
-	# Extract the positive data on which to perform LASSO
-	posGroup = simGroup[giKnown,:]
-	posOrig = simOrig[giKnown,:]
-	posLabel = np.ones(len(giKnown))
-#	print(posGroup[0:3,0:10])
-
-	# Select & extract random counter-examples
-	nExamples = min( len(giKnown), (len(geneDict) - len(giKnown)) )
+	# Create index lists for Known, Hidden, Unknown, TrueNeg
+	gKnown = mp.readFileAsList(si+'known.txt')
+	giKnown = mp.convertToIndices(gKnown, geneDict)
+	gHidden = mp.readFileAsList(si+'concealed.txt')
+	giHidden = mp.convertToIndices(gHidden, geneDict)
 	giUnknown = [g for g in geneDict.values() if g not in giKnown]
-	giNegTrain = random.sample(giUnknown, nExamples)
-	negGroup = simGroup[giUnknown,:]
-	negOrig = simOrig[giUnknown,:]
-	negLabel = np.zeros(len(giUnknown))
-#	print(negGroup[0:3,0:10])
+	giTrueNeg = [g for g in giUnknown if g not in giHidden]
+	print len(gKnown), len(gHidden), len(giUnknown), len(giTrueNeg)
 
+	# Extract the vectors for the pos sets
+	posTrainG = vectG[giKnown,:]
+	posTestG = vectG[giHidden,:]
+
+	posTrainO = vectO[giKnown,:]
+	posTestO = vectO[giHidden,:]
+
+	posTrainLabel = np.ones( (len(giKnown), 1) ) * 100
+#	posTrainLabel = np.ones(len(giKnown))
+
+	posTestLabel = np.ones( (len(giHidden), 1) ) * 100
+#	posTestLabel = np.ones(len(giHidden))
+
+
+	# Extract the vectors for the neg sets
+#TODO: best way to handle/produce negative train data ??
+	#	(as one-class) using rand sample of Unknown
+	nExamples = min( 4 * len(giKnown), (len(geneDict) - len(giKnown)) )
+	giRandNeg = random.sample(giUnknown, nExamples)
+#	giRandNeg = random.sample(giTrueNeg, nExamples)
+
+	negTrainG = vectG[giRandNeg]
+	negTestG = vectG[giTrueNeg]
+
+	negTrainO = vectO[giRandNeg]
+	negTestO = vectO[giTrueNeg]
+
+#	negTrainLabel = np.zeros(len(giRandNeg))
+	negTrainLabel = np.ones( (len(giRandNeg), 1) ) * -100
+#	negTrainLabel = np.ones(len(giRandNeg)) * -1
+
+#	negTestLabel = np.zeros(len(giTrueNeg))
+	negTestLabel = np.ones( (len(giTrueNeg), 1) ) * -100
+#	negTestLabel = np.ones(len(giTrueNeg)) * -1
+
+	# Combine to create the full train & test data sets
+	trainG = np.vstack( (posTrainG, negTrainG) )
+	trainO = np.vstack( (posTrainO, negTrainO) )
+	trainLabel = np.vstack( (posTrainLabel, negTrainLabel) )
+
+	testG = np.vstack( (posTestG, negTestG) )
+	testO = np.vstack( (posTestO, negTestO) )
+	testLabel = np.vstack( (posTestLabel, negTestLabel) )
+
+
+	# ####### ####### ####### #######
+	# Perform the regression analysis
 	print("  ... performing regression ...")
-#	print posLabel.shape, negLabel.shape
-	# Combine into the full training set
-	trainGroup = np.vstack( (posGroup, negGroup) )
-#	print trainGroup.shape
-	trainOrig = np.vstack( (posOrig, negOrig) )
 
-	trainLabel = np.vstack( (np.reshape(posLabel, (len(posLabel), 1)),
-		np.reshape(negLabel, (len(negLabel), 1))) )
+	# Train LASSO
+#TODO: exp w/ diff types: LassoCV, ElasticNet, MultiTaskElasticNet, MultiTaskLasso ..?
+	lassoG = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
+		positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
+	lassoG.fit(trainG, trainLabel)
 
-	# Perform LASSO (x2)
-	lGroup = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter,
-		normalize=lNorm, positive=lPos)
-	lGroup.fit(trainGroup, trainLabel)
-#	print(lGroup.coef_.shape, lGroup.coef_)
 
-	lOrig = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter,
-		normalize=lNorm, positive=lPos)
-	lOrig.fit(trainOrig, trainLabel)
-#	print(lOrig.coef_.shape, lOrig.coef_)
+	# How well does it work ??
+	# Get score from training data
+	scoreG = lassoG.score(trainG, trainLabel)
+	print("On training data {}, score: {}".format(fGroupNorm, scoreG))
+	print("  using {} coefficients".format( len(np.nonzero(lassoG.coef_)[0]) ))
 
-	# Extract the weights and corresponding paths
-#	nodeDT = np.dtype('a30')
 
-#	print lGroup.coef_
+	# On the full set ?? ...
+	scoreG = lassoG.score(testG, testLabel)
+	print("On test data {}, score: {}".format(fGroupNorm, scoreG))
+	predLabel = lassoG.predict(testG)
+	print("Some labels for the hidden set:")
+#	print(predLabel[0:len(posTestLabel)])
+	print(predLabel[0:5])
+	print("Some labels for the true neg set:")
+	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
 
-	iCoefGroup = np.nonzero(lGroup.coef_)[0]
+
+
+
+
+	iCoefGroup = np.nonzero(lassoG.coef_)[0]
 #	print(iCoefGroup[0])
 #	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', nodeDT), ('weight', 'f4')] )
 	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', 'i4'), ('weight', 'f4')] )
@@ -167,18 +211,18 @@ for si in dSubDirs :
 #		print(c)
 #		print(pathNames[c], lGroup.coef_[c])
 #		pGroup[row] = (pathNames[c], lGroup.coef_[c])
-		pGroup[row] = (c, lGroup.coef_[c])
+		pGroup[row] = (c, lassoG.coef_[c])
 		row += 1
 	pGroup[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
-	iCoefOrig = np.nonzero(lOrig.coef_)[0]
-	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
-	row = 0
-	for c in iCoefOrig :
-#		pOrig[row] = (pathNames[c], lOrig.coef_[c])
-		pOrig[row] = (c, lOrig.coef_[c])
-		row += 1
-	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+#	iCoefOrig = np.nonzero(lOrig.coef_)[0]
+#	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
+#	row = 0
+#	for c in iCoefOrig :
+##		pOrig[row] = (pathNames[c], lOrig.coef_[c])
+#		pOrig[row] = (c, lOrig.coef_[c])
+#		row += 1
+#	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 
 	# Output the coefficients (x2)
@@ -191,7 +235,8 @@ for si in dSubDirs :
 	with open(si+fname, 'wb') as fout :
 	#	fout = open(si+fname, 'wb')
 		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
+			'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
 		for row in xrange(len(pGroup)) :
 			fout.write('\n{}{}{}'.format(pGroup['weight'][row],
 				textDelim, pathNames[pGroup['path'][row]]))
@@ -201,17 +246,21 @@ for si in dSubDirs :
 	#end with
 #	fout.close()
 
-	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
-	fname = mp.nameOutputFile(si, fPrefix)
-	print("Saving top paths to file {}".format(fname))
-#	print("  in directory {}".format(si))
-	with open(si+fname, 'wb') as fout :
-		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
-		for row in xrange(len(pOrig)) :
-			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
-				textDelim, pathNames[pOrig['path'][row]]))
-	#end with
+#	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
+#	fname = mp.nameOutputFile(si, fPrefix)
+#	print("Saving top paths to file {}".format(fname))
+##	print("  in directory {}".format(si))
+#	with open(si+fname, 'wb') as fout :
+#		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+#			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+#		for row in xrange(len(pOrig)) :
+#			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
+#				textDelim, pathNames[pOrig['path'][row]]))
+#	#end with
+
+
+
+
 #end loop
 
 
