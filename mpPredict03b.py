@@ -64,7 +64,7 @@ fOrigSum = 'SxySum.gz'
 lAlpha = 0.09
 lMaxIter = 10000
 lNorm = True
-lPos = True
+lPos = False
 lFitIcpt = True
 lSelctn = 'random' # random vs cyclic
 
@@ -105,7 +105,7 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 for si in dSubDirs[4:6] :
 #for si in dSubDirs :
 
-	print("\n", si)
+	print("\n{}".format(si))
 
 
 	# ####### ####### ####### #######
@@ -143,8 +143,8 @@ for si in dSubDirs[4:6] :
 #TODO: best way to handle/produce negative train data ??
 	#	(as one-class) using rand sample of Unknown
 	nExamples = min( 4 * len(giKnown), (len(geneDict) - len(giKnown)) )
-	giRandNeg = random.sample(giUnknown, nExamples)
-#	giRandNeg = random.sample(giTrueNeg, nExamples)
+#	giRandNeg = random.sample(giUnknown, nExamples)
+	giRandNeg = random.sample(giTrueNeg, nExamples)
 
 	negTrainG = vectG[giRandNeg]
 	negTestG = vectG[giTrueNeg]
@@ -192,16 +192,44 @@ for si in dSubDirs[4:6] :
 	scoreG = lassoG.score(testG, testLabel)
 	print("On test data {}, score: {}".format(fGroupNorm, scoreG))
 	predLabel = lassoG.predict(testG)
-	print("Some labels for the hidden set:")
-#	print(predLabel[0:len(posTestLabel)])
-	print(predLabel[0:5])
-	print("Some labels for the true neg set:")
-	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
+#	print("Some labels for the hidden set:")
+##	print(predLabel[0:len(posTestLabel)])
+#	print(predLabel[0:5])
+#	print("Some labels for the true neg set:")
+#	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
 
 
+	# Train LASSO (2nd metric)
+#TODO: exp w/ diff types: LassoCV, ElasticNet, MultiTaskElasticNet, MultiTaskLasso ..?
+	lassoO = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
+		positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
+	lassoO.fit(trainO, trainLabel)
 
 
+	# How well does it work ??
+	# Oet score from training data
+	scoreO = lassoO.score(trainO, trainLabel)
+	print("On training data {}, score: {}".format(fOrigSum, scoreO))
+	print("  using {} coefficients".format( len(np.nonzero(lassoO.coef_)[0]) ))
 
+
+	# On the full set ?? ...
+	scoreO = lassoO.score(testO, testLabel)
+	print("On test data {}, score: {}".format(fOrigSum, scoreO))
+	predLabel = lassoO.predict(testO)
+#	print("Some labels for the hidden set:")
+##	print(predLabel[0:len(posTestLabel)])
+#	print(predLabel[0:5])
+#	print("Some labels for the true neg set:")
+#	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
+
+
+	# ####### ####### ####### #######
+	# Output results to file
+
+	# Save the selected paths & scores/weights
+
+	# First metric:
 	iCoefGroup = np.nonzero(lassoG.coef_)[0]
 #	print(iCoefGroup[0])
 #	pGroup = np.recarray( len(iCoefGroup), dtype=[('path', nodeDT), ('weight', 'f4')] )
@@ -214,16 +242,6 @@ for si in dSubDirs[4:6] :
 		pGroup[row] = (c, lassoG.coef_[c])
 		row += 1
 	pGroup[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
-
-#	iCoefOrig = np.nonzero(lOrig.coef_)[0]
-#	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
-#	row = 0
-#	for c in iCoefOrig :
-##		pOrig[row] = (pathNames[c], lOrig.coef_[c])
-#		pOrig[row] = (c, lOrig.coef_[c])
-#		row += 1
-#	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
-
 
 	# Output the coefficients (x2)
 	textDelim = '\t'
@@ -246,22 +264,32 @@ for si in dSubDirs[4:6] :
 	#end with
 #	fout.close()
 
-#	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
-#	fname = mp.nameOutputFile(si, fPrefix)
-#	print("Saving top paths to file {}".format(fname))
-##	print("  in directory {}".format(si))
-#	with open(si+fname, 'wb') as fout :
-#		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-#			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
-#		for row in xrange(len(pOrig)) :
-#			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
-#				textDelim, pathNames[pOrig['path'][row]]))
-#	#end with
 
+	# Second metric:
+	iCoefOrig = np.nonzero(lassoO.coef_)[0]
+	pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
+	row = 0
+	for c in iCoefOrig :
+#		pOrig[row] = (pathNames[c], lassoO.coef_[c])
+		pOrig[row] = (c, lassoO.coef_[c])
+		row += 1
+	pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
+	fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
+	fname = mp.nameOutputFile(si, fPrefix)
+	print("Saving top paths to file {}".format(fname))
+#	print("  in directory {}".format(si))
+	with open(si+fname, 'wb') as fout :
+		fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+			'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+		for row in xrange(len(pOrig)) :
+			fout.write('\n{}{}{}'.format(pOrig['weight'][row],
+				textDelim, pathNames[pOrig['path'][row]]))
+	#end with
 
 
 #end loop
+
 
 
 # rank genes
