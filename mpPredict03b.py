@@ -54,7 +54,7 @@ else :
 #end if
 
 # whether to write output files
-writeOutput = False
+writeOutput = True
 
 
 # File names for similarity metrics
@@ -69,7 +69,7 @@ sampleAsOneClass = True
 
 # LASSO params
 lAlpha = 0.05
-lMaxIter = 1000
+lMaxIter = 10000
 lNorm = True
 lPos = False
 lFitIcpt = True
@@ -93,6 +93,7 @@ print("")
 mp.setParamVerbose(newVerbose)
 
 
+
 # 1) Load the gene-index dictionary & path names
 print("Creating the gene-index dictionary.")
 geneDict = mp.readGenesFile(ePath, eName)
@@ -103,8 +104,11 @@ pathNames = mp.removeInvertedPaths(pathDict)
 del pathDict
 
 
+
 # 2) Get a list of the sample subdirectories
 dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
+
+
 
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
@@ -115,8 +119,9 @@ for si in dSubDirs[4:6] :
 	print("\n{}".format(si))
 
 
+
 	# ####### ####### ####### #######
-	# Prepare the test/train vectors & labels
+	# 3a) Prepare the test/train vectors & labels
 	print("  ... creating train & test data ...")
 
 	# Read in the (modified) group PathSim matrix
@@ -162,6 +167,7 @@ for si in dSubDirs[4:6] :
 		negTestO = vectO[giTrueNeg]
 		negTestLabel = np.ones( (len(giTrueNeg), 1) ) * -100
 
+		giTest = np.hstack( (giHidden, giTrueNeg) )
 	else :
 		# as two-class: train rand samp from TrueNeg (1/2)
 		#		test with remaining (TrueNeg * 1/2 + Hidden)
@@ -176,6 +182,8 @@ for si in dSubDirs[4:6] :
 		negTestG = vectG[giTestNeg]
 		negTestO = vectO[giTestNeg]
 		negTestLabel = np.ones( (len(giTestNeg), 1) ) * -100
+
+		giTest = np.hstack( (giHidden, giTestNeg) )
 	#end if
 
 
@@ -189,8 +197,9 @@ for si in dSubDirs[4:6] :
 	testLabel = np.vstack( (posTestLabel, negTestLabel) )
 
 
+
 	# ####### ####### ####### #######
-	# Perform the regression analysis
+	# 3b) Perform the regression analysis
 	print("  ... performing regression ...")
 
 	# Train LASSO	
@@ -199,7 +208,7 @@ for si in dSubDirs[4:6] :
 	trainLabel = np.reshape(trainLabel, [trainLabel.shape[0],])
 
 #TODO: exp w/ diff types: LassoCV, ElasticNet, MultiTaskElasticNet, MultiTaskLasso ..?
-	 lassoG = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
+	lassoG = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
 	 	positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
 #	lassoG = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
 #		positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
@@ -218,7 +227,7 @@ for si in dSubDirs[4:6] :
 	# On the full set ?? ...
 	scoreG = lassoG.score(testG, testLabel)
 	print("On test data {}, score: {}".format(fGroupNorm, scoreG))
-	predLabel = lassoG.predict(testG)
+	predLabelG = lassoG.predict(testG)
 #	print("Some labels for the hidden set:")
 ##	print(predLabel[0:len(posTestLabel)])
 #	print(predLabel[0:5])
@@ -247,7 +256,7 @@ for si in dSubDirs[4:6] :
 	# On the full set ?? ...
 	scoreO = lassoO.score(testO, testLabel)
 	print("On test data {}, score: {}".format(fOrigSum, scoreO))
-	predLabel = lassoO.predict(testO)
+	predLabelO = lassoO.predict(testO)
 #	print("Some labels for the hidden set:")
 ##	print(predLabel[0:len(posTestLabel)])
 #	print(predLabel[0:5])
@@ -257,7 +266,7 @@ for si in dSubDirs[4:6] :
 
 
 	# ####### ####### ####### #######
-	# Output results to file
+	# 3c) Output selected path results to file
 
 	# Save the selected paths & scores/weights
 	if writeOutput :
@@ -312,11 +321,62 @@ for si in dSubDirs[4:6] :
 				fout.write('\n{}{}{}'.format(pOrig['weight'][row],
 					textDelim, pathNames[pOrig['path'][row]]))
 		#end with
-
-
-
-		
 	#end if
+
+
+
+	# ####### ####### ####### #######
+	# 3d) Output selected path results to file
+
+	# Save the selected paths & scores/weights
+	if writeOutput :
+
+		textDelim = '\t'
+
+		geneList = geneDict.keys()
+		geneList.sort()
+
+		# Sort the genes by (inverse) rank
+		#	first metric
+		rGenesG = np.recarray( len(predLabelG), dtype=[('gene', 'i4'), ('rank', 'f4')] )
+		rGenesG['gene'] = giTest
+		rGenesG['rank'] = predLabelG
+		rGenesG[::-1].sort(order=['rank','gene'])
+
+		# write the file
+		fPrefix = 'ranked_genes-'+fGroupNorm.rstrip('.txtgz')
+		fname = mp.nameOutputFile(si, fPrefix)
+		print("Saving ranked genes to file {}".format(fname))
+		with open(si+fname, 'wb') as fout :
+			firstRow = True
+			for row in xrange(len(rGenesG)) :
+				if not firstRow :
+					fout.write('\n')
+				fout.write('{:3.3f}{}{}'.format(rGenesG['rank'][row],
+					textDelim, geneList[rGenesG['gene'][row]]))
+				firstRow = False
+		#end with
+
+		# Sort the genes by (inverse) rank
+		#	second metric
+		rGenesO = np.recarray( len(predLabelO), dtype=[('gene', 'i4'), ('rank', 'f4')] )
+		rGenesO['gene'] = giTest
+		rGenesO['rank'] = predLabelO
+		rGenesO[::-1].sort(order=['rank','gene'])
+
+		# write the file
+		fPrefix = 'ranked_genes-'+fOrigSum.rstrip('.txtgz')
+		fname = mp.nameOutputFile(si, fPrefix)
+		print("Saving ranked genes to file {}".format(fname))
+		with open(si+fname, 'wb') as fout :
+			firstRow = True
+			for row in xrange(len(rGenesO)) :
+				if not firstRow :
+					fout.write('\n')
+				fout.write('{:3.3f}{}{}'.format(rGenesO['rank'][row],
+					textDelim, geneList[rGenesO['gene'][row]]))
+				firstRow = False
+		#end with
 
 #end loop
 
