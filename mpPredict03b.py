@@ -389,13 +389,11 @@ for si in dSubDirs[4:6] :
 
 		textDelim = '\t'
 
-		# First metric
-		fPrefix = 'parameters-'+fGroupNorm.rstrip('.txtgz')
-		fname = mp.nameOutputFile(si, fPrefix)
+#		fPrefix = 'parameters-'+fGroupNorm.rstrip('.txtgz')
+#		fname = mp.nameOutputFile(si, fPrefix)
+		fname = mp.nameOutputFile(si, 'parameters')
 		print("Saving params & stats to file {}".format(fname))
 		with open(si+fname, 'wb') as fout :
-
-			fout.write('Similarity Metric:{}{}\n'.format(textDelim, fGroupNorm))
 			fout.write('\n')
 
 			fout.write('Lasso Parameters\n')
@@ -407,34 +405,19 @@ for si in dSubDirs[4:6] :
 			fout.write('selection:{}{}\n'.format(textDelim, lSelctn))
 			fout.write('\n')
 
+			fout.write('Similarity Metric:{}{}\n'.format(textDelim, fGroupNorm))
 			fout.write('Prediction Results\n')
 			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(lassoG.coef_)[0])))
-			fout.write('Training score:{}{}\n'.format(textDelim, lassoG.score(trainG, trainLabel)))
-			fout.write('Testing score:{}{}\n'.format(textDelim, lassoG.score(testG, testLabel)))
-		#end with
-
-		# Second metric
-		fPrefix = 'parameters-'+fOrigSum.rstrip('.txtgz')
-		fname = mp.nameOutputFile(si, fPrefix)
-		print("Saving params & stats to file {}".format(fname))
-		with open(si+fname, 'wb') as fout :
+			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, lassoG.score(trainG, trainLabel)))
+			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, lassoG.score(testG, testLabel)))
+			fout.write('\n')
 
 			fout.write('Similarity Metric:{}{}\n'.format(textDelim, fGroupNorm))
-			fout.write('\n')
-
-			fout.write('Lasso Parameters\n')
-			fout.write('alpha:{}{}\n'.format(textDelim, lAlpha))
-			fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
-			fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
-			fout.write('positive:{}{}\n'.format(textDelim, lPos))
-			fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
-			fout.write('selection:{}{}\n'.format(textDelim, lSelctn))
-			fout.write('\n')
-
 			fout.write('Prediction Results\n')
 			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(lassoO.coef_)[0])))
-			fout.write('Training score:{}{}\n'.format(textDelim, lassoO.score(trainO, trainLabel)))
-			fout.write('Testing score:{}{}\n'.format(textDelim, lassoO.score(testO, testLabel)))
+			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, lassoO.score(trainO, trainLabel)))
+			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, lassoO.score(testO, testLabel)))
+			fout.write('\n')
 		#end with
 	#end if
 
