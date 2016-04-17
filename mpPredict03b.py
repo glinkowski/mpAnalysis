@@ -50,7 +50,7 @@ else :
 	ePath = '../Dropbox/mp/networks/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	dRoot = '../Dropbox/mp/output/'
-	dDir = 'pred03-batch-001'
+	dDir = 'pred03-batch-002'
 #end if
 
 # whether to write output files
@@ -68,13 +68,18 @@ sampleAsOneClass = True
 
 
 # LASSO params
-lAlpha = 0.05
+if sampleAsOneClass :
+	lAlpha = 0.05	# good for asOneClass
+else :
+	lAlpha = 0.005 	# find good TwoClass alpha
+#end if
 lMaxIter = 10000
 lNorm = True
 lPos = False
 lFitIcpt = True
 lSelctn = 'random' # random vs cyclic
 
+#TODO: will probably prefer using LassoCV to find alpha
 
 # verbose feedback ?
 newVerbose = True
@@ -394,6 +399,14 @@ for si in dSubDirs[4:6] :
 		fname = mp.nameOutputFile(si, 'parameters')
 		print("Saving params & stats to file {}".format(fname))
 		with open(si+fname, 'wb') as fout :
+			fout.write('\n')
+
+			fout.write('Sampling Method for Neg examples\n')
+			if sampleAsOneClass :
+				fout.write('  as One-Class\n')
+			else :
+				fout.write('  as Two-Class\n')
+			#end if
 			fout.write('\n')
 
 			fout.write('Lasso Parameters\n')
