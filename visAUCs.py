@@ -55,6 +55,11 @@ for pFolder in subDirs :
 	# Get the curve statistics from the ranked_genes file
 	FPR, recall, precision, numHid = vl.getAUCstats(pDir)
 
+	# Calculate (approximate) are under the ROC curve
+	areaROC = 0
+	for r in recall :
+		areaROC += (r / len(recall))
+	#end loop
 
 	# Plot the results
 	fig = plt.figure()
@@ -76,7 +81,8 @@ for pFolder in subDirs :
 #TODO: why is P-R line so jagged?
 
 	# Final touches
-	plt.suptitle(pFolder+', concealed = {}'.format(numHid))
+	plt.suptitle(pFolder+', concealed = {}'.format(numHid)+
+		', ROC area = {:.3}'.format(areaROC))
 #	plt.tight_layout()
 	plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=.4, hspace=None)
 
