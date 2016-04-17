@@ -60,6 +60,10 @@ fGroupNorm = 'Pxy-mod-norm.gz'
 fOrigSum = 'SxySum.gz'
 
 
+# how to sample negative train/test set
+sampleAsOneClass = True
+
+
 # LASSO params
 lAlpha = 0.05
 lMaxIter = 10000
@@ -141,25 +145,44 @@ for si in dSubDirs[4:6] :
 
 	# Extract the vectors for the neg sets
 #TODO: best way to handle/produce negative train data ??
-	#	(as one-class) using rand sample of Unknown
-	nExamples = min( 2 * len(giKnown), (len(geneDict) - len(giKnown)) )
-	giRandNeg = random.sample(giUnknown, nExamples)
-#	nExamples = int( len(giTrueNeg) / 2 )
-#	giRandNeg = random.sample(giTrueNeg, nExamples)
+	if sampleAsOneClass == True :
+		# as one-class: train with rand samp from Unknown
+		#		test with all Unknown (TrueNeg + Hidden)
+		nExamples = min( 2 * len(giKnown), (len(geneDict) - len(giKnown)) )
+		giTrainNeg = random.sample(giUnknown, nExamples)
 
-	negTrainG = vectG[giRandNeg]
-	negTestG = vectG[giTrueNeg]
+		negTrainG = vectG[giTrainNeg]
+		negTrainO = vectO[giTrainNeg]
+		negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * -100
 
-	negTrainO = vectO[giRandNeg]
-	negTestO = vectO[giTrueNeg]
+		negTestG = vectG[giTrueNeg]
+		negTestO = vectO[giTrueNeg]
+		negTestLabel = np.ones( (len(giTrueNeg), 1) ) * -100
 
-#	negTrainLabel = np.zeros(len(giRandNeg))
-	negTrainLabel = np.ones( (len(giRandNeg), 1) ) * -100
-#	negTrainLabel = np.ones(len(giRandNeg)) * -1
+	else :
+		# as two-class: train rand samp from TrueNeg (1/2)
+		#		test with remaining (TrueNeg * 1/2 + Hidden)
+		nExamples = int( len(giTrueNeg) / 2 )
+		giTrainNeg = random.sample(giTrueNeg, nExamples)
+		giTestNeg = [g for g in giTrueNeg if g not in giTrainNeg]
 
-#	negTestLabel = np.zeros(len(giTrueNeg))
-	negTestLabel = np.ones( (len(giTrueNeg), 1) ) * -100
-#	negTestLabel = np.ones(len(giTrueNeg)) * -1
+		negTrainG = vectG[giTrainNeg]
+		negTrainO = vectO[giTrainNeg]
+		negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * -100
+
+		negTestG = vectG[giTestNeg]
+		negTestO = vectO[giTestNeg]
+		negTestLabel = np.ones( (len(giTestNeg), 1) ) * -100
+	#end if
+
+
+# #	negTrainLabel = np.zeros(len(giTrainNeg))
+# 	negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * -100
+# #	negTrainLabel = np.ones(len(giTrainNeg)) * -1
+
+# #	negTestLabel = np.zeros(len(giTrueNeg))
+# 	negTestLabel = np.ones( (len(giTrueNeg), 1) ) * -100
+# #	negTestLabel = np.ones(len(giTrueNeg)) * -1
 
 	# Combine to create the full train & test data sets
 	trainG = np.vstack( (posTrainG, negTrainG) )
