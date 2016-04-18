@@ -413,7 +413,7 @@ for si in dSubDirs :
 			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, lassoG.score(testG, testLabel)))
 			fout.write('\n')
 
-			fout.write('Similarity Metric:{}{}\n'.format(textDelim, fGroupNorm))
+			fout.write('Similarity Metric:{}{}\n'.format(textDelim, fOrigSum))
 			fout.write('Prediction Results\n')
 			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(lassoO.coef_)[0])))
 			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, lassoO.score(trainO, trainLabel)))
