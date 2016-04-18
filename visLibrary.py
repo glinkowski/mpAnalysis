@@ -396,3 +396,40 @@ def getAUCstats(path, name) :
 
 	return FPR, recall, precision, nHidden
 #end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: choose an unused name for the output file
+# Input ----
+#   path, str: path to the network files
+#   name, str: name of the network to use
+#	extension, str: extension to append to file
+# Returns ----
+#   fname, str: name of output file (without path)
+def nameOutputFile(path, name, extension) :
+
+#TODO: replace with the verify function
+	# ERROR CHECK: verify directory exists
+	if not os.path.isdir(path) :
+		print ( "ERROR: Specified path doesn't exist:" +
+			" {}".format(path) )
+		sys.exit()
+	#end if
+
+	zpad = fnOutputZPad
+
+	# Set of all files in the directory
+	fileSet = set(os.listdir(path))
+
+	# increment file name until an unused one is found
+	num = int(0)
+	fname = name + "-{}.".format(str(num).zfill(zpad)) + extension
+#	fname = name + "-{}.txt".format(str(num).zfill(zpad))
+	while fname in fileSet :
+		num += 1
+		fname = name + "-{}.".format(str(num).zfill(zpad)) + extension
+	#end loop
+
+	return fname
+#end def ######## ######## ######## 

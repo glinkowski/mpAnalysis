@@ -20,7 +20,7 @@ import os
 # PARAMETERS
 
 # Paths to network files & sample prediction files
-pPath = '../Dropbox/mp/output/pred03-batch-001/'
+pPath = '../Dropbox/mp/output/pred03-batch-002/'
 pFolderPrefix = ''
 #pPath = '../Dropbox/mp/output/'
 #pFolderPrefix = 'pred01-'
@@ -81,6 +81,8 @@ for pFolder in subDirs :
 			areaROC += (r / len(recall))
 		#end loop
 
+		outName = vl.nameOutputFile(pDir, 'AUC-'+pFolder, 'png')
+
 		# Plot the results
 		fig = plt.figure()
 
@@ -108,7 +110,8 @@ for pFolder in subDirs :
 
 		# Save the figure
 	#	plt.show()
-		plt.savefig(pDir+'AUC_'+pFolder+'.png')
+		plt.savefig(pDir+outName)
+#		plt.savefig(pDir+'AUC_'+pFolder+'.png')
 		plt.close()
 
 	#end loop

@@ -50,7 +50,7 @@ else :
 	ePath = '../Dropbox/mp/networks/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	dRoot = '../Dropbox/mp/output/'
-	dDir = 'pred03-batch-001'
+	dDir = 'pred03-batch-002'
 #end if
 
 # whether to write output files
@@ -113,8 +113,8 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-for si in dSubDirs[4:6] :
-#for si in dSubDirs :
+#for si in dSubDirs[4:6] :
+for si in dSubDirs :
 
 	print("\n{}".format(si))
 
@@ -316,7 +316,8 @@ for si in dSubDirs[4:6] :
 	#	print("  in directory {}".format(si))
 		with open(si+fname, 'wb') as fout :
 			fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-				'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos))
+				'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
+				'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
 			for row in xrange(len(pOrig)) :
 				fout.write('\n{}{}{}'.format(pOrig['weight'][row],
 					textDelim, pathNames[pOrig['path'][row]]))
