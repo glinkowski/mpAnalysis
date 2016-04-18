@@ -331,22 +331,31 @@ def countLinesInFile(fname) :
 ######## ######## ######## ########
 # Function: calculate Recall (TPR), FPR, & Precision
 # Input ----
-#	fname, str: path & filename of file to read
+#	path, str: path to file to read
+#	name, str: name of file to read
 # Returns ----
 #	recall, 
 #	FPR, 
 #	precision, 
 #	nHidden
-def getAUCstats(path) :
+def getAUCstats(path, name) :
 
 	# Read in the ranked genes
 	gHidden = readFileColumnAsString(path+'concealed.txt', 0, 0)
 	gHidSet = set(gHidden)
 	nHidden = len(gHidden)
 
+	# In case concealed.txt is empty
+	if nHidden == 0 :
+		print("There are no Concealed Positives to predict in {}".format(path))
+#		noHid = list()
+#		return noHid, noHid, noHid, noHid
+		return [-1], [-1], [-1], [-1]
+	#end if
 
 	# Declare the confusion matrix
-	rows, colMin, colMax = countLinesInFile(path+'ranked_genes.txt')
+	rows, colMin, colMax = countLinesInFile(path+name)
+#	rows, colMin, colMax = countLinesInFile(path+'ranked_genes.txt')
 	posActual = len(gHidden)
 	negActual = rows - posActual
 	confusion = np.zeros([2,rows])	# TP, FP
@@ -354,7 +363,8 @@ def getAUCstats(path) :
 
 	# Create the matrix by reading in the file
 	#	matrix is running count of: True Positives, False Positives
-	fin = open(path+'ranked_genes.txt')
+	fin = open(path+name)
+#	fin = open(path+'ranked_genes.txt')
 	col = 0
 	TP = 0
 	FP = 0
