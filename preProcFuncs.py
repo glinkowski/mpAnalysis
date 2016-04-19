@@ -32,6 +32,7 @@
 #	saveMatrixListPlus(mList, mNames, mGenes, mpath)
 #	saveKeyFile(mDict, path)
 #	saveGeneFile(mGenes, path)
+#	calcPathSimMatrix(matrix)
 #	createMPLengthOne(pList, pNames, path)
 #	createMPLengthTwo(pList, pNames, path)
 #	createMPLengthThree(pList, pNames, path)
@@ -1309,7 +1310,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 #	integer, bool: True means save values as int()
 # Returns ----
 #	nothing
-def saveMatrixNumpy(matrix, mname, mpath) :
+def saveMatrixNumpy(matrix, mname, mpath, integer) :
 
 	# If folder doesn't exist, create it
 	if not os.path.exists(mpath) :
@@ -1319,7 +1320,12 @@ def saveMatrixNumpy(matrix, mname, mpath) :
 	# Write to the file
 #TODO: check if the fmt option is appropriate, or pointless
 #	np.save(mpath+mname, matrix)
-	np.savetxt(mpath + mname + matrixExt, matrix, fmt='%u')
+	if integer :
+		np.savetxt(mpath+mname+matrixExt, matrix, fmt='%u')
+	else :
+		np.savetxt(mpath+mname+matrixExt, matrix, fmt='%f')
+	#end if
+
 #NOTE: In this case, the text file from savetxt() is much
 #	smaller than the binary file from save()
 
@@ -1410,7 +1416,7 @@ def saveMatrixList(mList, mGenes, mpath) :
 
 		# Save each matrix as the corresponding number
 		saveMatrixNumpy(mList[name], str(num).zfill(keyZPad),
-			mpath)
+			mpath, True)
 
 		# VERIFICATION: save as a text-readable file
 		if saveTextCopy :
@@ -1485,7 +1491,7 @@ def saveMatrixListPlus(mList, mNames, mGenes, mpath) :
 
 	for i in range(0, len(mList)) :
 		# Save each matrix as the corresponding number
-		saveMatrixNumpy(mList[i], str(i).zfill(keyZPad), mpath)
+		saveMatrixNumpy(mList[i], str(i).zfill(keyZPad), mpath, True)
 
 		# VERIFICATION: save as a text-readable file
 		if saveTextCopy :
@@ -1577,6 +1583,43 @@ def saveGeneFile(mGenes, path) :
 
 
 
+
+######## ######## ######## ######## 
+# Function: Calculate the gene-gene PathSim metric from
+#	a given metapath matrix
+# Input ----
+#	matrix, numpy matrixDT: the metapath matrix (#gene x #gene)
+# Returns ----
+#	Sxy, numpy matrixDT: the PathSim matrix
+def calcPathSimMatrix(matrix) :
+
+	# PathSim = (Pxy + Pyx) / (Pxx + Pyy)
+
+	# numerator
+	Sxy = matrix.transpose()
+	Sxy = np.add( matrix, Sxy )
+
+	# denominator
+	Pyy = matrix.diagonal()
+#	print Pyy.shape
+	Pyy = np.reshape( Pyy, [1,Pyy.shape[0]])
+#	print Pyy.shape
+	Pxx = np.reshape( Pyy, [Pyy.shape[1],1])
+#	print Pxx.shape
+
+	PyyPxx = np.add( Pxx, Pyy )
+	PyyPxx = np.add( PyyPxx, 1 )	# +1 so no divide by zero
+#	print PyyPxx.shape
+
+	# result
+	Sxy = np.divide( Sxy, PyyPxx )
+
+	return Sxy
+#end def ######## ######## ######## 
+
+
+
+
 ######## ######## ######## ######## 
 # Function: Read in the key.txt file regarding the 
 #	metapath matrices
@@ -1638,7 +1681,9 @@ def createMPLengthOne(pList, path) :
 	pNames = pList.keys()
 	pNames.sort()
 	for p in pNames :
-		saveMatrixNumpy(pList[p], str(mNum).zfill(keyZPad), path)
+		saveMatrixNumpy(pList[p], str(mNum).zfill(keyZPad), path, True)
+		SxyMatrix = calcPathSimMatrix(pList[p])
+		saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
 		mDict[p] = [mNum, False]
 		mNum += 1
 	#end loop
@@ -1668,7 +1713,9 @@ def createMPLengthTwo(pList, path) :
 			# Create new matrix if file doesn't already exist
 			if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
 				newM = np.dot(pList[p1], pList[p2])
-				saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
+				saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
+				SxyMatrix = calcPathSimMatrix(newM)
+				saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
 			#end if
 
 			# Add the matrix name & number to mDict
@@ -1733,7 +1780,9 @@ def createMPLengthThree(pList, path) :
 						temp = np.dot(pList[p1], pList[p2])
 						newM = np.dot(temp, pList[p3])
 						# Save the data
-						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
+						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
+						SxyMatrix = calcPathSimMatrix(newM)
+						saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
 					#end if
 
 					mDict[name] = [mNum, False]
@@ -1742,7 +1791,9 @@ def createMPLengthThree(pList, path) :
 					if nameRev not in checkSet :
 						checkSet.add(nameRev)
 						# Save the data
-						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
+						saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
+						SxyMatrix = calcPathSimMatrix(newM)
+						saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
 						mDict[nameRev] = [mNum, True]
 					#end if
 				#end if
@@ -1811,7 +1862,9 @@ def createMPLengthFour(pList, path) :
 							temp2 = np.dot(temp1, pList[p3])
 							newM = np.dot(temp2, pList[p4])
 							# Save the data
-							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
+							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
+							SxyMatrix = calcPathSimMatrix(newM)
+							saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
 						#end if
 
 						mDict[name] = [mNum, False]
@@ -1820,7 +1873,9 @@ def createMPLengthFour(pList, path) :
 						if nameRev not in checkSet :
 							checkSet.add(nameRev)
 							# Save the data
-							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path)
+							saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
+							SxyMatrix = calcPathSimMatrix(newM)
+							saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
 							mDict[nameRev] = [mNum, True]
 						#end if
 					#end if

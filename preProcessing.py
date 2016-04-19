@@ -35,6 +35,7 @@ if not useRealData :
 #	ename = 'fakeNtwk00_g2e3t10'
 	ename = 'fakeNtwk00'
 	epath = 'networks/'
+#	epath = '../Dropbox/mp/networksFake/'
 else :
 #	ename = all_v1
 	ename = 'toy2_hsa'
