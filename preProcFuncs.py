@@ -57,6 +57,7 @@ import gzip
 
 # Data type used when loading edge file to memory:
 nodeDT = np.dtype('a30')
+nodeDTSize = 30
 # Whether to use the data-type for the matrices:
 speedVsMemory = False	# True favors speed, disables dtype
 # Data-type for the path matrices:
@@ -100,7 +101,7 @@ def readKeepFile(fname) :
 
 	# Make sure the keep file exists
 	if not os.path.isfile(fname) :
-		print "Please create a keep file: ", fname
+		print("Please create a keep file: ", fname)
 		sys.exit()
 	#end if
 
@@ -110,15 +111,18 @@ def readKeepFile(fname) :
 	loseGenes = list()
 	keepEdges = list()
 	indirEdges = list()
+	tHold = 0.0
 
 	# Read the file
-	f = open(fname, "rb")
+#	f = open(fname, "rb")
+	f = open(fname, "r")
 	line = f.readline()    # throw away the first line
 
 	section = 'header'		# the section of the file being read
 
 	# read file line by line
 	for line in f :
+#		line = str(line)
 		line = line.rstrip()
 		if line == '':
 			continue
@@ -174,26 +178,37 @@ def readKeepFile(fname) :
 def readEdgeFile(datafile) :
 
 	# get the number of lines in the file
-	nLines = sum( 1 for line in open(datafile, "rb") )
+	nLines = sum( 1 for line in open(datafile, "r") )
 
 	# assign space for edge list
 	Edges = np.empty( (nLines,4), dtype=nodeDT)
+#	Edges = np.char.array( (nLines,4), itemsize=nodeDTSize )
 
 	# dictionary to hold Node indices
 	Nodes = dict()
 	nodeSet = set()
 
 	# Start reading from the file
-	df = open(datafile, "rb")
+#	df = open(datafile, "rb")
+	df = open(datafile, "r")
 
 	i = 0
 	for line in df:
 		# extract the data from the file
+#		line = line.decode('UTF-8')
+#		print(line)
+
 		line = line.rstrip()
 		lv = line.split('\t')
 
+#		print(lv[0])
+
+#		temp = lv[1]
+
 		# insert into the edge list
 		Edges[i,0] = lv[0]
+#		Edges[i,0] = str(lv[0], encoding='utf-8')
+#		print(np.char.decode(Edges[i,0], 'ascii'))
 		Edges[i,1] = lv[1]
 		Edges[i,2] = lv[2]
 		Edges[i,3] = lv[3]
@@ -221,7 +236,10 @@ def readEdgeFile(datafile) :
 	df.close()
 
 	if verbose :
-	    print "  file contained {:,} lines".format(nLines)
+	    print("  file contained {:,} lines".format(nLines))
+
+	# Decode the edge array from type=bytes to type=str
+	Edges = np.char.decode(Edges, 'ascii')
 
 	return Edges, Nodes
 #end def ######## ######## ########
@@ -243,7 +261,7 @@ def applyCorrections(edges, fname) :
 
 	# Make no changes if no file found
 	if not os.path.isfile(fname) :
-		print "No file found, no corrections made."
+		print("No file found, no corrections made.")
 		return #edges
 	#end if
 
@@ -251,7 +269,8 @@ def applyCorrections(edges, fname) :
 	checkSet = set()
 	fixList = list()	# column 2
 
-	cf = open(fname, "rb")
+#	cf = open(fname, "rb")
+	cf = open(fname, "r")
 	index = 0
 	for line in cf :
 		line = line.rstrip()
@@ -264,8 +283,8 @@ def applyCorrections(edges, fname) :
 	#end loop
 
 	if verbose :
-		print checkSet
-		print edges.shape
+		print(checkSet)
+		print(edges.shape)
 
 	for i in range(0, edges.shape[0]) :
 		if edges[i,0] in checkSet :
@@ -311,11 +330,11 @@ def applyNormalization(edges, lowBound) :
 
 
 	if verbose :
-		print "Normalizing edge type ..."
+		print("Normalizing edge type ...")
 	# Normalize values within each edge type in the graph
 	for et in eTypes :
 		if verbose :
-			print "    {}".format(et)
+			print("    {}".format(et))
 
 		# extract the edge weights for only this edge type
 		weightStr = edges[edges[:,3]==et, 2]
@@ -372,9 +391,9 @@ def applyThreshold(edges, threshold) :
 
 	# ERROR CHECK: threshold meant to be applied after normalization
 	if threshold > 1 :
-		print ("WARNING: threshold value {}".format(threshold)
+		print("WARNING: threshold value {}".format(threshold)
 			+ " is outside the normalized range.")
-		print ("    If network has been normalized, all"
+		print("    If network has been normalized, all"
 			+ " edges will be kept.")
 	#end if
 
@@ -389,7 +408,7 @@ def applyThreshold(edges, threshold) :
 
 	# ERROR CHECK: If no edges are above threshold value ...
 	if count == 0 :
-		print ("\nWARNING: No edge weights above threshold"
+		print("\nWARNING: No edge weights above threshold"
 			+ " {}, returning unaltered array.\n".format(threshold))
 		return edges
 	#end if
@@ -411,6 +430,8 @@ def applyThreshold(edges, threshold) :
 	if threshold <= 0 :
 		return edges
 	else :
+		# Decode the edge array from type=bytes to type=str
+		newEdges = np.char.decode(newEdges, 'ascii')
 		return newEdges
 #end def ######## ######## ########
 
@@ -629,8 +650,10 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 	# Save output: row indices for each node in edge file
 	gfile = 'genes.txt'
 	nfile = 'indices.txt'
-	gf = open(newPath + gfile, 'wb')
-	nf = open(newPath + nfile, 'wb')
+	gf = open(newPath + gfile, 'w')
+	nf = open(newPath + nfile, 'w')
+#	gf = open(newPath + gfile, 'wb')
+#	nf = open(newPath + nfile, 'wb')
 	first = True
 	for gene in gList :
 
@@ -667,7 +690,8 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 	eTypes.sort()
 
 	efile = 'edges.txt'
-	ef = open(newPath + efile, 'wb')
+	ef = open(newPath + efile, 'w')
+#	ef = open(newPath + efile, 'wb')
 
 	first = True
 	for et in eTypes :
@@ -684,7 +708,8 @@ def writeModEdgeFilePlus(path, oname, nDict, gList, eArray) :
 
 	# Save output: the network (as an edge list)
 	ofile = 'network.txt'
-	of = open(newPath + ofile, 'wb')
+	of = open(newPath + ofile, 'w')
+#	of = open(newPath + ofile, 'wb')
 
 	first = True
 	for i in range(0, eArray.shape[0]) :
@@ -902,7 +927,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				thisM = np.zeros([numG,numG], dtype=dt)
 			#end if
 			if verbose :
-				print "    building {}, at {} bytes".format(et, thisM.nbytes)
+				print("    building {}, at {} bytes".format(et, thisM.nbytes))
 
 			count = 0
 			for term in term_sm :
@@ -946,7 +971,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				# ERROR CHECK: verify counts fit within
 				#	specified data type
 				if np.amax(thisM) > warnVal :
-					print ("WARNING: Path counts exceed" +
+					print("WARNING: Path counts exceed" +
 						"{}, change data-type.".format(warnVal))
 				#end if
 
@@ -1005,7 +1030,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				# ERROR CHECK: verify counts fit within
 				#	specified data type
 				if np.amax(thisM) > warnVal :
-					print ("WARNING: Path counts exceed" +
+					print("WARNING: Path counts exceed" +
 						"{}, change data-type.".format(warnVal))
 				#end if
 
@@ -1063,7 +1088,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 				# ERROR CHECK: verify counts fit within
 				#	specified data type
 				if np.amax(thisM) > warnVal :
-					print ("WARNING: Path counts exceed" +
+					print("WARNING: Path counts exceed" +
 						"{}, change data-type.".format(warnVal))
 				#end if
 				
@@ -1109,7 +1134,7 @@ def createMatrixList(eArray, kEdges, iEdges, gList,
 			# ERROR CHECK: verify counts fit within
 			#	specified data type
 			if np.amax(thisM) > warnVal :
-				print ("WARNING: Path counts exceed" +
+				print("WARNING: Path counts exceed" +
 					"{}, change data-type.".format(warnVal))
 			#end if
 				
@@ -1151,9 +1176,16 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 	iEdges.sort()
 	kEdges.sort()
 
+#	print(iEdges)
+#	print(kEdges)
+#	print(eArray)
 
 	# Start creating matrices
 	for et in kEdges :
+
+		if verbose :
+			print("  creating primary matrix {}".format(et))
+		#end if
 
 		# Convert indirect edges to direct
 		if et in iEdges :
@@ -1185,7 +1217,7 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 			#end if
 
 			if verbose :
-				print "    building {}, at {} bytes".format(et, thisM.nbytes)
+				print("    building {} (indirect), at {} bytes".format(et, thisM.nbytes))
 #TODO: build from here.
 			count = 0
 			for term in termDict.keys() :
@@ -1224,9 +1256,14 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 			#end if
 
 			if verbose :
-				print "    building {}, at {} bytes".format(et, thisM.nbytes)
+				print("    building {} (direct), at {} bytes".format(et, thisM.nbytes))
 			#end if
 			
+
+			print(eArray)
+			print(eArray[:,3])
+
+
 			count = 0
 			thisArray = eArray[eArray[:,3]==et]
 			# increment entry at (i,j) = (gene0,gene1)
@@ -1386,7 +1423,8 @@ def saveMatrixList(mList, mGenes, mpath) :
 
 	# This file gives the corresponding gene names for
 	#	each row/col of the matrix (rows & cols are same)
-	fgene = open(mpath+"genes.txt", "wb")
+	fgene = open(mpath+"genes.txt", "w")
+#	fgene = open(mpath+"genes.txt", "wb")
 	firstline = True
 	for gene in mGenes :
 		if firstline :
@@ -1398,9 +1436,10 @@ def saveMatrixList(mList, mGenes, mpath) :
 	#end if
 
 	# This file tells which matrix corresponds to which path
-	fkey = open(mpath+"key.txt", "wb")
+	fkey = open(mpath+"key.txt", "w")
+#	fkey = open(mpath+"key.txt", "wb")
 
-	mNames = mList.keys()
+	mNames = list(mList.keys())
 	mNames.sort()
 	num = 0
 	firstline = True
@@ -1528,7 +1567,8 @@ def saveKeyFile(mDict, path) :
 	nameList.sort()
 
 	# This file tells which matrix corresponds to which path
-	fkey = open(path+"key.txt", "wb")
+	fkey = open(path+"key.txt", "w")
+#	fkey = open(path+"key.txt", "wb")
 	fkey.write("NOTE: 't' means use matrix transpose\n")
 	firstline = True
 	for name in nameList :
@@ -1566,7 +1606,8 @@ def saveGeneFile(mGenes, path) :
 
 	# This file gives the corresponding gene names for
 	#	each row/col of the matrix (rows & cols are same)
-	fgene = open(path+"genes.txt", "wb")
+	fgene = open(path+"genes.txt", "w")
+#	fgene = open(path+"genes.txt", "wb")
 	firstline = True
 	for gene in mGenes :
 		if firstline :
@@ -1636,7 +1677,7 @@ def readKeyFilePP(path) :
 	fname = path + "key.txt"
 	# ERROR CHECK: verify file exists
 	if not os.path.isfile(fname) :
-		print ( "ERROR: Specified file doesn't exist:" +
+		print( "ERROR: Specified file doesn't exist:" +
 			" {}".format(fname) )
 		sys.exit()
 	#end if
@@ -1645,7 +1686,8 @@ def readKeyFilePP(path) :
 	keyDict = dict()
 
 	# Read in the file
-	fk = open(fname, "rb")
+	fk = open(fname, "r")
+#	fk = open(fname, "rb")
 	firstline = True
 	for line in fk :
 		# skip the first line
@@ -1674,11 +1716,85 @@ def readKeyFilePP(path) :
 
 
 
+######## ######## ######## ######## 
+# Function: Load the matrix containing the number of paths
+#   of this type which join the nodes in the network
+# Input ----
+#   mpTuple [int, bool]: indicates which matrix file to use
+#   path, str: path to the network files
+#   name, str: name of the network to use
+# Returns ----
+#   matrix, int array: num paths between node pairs
+def getPathMatrix(mpTuple, path, name, sizeOf) :
+
+#	zpad = fnMatrixZPad
+	zpad = keyZPad
+#   fname = (path + name + "_MetaPaths/" +
+#       "{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+
+#	fname = str('')
+
+#TODO: adapt this to fit current situation
+#  maybe "if doesn't contain MetaPaths" ...
+
+#	prename = (path + name + "_MetaPaths/" +
+#		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+#	if os.path.isfile(prename + '.gz') :
+#		fname = (path + name + "_MetaPaths/" +
+#		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+#	elif os.path.isfile(prename + '.txt') :
+#		fname = (path + name + "_MetaPaths/" +
+#		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	prename = (path + name +
+		"{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = (path + name +
+		"{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = (path + name +
+		"{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}.txt/gz".format(str(mpTuple[0]).zfill(zpad)))
+		sys.exit()
+	#end if
+
+	# Load the matrix
+#   matrix = np.load(fname)
+#	matrix = np.loadtxt(fname)
+
+	# Declare the matrix
+	if speedVsMemory :
+		matrix = np.zeros([sizeOf, sizeOf])
+	else :
+		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+	#end if
+
+	# Read in the file, placing values into matrix
+	row = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			line = line.rstrip()
+			ml = line.split()
+			matrix[row,:] = ml[:]
+			row += 1
+	#end with
+
+	# Convert to transpose if flag==True
+	if mpTuple[1] :
+		return np.transpose(matrix)
+	else :
+		return matrix
+#end def ######## ######## ######## 
+
+
+
 def createMPLengthOne(pList, path) :
 	mNum = 0
 	mDict = dict()
 	# Create list of path names to loop over
-	pNames = pList.keys()
+	pNames = list(pList.keys())
 	pNames.sort()
 	for p in pNames :
 		saveMatrixNumpy(pList[p], str(mNum).zfill(keyZPad), path, True)
@@ -1695,7 +1811,7 @@ def createMPLengthTwo(pList, path) :
 	mNum = len(mDict)
 
 
-	pNames = pList.keys()
+	pNames = list(pList.keys())
 	pNames.sort()
 	for p1 in pNames :
 		for p2 in pNames :
@@ -1811,18 +1927,25 @@ def createMPLengthThreeFast(pList, path) :
 	# Read in the list of matrices already made
 	mDict = readKeyFilePP(path)
 #	mNum = len(mDict)+1
-	mNum = max(mDict.values()) + 1
+#	print( max(list(mDict.values())))
+#	mNum = max( list(mDict.values()) ) + 1
+	mNum = 0
+	for tup in mDict.values() :
+		mNum = max( mNum, tup[0] )
+	#end loop
+	mNum += 1
+#	print (mNum)
 
 	# Get the length-1 paths (primary paths)
-	l1Names = pList.keys()
+	l1Names = list(pList.keys())
 	l1Names.sort()
 
 	# Separate out the length-2 paths
 #	l1Names = list()
 	l2Names = list()
 	lOthers = list()
-	mNames = mDict.keys()
-	mnames.sort()
+	mNames = list(mDict.keys())
+	mNames.sort()
 	for p in mNames :
 		length = p.count('-') + 1
 		if length == 2 :
@@ -1839,11 +1962,11 @@ def createMPLengthThreeFast(pList, path) :
 	# end if
 
 	# ERROR CHECK: ensure lists aren't empty
-	if l1Names.empty() :
+	if len(l1Names) == 0 :
 		print("ERROR: no paths of length 1 found.")
 		sys.exit()
-	elif l2Names.empty() :
-		print("ERROR: no paths of length 1 found.")
+	elif len(l2Names) == 0 :
+		print("ERROR: no paths of length 2 found.")
 		sys.exit()
 	#end if
 
@@ -1869,7 +1992,9 @@ def createMPLengthThreeFast(pList, path) :
 			#end if
 
 			# Name of the reverse path
-			mNameRev = mNameSplit[::-1]
+#			mNameRev = mNameSplit[::-1]
+#TODO: there must be a cleaner way to do this
+			mNameRev = mNameSplit[2] + '-' + mNameSplit[1] + '-' + mNameSplit[0]
 
 			# Skip if this path was already calculated (is in checkSet)
 			if mName not in checkSet :
@@ -1889,7 +2014,7 @@ def createMPLengthThreeFast(pList, path) :
 				if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
 					# Calculate the new matrix
 					#	read in the length-2 from file (faster than re-calculate)
-					mTwo = getPathMatrix(mpDict[p2], path, '', mRows)
+					mTwo = getPathMatrix(mDict[p2], path, '', mRows)
 					mThree = np.dot(pList[p1], mTwo)
 
 					# Save the data
@@ -1911,7 +2036,7 @@ def createMPLengthFour(pList, path) :
 	mNum = len(mDict)
 
 
-	pNames = pList.keys()
+	pNames = list(pList.keys())
 	pNames.sort()
 	checkSet = set()
 	for p1 in pNames :
@@ -1993,10 +2118,9 @@ def createMPLengthFour(pList, path) :
 ######## ######## ######## ########
 # Function: save a list of matrices
 # Input ----
-#	pList, list of NxN matrices: the primary matrices
-#		ie: the 1-level path matrices
-#	pNames, dict
-#		key, str: metapath names
+#	pList, dict
+#		key, str: primary path names
+#				ie: the 1-level path matrices
 #		value, int: corresponding index number for mList
 #	mGenes, list of str: names of genes in the matrix
 #	mpath, str: path to the folder to save the file
@@ -2005,16 +2129,18 @@ def createMPLengthFour(pList, path) :
 #	folder. These are simply named numerically, with a
 #	key/legend file provided. The list of genes used as
 #	row/col headers is also saved to that folder.	
-def createMetaPaths(pList, gList, depth, path) :
-#def createMetaPaths(pList, pNames, gList, depth, path) :
+def createMetaPaths(pDict, gList, depth, path) :
+#def createMetaPaths(pDict, pNames, gList, depth, path) :
 
+	pNames = list(pDict.keys())
+	pNames.sort()
 
 	maxDepth = 4
 	if depth > maxDepth :
-		print ( "WARNING: Can only calculate up to " +
+		print( "WARNING: Can only calculate up to " +
 			"{}-step metapaths.".format(maxDepth) )
 	elif depth < 1 :
-		print ( "WARNING: Requested metapaths of length" +
+		print( "WARNING: Requested metapaths of length" +
 			" {};".format(depth) +
 			" Will return only 1-step paths.")
 		depth = 1
@@ -2038,12 +2164,12 @@ def createMetaPaths(pList, gList, depth, path) :
 	zpad = keyZPad
 
 	#ERROR CHECK: verify gene list & matrix dimensions
-	if len(gList) != pList[pList.keys()[0]].shape[0] :
-		print ( "ERROR: The provided list of genes" +
+	if len(gList) != pDict[pNames[0]].shape[0] :
+		print( "ERROR: The provided list of genes" +
 			" does not match the matrix. No paths created.")
 		return
-	elif pList[pList.keys()[0]].shape[0] != pList[pList.keys()[0]].shape[1] :
-		print ( "ERROR: The primary path matrix passed" +
+	elif pDict[pNames[0]].shape[0] != pDict[pNames[0]].shape[1] :
+		print( "ERROR: The primary path matrix passed" +
 			" is not square.")
 		return
 	#end if
@@ -2053,8 +2179,8 @@ def createMetaPaths(pList, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 1-step paths
-	createMPLengthOne(pList, path)
-	print "    finished creating paths of length 1"
+	createMPLengthOne(pDict, path)
+	print("    finished creating paths of length 1")
 
 	if depth < 2 :
 		return
@@ -2062,8 +2188,8 @@ def createMetaPaths(pList, gList, depth, path) :
 
 	#-------------------------------
 	## Create the 2-step paths
-	createMPLengthTwo(pList, path)
-	print "    finished creating paths of length 2"
+	createMPLengthTwo(pDict, path)
+	print("    finished creating paths of length 2")
 	
 	if depth < 3 :
 		return
@@ -2071,9 +2197,9 @@ def createMetaPaths(pList, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 3-step paths
-#	createMPLengthThree(pList, path)
-	createMPLengthThreeFast(pList, path)
-	print "    finished creating paths of length 3"
+#	createMPLengthThree(pDict, path)
+	createMPLengthThreeFast(pDict, path)
+	print("    finished creating paths of length 3")
 
 	if depth < 4 :
 		return
@@ -2081,8 +2207,8 @@ def createMetaPaths(pList, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 4-step paths
-	createMPLengthFour(pList, path)
-	print "    finished creating paths of length 4"
+	createMPLengthFour(pDict, path)
+	print("    finished creating paths of length 4")
 
 #	return mList, mDict
 	return
@@ -2111,7 +2237,7 @@ def getPrimaryMatrixGZip(mpTuple, path, name, sizeOf) :
 		"{}.txt".format(str(mpTuple[0]).zfill(keyZPad)) )
 	else :
 		# ERROR CHECK: verify file exists
-		print ( "ERROR: Specified file doesn't exist:" +
+		print( "ERROR: Specified file doesn't exist:" +
 			" {}".format(fname) )
 		sys.exit()
 	#end if
@@ -2172,7 +2298,7 @@ def readPrimaryMatrices(nPath, nName) :
 	# Check for folder existence
 	path = nPath + nName + "_Primaries/"
 	if not os.path.exists(path) :
-		print "ERROR: Path doesn't exist: {}".format(path)
+		print("ERROR: Path doesn't exist: {}".format(path))
 		sys.exit()
 	#end if
 
@@ -2188,7 +2314,7 @@ def readPrimaryMatrices(nPath, nName) :
 		lv = line.split('\t')
 
 		if verbose:
-			print "    reading matrix {}".format(lv[1])
+			print("    reading matrix {}".format(lv[1]))
 		#end if
 
 
@@ -2202,7 +2328,7 @@ def readPrimaryMatrices(nPath, nName) :
 		elif os.path.isfile( path + lv[0] + '.txt' ) :
 			fname = path + lv[0] + '.txt'
 		else :
-			print ("ERROR: Unknown file name and extension" +
+			print("ERROR: Unknown file name and extension" +
 				" for matrix {}.".format(lv[0]))
 			sys.exit()
 		#end if
@@ -2245,7 +2371,7 @@ def readPrimaryMatrices(nPath, nName) :
 #			elif os.path.isfile( path + lv[0] + '.txt' ) :
 #				pList.append( np.loadtxt(path + lv[0] + '.txt') )
 #			else :
-#				print ("ERROR: Unknown file name and extension" +
+#				print("ERROR: Unknown file name and extension" +
 #					" for matrix {}.".format(lv[0]))
 #				sys.exit()
 #			#end if
@@ -2255,7 +2381,7 @@ def readPrimaryMatrices(nPath, nName) :
 #			elif os.path.isfile( path + lv[0] + '.txt' ) :
 #				pList.append( np.loadtxt(path + lv[0] + '.txt', dtype=matrixDT) )
 #			else :
-#				print ("ERROR: Unknown file name and extension" +
+#				print("ERROR: Unknown file name and extension" +
 #					" for matrix {}.".format(lv[0]))
 #				sys.exit()
 #			#end if
@@ -2263,8 +2389,8 @@ def readPrimaryMatrices(nPath, nName) :
 
 		if verbose :
 #			print "    finished loading {}, total: {} bytes".format(lv[1], pList[len(pList)-1].nbytes)
-			print "    finished loading {}, total: {} bytes".format(lv[1], pList[lv[1]].nbytes)
-			print "    current time: {}".format( time.time() )
+			print("    finished loading {}, total: {} bytes".format(lv[1], pList[lv[1]].nbytes))
+			print("    current time: {}".format( time.time() ))
 	#end loop
 
 #	pNames.sort()
@@ -2342,15 +2468,16 @@ def saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex) :
 	fname = nPath+nName+'/node-degree.txt'
 	# ERROR CHECK: rename if file exists
 	if os.path.isfile(fname) :
-		print ( "WARNING: Specified file already exists:" +
+		print( "WARNING: Specified file already exists:" +
 			" {}".format(fname) )
 		i = 0
 		while os.path.isfile(fname) :
 			fname = nPath+nName+"/node-degree{:03d}.txt".format(i)
 			i += 1
-		print "    using new file name: {}".format(fname)
+		print("    using new file name: {}".format(fname))
 	#end if
-	outf = open(fname, 'wb')
+	outf = open(fname, 'w')
+#	outf = open(fname, 'wb')
 
 	# Write column headers
 	outf.write("HEADER{}all".format(textDelim))
@@ -2358,7 +2485,7 @@ def saveSelectGeneDegrees(nPath, nName, edgeArray, genesAll, humanRegex) :
 		outf.write("{}{}".format(textDelim, et))
 
 	# Write the matrix to file
-	gHumanList = gHumanDict.keys()
+	gHumanList = list(gHumanDict.keys())
 	gHumanList.sort()
 	for i in range(len(gHumanList)) :
 		outf.write( "\n{}".format(gHumanList[i]) )
