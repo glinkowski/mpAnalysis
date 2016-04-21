@@ -26,7 +26,7 @@
 #	createCountDict(aList)
 #	createMatrixList(eArray, kEdges, iEdges, gList,	nDict)
 #	saveMatrixText(matrix, mname, mpath, integer)
-#	saveMatrixNumpy(matrix, mname, mpath)
+#	saveMatrixNumpy(matrix, mname, mpath, integer)
 #	clearFilesInDirectory(path)
 #	saveMatrixList(mList, mNames, mGenes, mpath)
 #	saveMatrixListPlus(mList, mNames, mGenes, mpath)
@@ -1806,6 +1806,106 @@ def createMPLengthThree(pList, path) :
 	saveKeyFile(mDict, path)
 	return
 #end def ######## ######## ######## 
+def createMPLengthThreeFast(pList, path) :
+
+	# Read in the list of matrices already made
+	mDict = readKeyFilePP(path)
+#	mNum = len(mDict)+1
+	mNum = max(mDict.values()) + 1
+
+	# Get the length-1 paths (primary paths)
+	l1Names = pList.keys()
+	l1Names.sort()
+
+	# Separate out the length-2 paths
+#	l1Names = list()
+	l2Names = list()
+	lOthers = list()
+	mNames = mDict.keys()
+	mnames.sort()
+	for p in mNames :
+		length = p.count('-') + 1
+		if length == 2 :
+			l2Names.append(p)
+#		elif length == 1 :
+#			l1Names.append(p)
+		elif length > 2 :
+			lOthers.append(p)
+	#end loop
+
+	if len(lOthers) > 0 :
+		print("WARNING: in createMPLengthThreeFast(), list of metapath names" +
+				" contains {} that are greater than length-2.".format(len(lOthers)))
+	# end if
+
+	# ERROR CHECK: ensure lists aren't empty
+	if l1Names.empty() :
+		print("ERROR: no paths of length 1 found.")
+		sys.exit()
+	elif l2Names.empty() :
+		print("ERROR: no paths of length 1 found.")
+		sys.exit()
+	#end if
+
+	# the number of rows in the matrix (for later)
+	mRows = pList[l1Names[0]].shape[0]
+
+	# Create the length-3 matrices
+	checkSet = set()
+	for p1 in l1Names :
+		for p2 in l2Names :
+
+			mName = p1+'-'+p2
+			mNameSplit = mName.split('-')
+
+			# Optional: skip 2 consecutive edges
+			if not keepDouble :
+				if (mNameSplit[0] == mNameSplit[1]) or (mNameSplit[1] == mNameSplit[2]) :
+					continue
+			# Optional: skip 3 consecutive edges
+			if not keepTriple :
+				if (mNameSplit[0] == mNameSplit[1]) and (mNameSplit[1] == mNameSplit[2]) :
+					continue
+			#end if
+
+			# Name of the reverse path
+			mNameRev = mNameSplit[::-1]
+
+			# Skip if this path was already calculated (is in checkSet)
+			if mName not in checkSet :
+				checkSet.add(mName)
+				mDict[mName] = [mNum, False]
+
+				# Check the reverse path (the transpose)
+				if mNameRev not in checkSet :
+					checkSet.add(mNameRev)
+					mDict[mNameRev] = [mNum, True]
+				#end if
+
+				# NOTE: the file may already exist but not be in mDict
+				#	ie: the process was interrupted, and key.txt wasn't updated
+
+				# Create new matrix (if file doesn't already exist)
+				if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
+					# Calculate the new matrix
+					#	read in the length-2 from file (faster than re-calculate)
+					mTwo = getPathMatrix(mpDict[p2], path, '', mRows)
+					mThree = np.dot(pList[p1], mTwo)
+
+					# Save the data
+					saveMatrixNumpy(mThree, str(mNum).zfill(keyZPad), path, True)
+					SxyMatrix = calcPathSimMatrix(mThree)
+					saveMatrixNumpy(SxyMatrix, 'Sxy-'+str(mNum).zfill(keyZPad), path, False)
+				#end if
+			#end if
+
+			mNum += 1
+		#end loop
+	#end loop
+
+	saveKeyFile(mDict, path)
+	return
+#end def ######## ######## ######## 
 def createMPLengthFour(pList, path) :
 	mDict = readKeyFilePP(path)
 	mNum = len(mDict)
@@ -1971,7 +2071,8 @@ def createMetaPaths(pList, gList, depth, path) :
 
 	#-------------------------------
 	# Create the 3-step paths
-	createMPLengthThree(pList, path)
+#	createMPLengthThree(pList, path)
+	createMPLengthThreeFast(pList, path)
 	print "    finished creating paths of length 3"
 
 	if depth < 4 :
