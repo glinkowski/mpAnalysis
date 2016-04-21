@@ -77,6 +77,8 @@ print("    reading in the edge file", efile)
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
 print("    initial edgeArray size: {} bytes".format(edgeArray.nbytes))
 
+#print("edgeArray: \n", edgeArray)
+#print("nodeDict: \n", nodeDict)
 
 # Read in the corrections file
 #   if not there, skip corrections, alert user
@@ -94,11 +96,11 @@ pp.applyNormalization(edgeArray, 0)
 print("Thresholding weights at {}".format(thresh))
 edgeArray = pp.applyThreshold(edgeArray, thresh)
 
+
 # Discard specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 	keepEdges, indirEdges)
 print("    final edgeArray size: {} bytes".format(edgeArray.nbytes))
-
 
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
