@@ -65,22 +65,22 @@ tstart = time.time()
 
 # Read in the keep file
 #	if not there, ask to have it created
-print "\nReading in the network:", ename
-print "    reading the keep file", kfile
+print("\nReading in the network:", ename)
+print("    reading the keep file", kfile)
 geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
 #print keepGenes
 #print keepEdges
 #print indirEdges
 
 # Read in the network (edge file) to a matrix
-print "    reading in the edge file", efile
+print("    reading in the edge file", efile)
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
-print "    initial edgeArray size: {} bytes".format(edgeArray.nbytes)
+print("    initial edgeArray size: {} bytes".format(edgeArray.nbytes))
 
 
 # Read in the corrections file
 #   if not there, skip corrections, alert user
-print "Applying corrections to spelling ..."
+print("Applying corrections to spelling ...")
 pp.applyCorrections(edgeArray, epath+cfile)
 
 
@@ -88,19 +88,19 @@ pp.applyCorrections(edgeArray, epath+cfile)
 # 1b) Apply normalization, thresholding, discard unwanteds
 
 # Normalize weights
-print "Normalizing weights by edge type ..."
+print("Normalizing weights by edge type ...")
 pp.applyNormalization(edgeArray, 0)
 # Apply threshold to normalized edges
-print "Thresholding weights at {}".format(thresh)
+print("Thresholding weights at {}".format(thresh))
 edgeArray = pp.applyThreshold(edgeArray, thresh)
 
 # Discard specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
 	keepEdges, indirEdges)
-print "    final edgeArray size: {} bytes".format(edgeArray.nbytes)
+print("    final edgeArray size: {} bytes".format(edgeArray.nbytes))
 
 
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
@@ -112,7 +112,7 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
 # Save the edge list, node dict, gene list
 outname = pp.createModEdgeFileName(ename, keepEdges,
 	keepGenes, thresh)
-print "Saving modified network to {}.network.txt".format(outname)
+print("Saving modified network to {}.network.txt".format(outname))
 pp.writeModEdgeFilePlus(epath, outname,
 	nodeDict, geneList, edgeArray)
 
@@ -120,37 +120,37 @@ pp.writeModEdgeFilePlus(epath, outname,
 pp.saveSelectGeneDegrees(epath, outname, edgeArray, geneList, geneHuman)
 
 
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
 # 3) Find the primary path matrices
 
 # Change indirect edges to direct
-print "Creating the primary gene-gene matrices ..."
+print("Creating the primary gene-gene matrices ...")
 matrixList = pp.createMatrixListNoBinning(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
 
 # Save the primary matrices
 primpath = epath + outname + "_Primaries/"
-print "    ... saving to: {}".format(primpath)
+print("    ... saving to: {}".format(primpath))
 pp.saveMatrixList(matrixList, geneList, primpath)
 
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
 # 4) Calculate the specified metapaths
 
-print "Determining metapaths, up to length {}".format(mpDepth)
+print("Determining metapaths, up to length {}".format(mpDepth))
 # folder/path to save output
 mpPath = epath + outname + "_MetaPaths/"
-print "    ... and saving to: {}".format(mpPath)
+print("    ... and saving to: {}".format(mpPath))
 # Find paths up to length = mDepth
 pp.createMetaPaths(matrixList, geneList, mpDepth, mpPath)
 
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
-print "\nDone.\n"
+print("\nDone.\n")
