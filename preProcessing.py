@@ -29,7 +29,7 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-useRealData = False
+useRealData = True
 
 if not useRealData :
 #	ename = 'fakeNtwk00_g2e3t10'
@@ -37,14 +37,14 @@ if not useRealData :
 	epath = 'networks/'
 #	epath = '../Dropbox/mp/networksFake/'
 else :
-#	ename = all_v1
-	ename = 'toy2_hsa'
+	ename = 'all_v1'
+#	ename = 'toy2_hsa'
 	epath = '../Dropbox/mp/networks/'
 #end if
 
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 4
+mpDepth = 3
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -65,15 +65,15 @@ tstart = time.time()
 
 # Read in the keep file
 #	if not there, ask to have it created
-print("\nReading in the network:", ename)
-print("    reading the keep file", kfile)
+print("\nReading in the network: {}".format(ename))
+print("    reading the keep file {}".format(kfile))
 geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(epath+kfile)
 #print keepGenes
 #print keepEdges
 #print indirEdges
 
 # Read in the network (edge file) to a matrix
-print("    reading in the edge file", efile)
+print("    reading in the edge file {}".format(efile))
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
 print("    initial edgeArray size: {} bytes".format(edgeArray.nbytes))
 
