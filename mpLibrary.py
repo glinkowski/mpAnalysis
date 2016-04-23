@@ -108,9 +108,9 @@ def setParamVerbose(newVal) :
 def setParamTextDelim(newVal) :
 	global textDelim
 
-	if str(newVal == '-1') :
+	if str(newVal) == '-1' :
 		textDelim = textDelim
-	elif str(newVal == '-2') :
+	elif str(newVal) == '-2' :
 		textDelim = '\t'
 	else :
 		textDelim = str(newVal)
@@ -122,19 +122,32 @@ def setParamFileZeroPad(newMval, newOval) :
 	global fnMatrixZPad
 	global fnOutputZPad
 
-	if str(newMval == -1) :
+	if newMval == -1 :
 		fnMatrixZPad = fnMatrixZPad
-	elif str(newMval == -2) :
+	elif newMval == -2 :
 		fnMatrixZPad = 5
 	else :
 		fnMatrixZPad = newMval
 	#end if
-	if str(newOval == -1) :
+	if newOval == -1 :
 		fnOutputZPad = fnOutputZPad
-	elif str(newOval == -2) :
+	elif newOval == -2 :
 		fnOutputZPad = 3
 	else :
 		fnOutputZPad = newMval
+	#end if
+
+	return
+#end def ######## ######## ######## 
+def setParamMatrixDT(newVal) :
+	global matrixDT
+
+	if newVal == -1 :
+		matrixDT = matrixDT
+	elif newVal == -2 :
+		matrixDT = np.float32
+	else :
+		matrixDT = newVal
 	#end if
 
 	return
