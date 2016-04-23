@@ -36,7 +36,7 @@ import random
 
 
 # Input names & locations
-useNtwk = 1		# network & samples to use (0 means fake)
+useNtwk = 0		# network & samples to use (0 means fake)
 
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
@@ -59,8 +59,9 @@ writeOutput = True
 
 # File names for similarity metrics
 #fGroupNorm = 'Pxy.gz'
-fGroupNorm = 'Pxy-mod-norm.gz'
-fOrigSum = 'SxySum.gz'
+#fGroupNorm = 'Pxy-mod-norm.gz'
+#fOrigSum = 'SxySum.gz'
+fSimilarity = 'SxySum.gz' # SxySum.gz or Pxy.gz
 
 
 # how to sample negative train/test set
@@ -127,6 +128,11 @@ for si in dSubDirs :
 	# Read in the (modified) group PathSim matrix
 	vectG = mp.readFileAsMatrix(si, fGroupNorm)
 	vectO = mp.readFileAsMatrix(si, fOrigSum)
+
+
+
+
+
 
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
 	gKnown = mp.readFileAsList(si+'known.txt')
