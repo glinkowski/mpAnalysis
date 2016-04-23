@@ -58,10 +58,8 @@ writeOutput = True
 
 
 # File names for similarity metrics
-#fGroupNorm = 'Pxy.gz'
-#fGroupNorm = 'Pxy-mod-norm.gz'
-#fOrigSum = 'SxySum.gz'
-fSimilarity = 'SxySum.gz' # SxySum.gz or Pxy.gz
+fSimilarity = 'SxySum.gz' 
+	# SxySum.gz or Pxy.gz
 
 
 # how to sample negative train/test set
@@ -126,7 +124,7 @@ for si in dSubDirs[4:6] :
 
 	# Display directory to examine
 	sv = si.split('/')
-	print("\n{}".format(sv[-1]))
+	print("\n{}/{}/".format(sv[-3],sv[-2]))
 
 
 
@@ -139,22 +137,11 @@ for si in dSubDirs[4:6] :
 	features = mp.readFileAsMatrix(si, fSimilarity)
 	mp.setParamMatrixDT(-2)
 
-#	print(features)
-
 	# Remove the mean, set L2 norm = 1
 	featMean = np.mean(features, axis=0)
 	features = np.subtract(features, featMean)
-
-#	print(featMean)
-#	print(features)
-
 	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
 	features = np.divide(features, featAbsMax)
-
-#	print(featAbsMax)
-#	print(features)
-
-
 
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
 	gKnown = mp.readFileAsList(si+'known.txt')
@@ -163,22 +150,14 @@ for si in dSubDirs[4:6] :
 	giHidden = mp.convertToIndices(gHidden, geneDict)
 	giUnknown = [g for g in geneDict.values() if g not in giKnown]
 	giTrueNeg = [g for g in giUnknown if g not in giHidden]
-	print len(gKnown), len(gHidden), len(giUnknown), len(giTrueNeg)
+#	print len(gKnown), len(gHidden), len(giUnknown), len(giTrueNeg)
 
 	# Extract the vectors for the pos sets
 	posTrain = features[giKnown,:]
 	posTest = features[giHidden,:]
-#	posTrainG = vectG[giKnown,:]
-#	posTestG = vectG[giHidden,:]
-
-#	posTrainO = vectO[giKnown,:]
-#	posTestO = vectO[giHidden,:]
 
 	posTrainLabel = np.ones( (len(giKnown), 1) )
-#	posTrainLabel = np.ones(len(giKnown))
-
 	posTestLabel = np.ones( (len(giHidden), 1) )
-#	posTestLabel = np.ones(len(giHidden))
 
 
 	# Extract the vectors for the neg sets
@@ -190,13 +169,9 @@ for si in dSubDirs[4:6] :
 		giTrainNeg = random.sample(giUnknown, nExamples)
 
 		negTrain = features[giTrainNeg]
-#		negTrainG = vectG[giTrainNeg]
-#		negTrainO = vectO[giTrainNeg]
 		negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * -1
 
 		negTest = features[giTrueNeg]
-#		negTestG = vectG[giTrueNeg]
-#		negTestO = vectO[giTrueNeg]
 		negTestLabel = np.ones( (len(giTrueNeg), 1) ) * -1
 
 		giTest = np.hstack( (giHidden, giTrueNeg) )
@@ -208,13 +183,9 @@ for si in dSubDirs[4:6] :
 		giTestNeg = [g for g in giTrueNeg if g not in giTrainNeg]
 
 		negTrain = features[giTrainNeg]
-#		negTrainG = vectG[giTrainNeg]
-#		negTrainO = vectO[giTrainNeg]
 		negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * -1
 
 		negTest = features[giTestNeg]
-#		negTestG = vectG[giTestNeg]
-#		negTestO = vectO[giTestNeg]
 		negTestLabel = np.ones( (len(giTestNeg), 1) ) * -1
 
 		giTest = np.hstack( (giHidden, giTestNeg) )
@@ -223,13 +194,9 @@ for si in dSubDirs[4:6] :
 
 	# Combine to create the full train & test data setsa
 	trainSet = np.vstack( (posTrain, negTrain) )
-#	trainG = np.vstack( (posTrainG, negTrainG) )
-#	trainO = np.vstack( (posTrainO, negTrainO) )
 	trainLabel = np.vstack( (posTrainLabel, negTrainLabel) )
 
 	testSet = np.vstack( (posTest, negTest) )
-#	testG = np.vstack( (posTestG, negTestG) )
-#	testO = np.vstack( (posTestO, negTestO) )
 	testLabel = np.vstack( (posTestLabel, negTestLabel) )
 
 
@@ -257,61 +224,6 @@ for si in dSubDirs[4:6] :
 
 	cfPredLabel = cfLasso.predict(testSet)
 
-#	lassoG = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
-#	 	positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
-##	lassoG = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
-##		positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
-##	lassoG = lm.ElasticNetCV(max_iter=lMaxIter, normalize=lNorm,
-##	 	positive=lPos, fit_intercept=lFitIcpt)
-#	lassoG.fit(trainG, trainLabel)
-
-#
-#	# How well does it work ??
-#	# Get score from training data
-#	scoreG = lassoG.score(trainG, trainLabel)
-#	print("On training data {}, score: {}".format(fGroupNorm, scoreG))
-#	print("  using {} coefficients".format( len(np.nonzero(lassoG.coef_)[0]) ))
-
-#
-#	# On the full set ?? ...
-#	scoreG = lassoG.score(testG, testLabel)
-#	print("On test data {}, score: {}".format(fGroupNorm, scoreG))
-#	predLabelG = lassoG.predict(testG)
-##	print("Some labels for the hidden set:")
-###	print(predLabel[0:len(posTestLabel)])
-##	print(predLabel[0:5])
-##	print("Some labels for the true neg set:")
-##	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
-
-#
-#	# Train LASSO (2nd metric)
-##TODO: exp w/ diff types: LassoCV, ElasticNet, MultiTaskElasticNet, MultiTaskLasso ..?
-#	lassoO = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
-#		positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
-##	lassoO = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
-##		positive=lPos, fit_intercept=lFitIcpt, selection=lSelctn)
-##	lassoO = lm.ElasticNetCV(max_iter=lMaxIter, normalize=lNorm,
-##		positive=lPos, fit_intercept=lFitIcpt)
-#	lassoO.fit(trainO, trainLabel)
-
-#
-#	# How well does it work ??
-#	# Oet score from training data
-#	scoreO = lassoO.score(trainO, trainLabel)
-#	print("On training data {}, score: {}".format(fOrigSum, scoreO))
-#	print("  using {} coefficients".format( len(np.nonzero(lassoO.coef_)[0]) ))
-
-#
-#	# On the full set ?? ...
-#	scoreO = lassoO.score(testO, testLabel)
-#	print("On test data {}, score: {}".format(fOrigSum, scoreO))
-#	predLabelO = lassoO.predict(testO)
-##	print("Some labels for the hidden set:")
-###	print(predLabel[0:len(posTestLabel)])
-##	print(predLabel[0:5])
-##	print("Some labels for the true neg set:")
-##	print(predLabel[len(posTestLabel):(len(posTestLabel) + 5)])
-
 
 
 	# ####### ####### ####### #######
@@ -326,7 +238,6 @@ for si in dSubDirs[4:6] :
 		# Output the feature coefficients (mp weights)
 		#	for the first metric
 		cfCoefs = np.nonzero(cfLasso.coef_)[0]
-	#	print(iCoefGroup[0])
 		cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
 		row = 0
 		for c in cfCoefs :
@@ -335,10 +246,9 @@ for si in dSubDirs[4:6] :
 		cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 		# write the file
-		fPrefix = 'top_paths_Lasso-'+fSimilarity.rstrip('.txtgz')
+		fPrefix = 'ranked_paths_Lasso-'+fSimilarity.rstrip('.txtgz')
 		fname = mp.nameOutputFile(si, fPrefix)
 		print("Saving top paths to file {}".format(fname))
-	#	print("  in directory {}".format(si))
 		with open(si+fname, 'wb') as fout :
 			fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
 				'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
@@ -347,31 +257,6 @@ for si in dSubDirs[4:6] :
 				fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
 					textDelim, pathNames[cfPaths['path'][row]]))
 		#end with
-
-#		# Output the feature coefficients (mp weights)
-#		#	for the second metric
-#		iCoefOrig = np.nonzero(lassoO.coef_)[0]
-#		pOrig = np.recarray( len(iCoefOrig), dtype=[('path', 'i4'), ('weight', 'f4')] )
-#		row = 0
-#		for c in iCoefOrig :
-#			pOrig[row] = (c, lassoO.coef_[c])
-#			row += 1
-#		pOrig[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
-#
-#		# write the file
-#		fPrefix = 'top_paths_Lasso-'+fOrigSum.rstrip('.txtgz')
-#		fname = mp.nameOutputFile(si, fPrefix)
-#		print("Saving top paths to file {}".format(fname))
-#	#	print("  in directory {}".format(si))
-#		with open(si+fname, 'wb') as fout :
-#			fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-#				'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
-#				'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
-#			for row in xrange(len(pOrig)) :
-#				fout.write('\n{}{}{}'.format(pOrig['weight'][row],
-#					textDelim, pathNames[pOrig['path'][row]]))
-#		#end with
-
 	#end if
 
 
@@ -407,28 +292,6 @@ for si in dSubDirs[4:6] :
 					textDelim, geneList[cfGenes['gene'][row]]))
 				firstRow = False
 		#end with
-
-#		# Sort the genes by (inverse) rank
-#		#	second metric
-#		rGenesO = np.recarray( len(predLabelO), dtype=[('gene', 'i4'), ('rank', 'f4')] )
-#		rGenesO['gene'] = giTest
-#		rGenesO['rank'] = predLabelO
-#		rGenesO[::-1].sort(order=['rank','gene'])
-#
-#		# write the file
-#		fPrefix = 'ranked_genes-'+fOrigSum.rstrip('.txtgz')
-#		fname = mp.nameOutputFile(si, fPrefix)
-#		print("Saving ranked genes to file {}".format(fname))
-#		with open(si+fname, 'wb') as fout :
-#			firstRow = True
-#			for row in xrange(len(rGenesO)) :
-#				if not firstRow :
-#					fout.write('\n')
-#				fout.write('{:3.3f}{}{}'.format(rGenesO['rank'][row],
-#					textDelim, geneList[rGenesO['gene'][row]]))
-#				firstRow = False
-#		#end with
-
 	#end if
 
 
@@ -441,8 +304,6 @@ for si in dSubDirs[4:6] :
 
 		textDelim = '\t'
 
-#		fPrefix = 'parameters-'+fGroupNorm.rstrip('.txtgz')
-#		fname = mp.nameOutputFile(si, fPrefix)
 		fname = mp.nameOutputFile(si, 'parameters')
 		print("Saving params & stats to file {}".format(fname))
 		with open(si+fname, 'wb') as fout :
@@ -471,14 +332,6 @@ for si in dSubDirs[4:6] :
 			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLasso.score(trainSet, trainLabel)))
 			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLasso.score(testSet, testLabel)))
 			fout.write('\n')
-
-#			fout.write('Similarity Metric:{}{}\n'.format(textDelim, fOrigSum))
-#			fout.write('Prediction Results\n')
-#			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(lassoO.coef_)[0])))
-#			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, lassoO.score(trainO, trainLabel)))
-#			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, lassoO.score(testO, testLabel)))
-#			fout.write('\n')
-
 		#end with
 	#end if
 
