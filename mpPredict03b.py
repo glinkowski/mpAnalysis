@@ -36,7 +36,7 @@ import random
 
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
@@ -50,7 +50,7 @@ else :
 	ePath = '../Dropbox/mp/networks/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	dRoot = '../Dropbox/mp/output/'
-	dDir = 'pred03-batch-002'
+	dDir = 'pred03-batch-000'
 #end if
 
 # whether to write output files
@@ -63,16 +63,18 @@ fSimilarity = 'SxySum.gz'
 
 
 # how to sample negative train/test set
-sampleAsOneClass = True
+sampleAsOneClass = False
 
+# use .LassoCV vs .Lasso
+useLCV = True
 
 # LASSO params
 if sampleAsOneClass :
-	lAlpha = 0.05	# good for asOneClass
+	lAlpha = 0.005	# good for asOneClass
 else :
-	lAlpha = 0.005 	# find good TwoClass alpha
+	lAlpha = 0.0001 	# find good TwoClass alpha
 #end if
-lMaxIter = 10000
+lMaxIter = 100000	# .Lasso=1000, .LassoCV=100000
 lNorm = True
 lPos = False
 lFitIcpt = True
@@ -119,8 +121,8 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-for si in dSubDirs[4:6] :
-#for si in dSubDirs :
+#for si in dSubDirs[4:6] :
+for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
@@ -141,6 +143,7 @@ for si in dSubDirs[4:6] :
 	featMean = np.mean(features, axis=0)
 	features = np.subtract(features, featMean)
 	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
+	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
 	features = np.divide(features, featAbsMax)
 
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
@@ -210,10 +213,15 @@ for si in dSubDirs[4:6] :
 	# Some versions want the labels reshaped
 	trainLabel = np.reshape(trainLabel, [trainLabel.shape[0],])
 
-#TODO: exp w/ diff types: LassoCV, ElasticNet, MultiTaskElasticNet, MultiTaskLasso ..?
-	cfLasso = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
-	 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
-#TODO: Why did it start complaining about 'selection' ?
+	#TODO: exp w/ diff types: LassoCV, ElasticNet, MultiTaskElasticNet, MultiTaskLasso ..?
+	if not useLCV :
+		cfLasso = lm.Lasso(alpha=lAlpha, max_iter=lMaxIter, normalize=lNorm,
+		 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
+		#TODO: Why did it start complaining about 'selection' ?
+	else :
+		cfLasso = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm, positive=lPos,
+			fit_intercept=lFitIcpt)
+	#end if
 	cfLasso.fit(trainSet, trainLabel)
 
 	# The meaning of this score is questionable,
@@ -250,9 +258,10 @@ for si in dSubDirs[4:6] :
 		fname = mp.nameOutputFile(si, fPrefix)
 		print("Saving top paths to file {}".format(fname))
 		with open(si+fname, 'wb') as fout :
-			fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
-				'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
-				'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
+			fout.write('intercept:{}{}'.format(textDelim, cfLasso.intercept_))
+#			fout.write('alpha:{0}{1}{0}max_iter:{0}{2}{0}'.format(textDelim, lAlpha, lMaxIter) +
+#				'normalize:{0}{1}{0}positive:{0}{2}{0}'.format(textDelim, lNorm, lPos) +
+#				'fit_intercept:{0}{1}{0}selection:{0}{2}{0}'.format(textDelim, lFitIcpt, lSelctn))
 			for row in xrange(len(cfPaths)) :
 				fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
 					textDelim, pathNames[cfPaths['path'][row]]))
@@ -318,7 +327,13 @@ for si in dSubDirs[4:6] :
 			fout.write('\n')
 
 			fout.write('Lasso Parameters\n')
-			fout.write('alpha:{}{}\n'.format(textDelim, lAlpha))
+			if useLCV :
+				fout.write('method:{}LassoCV (cross-validation)\n'.format(textDelim))
+				fout.write('alpha:{}{}\n'.format(textDelim, cfLasso.alpha_))
+			else :
+				fout.write('method:{}Lasso (standard)\n'.format(textDelim))
+				fout.write('alpha:{}{}\n'.format(textDelim, lAlpha))
+			#end if
 			fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
 			fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
 			fout.write('positive:{}{}\n'.format(textDelim, lPos))
