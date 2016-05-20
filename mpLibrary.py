@@ -39,6 +39,7 @@
 #	writeRankedGenes(path, statArray, itemDict, itemIndex,
 #		hiddenSet, cutoffs)
 #	writeRankedPaths(path, ranker, mpDict)
+#	readRankedPaths(path)
 #	writeGenericLists(path, fname, columnList)
 #	getSubDirectoryList(root)
 #	getMatrixDimensions(path, name)
@@ -193,7 +194,8 @@ def verifyFile(path, name, quiet) :
 	exists = True
 
 	# First check the directory
-	exists = verifyDirectory(path, False, quiet)
+	if not (path == '') :
+		exists = verifyDirectory(path, False, quiet)
 
 	# Then look for the file
 	if not path.endswith('/') :
@@ -379,7 +381,7 @@ def readKeyFile(path, name) :
 	keyDict = dict()
 
 	# Read in the file
-	fk = open(fname, "rb")
+	fk = open(fname, "r")
 	firstline = True
 	for line in fk :
 
@@ -391,6 +393,7 @@ def readKeyFile(path, name) :
 
 		# separate the values
 		line = line.rstrip()
+#		print(line)
 		lk = line.split('\t')
 		lv = lk[0].split(',')
 
@@ -564,7 +567,7 @@ def readSampleFiles(sfile, up, down) :
 
 	# Alert user if nothing was read in
 	if not exists :
-		print "WARNING: no file found: {}".format(sfile)
+		print("WARNING: no file found: {}".format(sfile))
 
 	# Do NOT return duplicates
 	uNodes = np.unique(sNodes) # sorted list of unique items
@@ -863,7 +866,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 
 		if verbose :
 			if not (count % 15) :
-				print "    tested {} paths".format(count)
+				print ("    tested {} paths".format(count))
 		#end if
 		count += 1
 	#end loop
@@ -1223,7 +1226,7 @@ def createRandomSamplesBinned(path, name, sample,
 	#end if
 
 	if verbose :
-		print "Opening {}".format(fname)
+		print ("Opening {}".format(fname))
 
 
 	# Read in the file:
@@ -1241,7 +1244,7 @@ def createRandomSamplesBinned(path, name, sample,
 					col = i
 			# end loop
 			if verbose :
-				print "    binning along edge type: {} (column {})".format(eType, col)
+				print ("    binning along edge type: {} (column {})".format(eType, col))
 			if col == -1 :
 				print ( "ERROR: Specified edge type doesn't appear" +
 					" in node-degree.txt" )
@@ -1292,8 +1295,8 @@ def createRandomSamplesBinned(path, name, sample,
 	#end loop
 
 	if verbose :
-		print "    degree distribution of sample: {}".format(distribution)
-		print "    with cutoffs: {}".format(cutoffs)
+		print ("    degree distribution of sample: {}".format(distribution))
+		print ("    with cutoffs: {}".format(cutoffs))
 	#end if
 
 
@@ -1319,7 +1322,7 @@ def createRandomSamplesBinned(path, name, sample,
 		distBins = list()
 		for i in range(len(binDict)) :
 			distBins.append(len(binDict[i]))
-		print "    degree distribution of network: {}".format(distBins)
+		print ("    degree distribution of network: {}".format(distBins))
 	#end if
 
 
@@ -1457,7 +1460,8 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 
 	# Create an array of the paths & stats to rank
-	pathArray = np.recarray( len(ranker), dtype=[('name', nodeDT),
+	# 	dtype=object allows me to store variable-sized str
+	pathArray = np.recarray( len(ranker), dtype=[('name', object),
 		('stat', 'f4'), ('length', 'u1'), ('stat_inverse', 'f4')] )
 
 	rankMax = np.amax(ranker)
@@ -1489,6 +1493,54 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 
 
+######## ######## ######## ######## 
+# Function: Read in the ranked_paths file
+# Input ----
+#   path, str: path to file
+# Returns ----
+#	np structured array :
+#		(percent, path name, length)
+def readRankedPaths(path) :
+
+	if not path.endswith('/') :
+		path = path + '/'
+
+	# ERROR CHECK: verify file exists
+	verifyFile(path, 'ranked_paths.txt', False)
+
+
+	# Get the number of lines in the file
+	fname = path + 'ranked_paths.txt'
+	nRows = 0
+	with open(fname, 'r') as fin :
+		nRows = sum(1 for line in fin)
+#		for line in fin :
+#			nRows += 1
+	#end with
+
+
+	# Create an array of the paths & stats to rank
+	# 	dtype=object allows me to store variable-sized str
+	pathArray = np.recarray( nRows, dtype=[('name', object),
+		('rank', 'f4'), ('rank_inv', 'f4'), ('length', 'u1')] )
+
+
+	# Read in the file
+	with open(fname, 'r') as fin :
+		i = 0
+		for line in fin :
+			line = line.rstrip()    # remove "\n"
+			lv = line.split(textDelim)
+
+			pathArray[i] = (lv[1],
+				float(lv[0]), (0.0 - float(lv[0])), int(lv[2]))
+			i += 1
+	#end with
+
+	return pathArray
+#end def ######## ######## ######## 
+
+
 
 ######## ######## ######## ######## 
 # Function: Create a list of samples contained in folder
@@ -1502,7 +1554,7 @@ def getSampleNamesFromFolder(path) :
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
-	print fNames
+	print (fNames)
 
 	# Identify & create list of sample names in folder
 	sNames = list()
