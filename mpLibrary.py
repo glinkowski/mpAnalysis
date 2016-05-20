@@ -233,7 +233,7 @@ def saveListToText(path, name, theList) :
 		os.makedirs(path)
 	#end if
 
-	theFile = open(path + name, 'wb')
+	theFile = open(path + name, 'w')
 	firstline = True
 	for item in theList :
 		if firstline :
@@ -434,7 +434,7 @@ def readFileAsIndexDict(fname) :
 
 	# Build the dictionary from the text file
 	iDict = dict()
-	gf = open(fname, "rb")
+	gf = open(fname, "r")
 	index = 0
 	for line in gf :
 		gene = line.rstrip()    # remove "\n"
@@ -487,7 +487,7 @@ def createRandomSamplesArray(numRows, numCols, numItems) :
 
 	# Choose the random samples
 	for r in range(0, numRows) :
-		rSamples[r,:] = random.sample(xrange(numItems),
+		rSamples[r,:] = random.sample(range(numItems),
 			numCols)
 	#end loop
 
@@ -515,7 +515,7 @@ def readFileAsList(fname) :
 	fItems = list()
 
 	# Read in from the file
-	fn = open(fname, "rb")
+	fn = open(fname, "r")
 	for line in fn :
 		fItems.append( line.rstrip() )
 	#end loop
@@ -1230,7 +1230,7 @@ def createRandomSamplesBinned(path, name, sample,
 
 
 	# Read in the file:
-	dfile = open(fname, 'rb')
+	dfile = open(fname, 'r')
 	col = -1
 	degreeDict = dict()
 	for line in dfile :
@@ -1258,7 +1258,7 @@ def createRandomSamplesBinned(path, name, sample,
 
 
 	# Define the bin cutoffs
-	values = degreeDict.values()
+	values = list(degreeDict.values())
 	values.sort()
 	cutoffs = list()
 	for cp in cutoffPercent :
@@ -1341,7 +1341,7 @@ def createRandomSamplesBinned(path, name, sample,
 			#end if
 
 			# get the indices from the list of nodes in bin
-			indices = random.sample(xrange(len(binDict[i])), distribution[i])
+			indices = random.sample(range(len(binDict[i])), distribution[i])
 			indices.sort()
 			# convert to list of indices from the passed dict
 			tempList = [indexDict[binDict[i][idx]] for idx in indices]
@@ -1388,7 +1388,7 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 	rankList['score'] = statAvg
 	rankList['inverse'] = 1 - statAvg
 	# The gene names exclude the known/test sample
-#	itemOutdex = [n for n in xrange(len(itemDict)) if not in itemIndex]
+#	itemOutdex = [n for n in range(len(itemDict)) if not in itemIndex]
 #	itemOutdex.sort()
 	itemNames = itemDict.keys()
 	itemNames.sort()
@@ -1401,8 +1401,8 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 
 
 	# Open the files to write
-	fouta = open(path+rankedFile, 'wb')
-	foutb = open(path+cutoffFile, 'wb')
+	fouta = open(path+rankedFile, 'w')
+	foutb = open(path+cutoffFile, 'w')
 
 	# Write the header for the cutoffs file
 	foutb.write("Number of True Positives returned in top N predicted...")
@@ -1410,7 +1410,7 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 
 	foundCount = 0
 	firstLine = True
-	for i in xrange(len(rankList)) :
+	for i in range(len(rankList)) :
 
 		# Write the body of the ranked file
 		if not firstLine :
@@ -1476,7 +1476,7 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 
 	# Write to file
-	fout = open(path+rankedFile, 'wb')
+	fout = open(path+rankedFile, 'w')
 	firstLine = True
 	for i in range(len(pathArray)) :
 		if not firstLine :
@@ -1593,10 +1593,10 @@ def writeGenericLists(path, fname, columnList) :
 
 	fout = open(path+fname, 'wb')
 
-	for i in xrange(len(columnList[0])) :
+	for i in range(len(columnList[0])) :
 		fout.write("{}".format(columnList[0][i]))
 
-		for j in xrange(1, len(columnList)) :
+		for j in range(1, len(columnList)) :
 			fout.write("{}{}".format(textDelim, columnList[j][i]))
 		#end loop
 
