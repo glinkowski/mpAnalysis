@@ -1378,7 +1378,7 @@ def saveMatrixNumpy(matrix, mname, mpath, integer) :
 #	#end if
 	# VERIFICATION: save as a text-readable file
 	if saveTextCopy :
-		saveMatrixText(matrix, "t"+mname, mpath, True)
+		saveMatrixText(matrix, "t"+mname, mpath, integer)
 	#end if
 
 	return
@@ -2318,7 +2318,7 @@ def readPrimaryMatrices(nPath, nName) :
 	pList = dict()
 
 	# Read in the key file
-	fn = open(path + "key.txt", "rb")
+	fn = open(path + "key.txt", "r")
 	for line in fn :
 		line = line.rstrip()
 		lv = line.split('\t')
