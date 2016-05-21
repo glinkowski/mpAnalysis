@@ -75,8 +75,6 @@ verbose = False
 tstart = time.time()
 print("")
 
-
-#TODO: Does this work? If not ... alternatives?
 mp.setParamVerbose(verbose)
 
 
@@ -113,6 +111,14 @@ for s in sNames :
 	gAll = mp.readSampleFiles(sPath+s, True, True)
 	gKnown, gHidden = mp.partitionSample(ePath, eName,
 		oSubDir, gAll, percHide)
+
+
+#	print("Printing: all, all[0], keys[0], known")
+#	print(gAll)
+#	print(gAll[0])
+#	print(list(geneDict.keys())[0])
+#	print(gKnown)
+#	break
 
 	print("Analyzing metapaths in sample: {}".format(s))
 	print( "  partitioned into {} known".format(len(gKnown)) +
@@ -235,6 +241,9 @@ for i in range(len(pathList)) :
 fout.close()
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
+
+#TODO: Save the name of the network used to a file
+#		and other params
 
 
 
