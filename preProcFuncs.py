@@ -62,17 +62,14 @@ nodeDTSize = 30
 speedVsMemory = False	# True favors speed, disables dtype
 # Data-type for the path matrices:
 matrixDT = np.float32	#TODO: any considerations here?
-warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
-# Whether to save uncompressed text version of matrix:
-saveText = False
 # Considering consecutive edges of same type
 keepDouble = True
 keepTriple = True
 # File extension to use when saving the matrix
 matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
-# Whether to save a text-only copy of the matrices
+# Whether to save a uncompressed text copy of the matrices
 saveTextCopy = False
 # Data delimiter to use in the output file:
 textDelim = '\t'
@@ -238,8 +235,9 @@ def readEdgeFile(datafile) :
 	if verbose :
 	    print("  file contained {:,} lines".format(nLines))
 
+#TODO: check for Python v 2/3 before running this line ?
 	# Decode the edge array from type=bytes to type=str
-	Edges = np.char.decode(Edges, 'ascii')
+#	Edges = np.char.decode(Edges, 'ascii')
 
 	return Edges, Nodes
 #end def ######## ######## ########
@@ -428,7 +426,8 @@ def applyThreshold(edges, threshold) :
 
 	# If threshold is zero, return unaltered network
 	if threshold <= 0 :
-		return edges
+#		return edges
+		return np.char.decode(edges, 'ascii')
 	else :
 		# Decode the edge array from type=bytes to type=str
 		newEdges = np.char.decode(newEdges, 'ascii')
@@ -489,17 +488,20 @@ def applyKeepLists(edges, lGenes, kEdges, iEdges) :
 	keepIndex = list()
 	kEdgeSet = set(kEdges)
 
-#	print "----- applyKeepLists --------"
-#	print kEdges
-#	print kEdgeSet
-#	for s in kEdgeSet : print s
+#	print ("----- applyKeepLists --------")
+#	print (kEdges)
+#	print (kEdgeSet)
+#	for s in kEdgeSet : print (".{}.".format(s))
+
+#	print(edges[0,3])
+#	print(str(edges[0,3]))
 
 	for i in range(0, edges.shape[0]) :
 
 		# Throw out non-kept edges
 		if edges[i,3] not in kEdgeSet :
 			# Skip this edge
-#			print "drop1", edges[i,:]
+#			print ("drop1 {}".format(edges[i,:]))
 			continue
 		#end if
 
@@ -514,14 +516,14 @@ def applyKeepLists(edges, lGenes, kEdges, iEdges) :
 		# Throw out genes that match the non-keep list
 		# Check for any match with the non-keep list
 		if any(match != None for match in m1) :
-#			print "drop2", edges[i,:]
+#			print ("drop2 {}".format(edges[i,:]))
 			# Skip this edge
 			continue
 		#ASSUMPTION: for indirect edges, col 0 contains
 		#	a non-gene node
 		elif edges[i,3] not in iEdges :
 			if any(match != None for match in m0) :
-#				print "drop3", edges[i,:]
+#				print ("drop3 {}".format(edges[i,:]))
 				# Skip this edge
 				continue
 		#end if
@@ -1260,11 +1262,14 @@ def createMatrixListNoBinning(eArray, kEdges, iEdges, gList, nDict):
 			#end if
 			
 
-			print(eArray)
-			print(eArray[:,3])
+#			print(eArray)
+#			print(eArray[:,3])
 
 
 			count = 0
+#			print(et)
+#			print(eArray[:,3]==et)
+#			print(eArray[eArray[:,3]==et])
 			thisArray = eArray[eArray[:,3]==et]
 			# increment entry at (i,j) = (gene0,gene1)
 			for row in thisArray :
@@ -1301,7 +1306,8 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 	#end if
 
 	# Open the file
-	fout = open(mpath + mname + ".txt", "wb")
+#	fout = open(mpath + mname + ".txt", "wb")
+	fout = open(mpath + mname + ".txt", "w")
 
 	# Write to the file
 	firstR = True
@@ -1327,7 +1333,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 			# Write the value to file
 			#	If integer = True, write as an integer
 			if integer :
-				fout.write("{}".format( int(matrix[i,j]) ))
+				fout.write("{}".format( float(matrix[i,j]) ))
 			else :
 				fout.write("{}".format( matrix[i,j] ))
 	#end loop
@@ -1366,9 +1372,13 @@ def saveMatrixNumpy(matrix, mname, mpath, integer) :
 #NOTE: In this case, the text file from savetxt() is much
 #	smaller than the binary file from save()
 
-	#ERROR CHECK: also save a text version of the matrix
-	if saveText :
-		saveMatrixText(matrix, mname, mpath, True)
+#	#ERROR CHECK: also save a text version of the matrix
+#	if saveTextCopy :
+#		saveMatrixText(matrix, mname, mpath, True)
+#	#end if
+	# VERIFICATION: save as a text-readable file
+	if saveTextCopy :
+		saveMatrixText(matrix, "t"+mname, mpath, True)
 	#end if
 
 	return

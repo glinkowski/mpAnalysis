@@ -23,7 +23,7 @@
 import preProcFuncs as pp
 import time
 
-
+import numpy as np
 
 ####### ####### ####### ####### 
 # PARAMETERS
@@ -89,6 +89,8 @@ pp.applyCorrections(edgeArray, epath+cfile)
 
 # 1b) Apply normalization, thresholding, discard unwanteds
 
+#print(edgeArray.shape)
+
 # Normalize weights
 print("Normalizing weights by edge type ...")
 pp.applyNormalization(edgeArray, 0)
@@ -96,6 +98,7 @@ pp.applyNormalization(edgeArray, 0)
 print("Thresholding weights at {}".format(thresh))
 edgeArray = pp.applyThreshold(edgeArray, thresh)
 
+#print(edgeArray.shape)
 
 # Discard specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
@@ -104,6 +107,8 @@ print("    final edgeArray size: {} bytes".format(edgeArray.nbytes))
 
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
+
+#print(edgeArray.shape)
 
 # 2) Save the modified network
 
