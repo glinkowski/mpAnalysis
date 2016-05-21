@@ -1306,7 +1306,6 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 	#end if
 
 	# Open the file
-#	fout = open(mpath + mname + ".txt", "wb")
 	fout = open(mpath + mname + ".txt", "w")
 
 	# Write to the file
@@ -1372,10 +1371,6 @@ def saveMatrixNumpy(matrix, mname, mpath, integer) :
 #NOTE: In this case, the text file from savetxt() is much
 #	smaller than the binary file from save()
 
-#	#ERROR CHECK: also save a text version of the matrix
-#	if saveTextCopy :
-#		saveMatrixText(matrix, mname, mpath, True)
-#	#end if
 	# VERIFICATION: save as a text-readable file
 	if saveTextCopy :
 		saveMatrixText(matrix, "t"+mname, mpath, integer)
@@ -1647,8 +1642,10 @@ def calcPathSimMatrix(matrix) :
 	# PathSim = (Pxy + Pyx) / (Pxx + Pyy)
 
 	# numerator
-	Sxy = matrix.transpose()
-	Sxy = np.add( matrix, Sxy )
+	Sxy = np.zeros( matrix.shape, dtype=matrixDT)
+	Sxy = np.add( Sxy, matrix.transpose() )
+#	Sxy = np.copy(matrix.transpose())
+	Sxy = np.add( Sxy, matrix)
 
 	# denominator
 	Pyy = matrix.diagonal()
@@ -1838,6 +1835,7 @@ def createMPLengthTwo(pList, path) :
 
 			# Create new matrix if file doesn't already exist
 			if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
+				newM = np.zeros(pList[p1].shape, dtype=matrixDT)
 				newM = np.dot(pList[p1], pList[p2])
 				saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
 				SxyMatrix = calcPathSimMatrix(newM)

@@ -31,32 +31,34 @@ import gzip
 # PARAMETERS
 
 # Variables/Quantities
-percHide = .00		# percent of genes to conceal
-nRandSamp = 200		# number of random samples to compare
+percHide = .25		# percent of genes to conceal
+nRandSamp = 300		# number of random samples to compare
 
 # options for Node Binning
 useBinning = True
-nodeBins = [0.3, .66]
+nodeBins = [0.4, .85]
 binType = 'all'
 
 
 # Input names & locations
-useNtwk = 1		# network & samples to use (0 means fake)
+useNtwk = 0		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
 	ePath = 'networks/'
 	sPath = 'samplesFake/'
+	oRoot = '../Dropbox/mp/outputFake/'
 else :
 	eName = 'all_v1_g2e11t0'
 	ePath = '../Dropbox/mp/networks/'
 	sPath = '../Dropbox/mp/samples-subset5/'
 #	sPath = '../Dropbox/mp/samplesMSIG/'
+	oRoot = '../Dropbox/mp/output/'
 #end if
 
 # Output path
 #oRoot = 'outputFake/'
-oRoot = '../Dropbox/mp/output/'
+#oRoot = '../Dropbox/mp/output/'
 oDirPrefix = 'pred02-batch'
 
 
@@ -71,29 +73,28 @@ verbose = False
 # BEGIN MAIN FUNCTION
 
 tstart = time.time()
-print ""
+print("")
 
-
-#TODO: Does this work? If not ... alternatives?
 mp.setParamVerbose(verbose)
 
 
 # 0) Name & create a folder to store output files
 oDirectory = mp.nameOutputPath(oRoot, oDirPrefix)
-print "Files will be saved to {}".format(oDirectory)
+print("Files will be saved to {}".format(oDirectory))
 oPath = oRoot + oDirectory
 
 #TODO: write file w/ experiment parameters
 
 
 # 1) Load the gene-index dict
-print "Creating the gene-index dictionary."
+print("Creating the gene-index dictionary.")
 geneDict = mp.readGenesFile(ePath, eName)
 
+print(geneDict)
 
 # 2) Get list of all samples in folder
 sNames = mp.getSampleNamesFromFolder(sPath)
-#print sNames
+#printsNames
 
 
 # 3) Read the samples & create random sample sets
@@ -111,8 +112,16 @@ for s in sNames :
 	gKnown, gHidden = mp.partitionSample(ePath, eName,
 		oSubDir, gAll, percHide)
 
-	print "Analyzing metapaths in sample: {}".format(s)
-	print ( "  partitioned into {} known".format(len(gKnown)) +
+
+#	print("Printing: all, all[0], keys[0], known")
+#	print(gAll)
+#	print(gAll[0])
+#	print(list(geneDict.keys())[0])
+#	print(gKnown)
+#	break
+
+	print("Analyzing metapaths in sample: {}".format(s))
+	print( "  partitioned into {} known".format(len(gKnown)) +
 		" and {} concealed genes ...".format(len(gHidden)) )
 
 	# Convert sample into list of indices
@@ -120,7 +129,7 @@ for s in sNames :
 	oSampLists.append(gIndices)
 
 	# Create N random samples
-	print ("  choosing {} random samples of".format(nRandSamp) +
+	print("  choosing {} random samples of".format(nRandSamp) +
 		" length {} ...".format(len(gKnown)) )
 	if useBinning :
 		rSamps = mp.createRandomSamplesBinned(ePath, eName,
@@ -134,21 +143,21 @@ for s in sNames :
 #TODO: output gene_bins.txt or ... degree_bins ? or ?
 
 #end loop
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
-#print "len of samples list", len(oSampLists)
-#print "len of rand samp list", len(rSampArrays)
+#print"len of samples list", len(oSampLists)
+#print"len of rand samp list", len(rSampArrays)
 
 
 # 4) Get the list of available paths
-print "Checking what paths are available ..."
+print("Checking what paths are available ...")
 pathDict = mp.readKeyFile(ePath, eName)
 pathList = mp.removeInvertedPaths(pathDict)
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 # Get expected matrix size
-print "Finding the matrix dimensions ..."
+print("Finding the matrix dimensions ...")
 fnMatrixZPad = 5
 #TODO: pack this into a function
 fname = (ePath+eName+"_MetaPaths/" +
@@ -158,43 +167,43 @@ with gzip.open(fname, 'rb') as fin :
 	for line in fin :
 		mxSize += 1
 #end with
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 # 5) Calculate scores 
 pathScores = np.zeros([len(pathList), len(sNames)])
-for i in xrange(len(pathList)) :
+for i in range(len(pathList)) :
 
-	print "Loading matrix {}, {}, {}".format(i, pathList[i], pathDict[pathList[i]])
+	print("Loading matrix {}, {}, {}".format(i, pathList[i], pathDict[pathList[i]]))
 	# Load a metapath matrix into memory
 	matrix = mp.getPathMatrix(pathDict[pathList[i]], ePath, eName, mxSize)
-	print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+	print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 	# Get the percentile/score for this path, per sample
-	for j in xrange(len(sNames)) :
+	for j in range(len(sNames)) :
 		tCount = mp.getPathCountOne(oSampLists[j], matrix)
 		tPercent = mp.getPercentile(tCount, rSampArrays[j], matrix)
 		pathScores[i,j] = tPercent
 	#end loop
 
-	print "  Examined path {}".format(pathList[i])
-	print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+	print("  Examined path {}".format(pathList[i]))
+	print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 #end loop
-#print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+#print"    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
 # 6) output ranked_path.txt per sample
-for j in xrange(len(sNames)) :
+for j in range(len(sNames)) :
 	oSubDir = oPath+sNames[j]+'/'
 	mp.writeRankedPaths(oSubDir, pathScores[:,j], pathDict)
 #end loop
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
 # 7) output overall ranked paths for all samples (one file)
 textDelim = '\t'
-fout = open(oPath+'ranked_paths_all.txt', 'wb')
+fout = open(oPath+'ranked_paths_all.txt', 'w')
 
 # Write the file header
 fout.write('network:{}{}\n'.format(textDelim, eName))
@@ -208,7 +217,7 @@ fout.write('\n')
 
 # Write the data header
 firstCol = True
-for i in xrange(len(sNames)) :
+for i in range(len(sNames)) :
 	if not firstCol :
 		fout.write(textDelim)
 	firstCol = False
@@ -218,21 +227,24 @@ fout.write('\n')
 
 # Write the main data
 firstRow = True
-for i in xrange(len(pathList)) :
+for i in range(len(pathList)) :
 	if not firstRow :
 		fout.write('\n')
 	firstRow = False
 
-	for j in xrange(len(sNames)) :
+	for j in range(len(sNames)) :
 		fout.write('{}{}'.format(pathScores[i,j],textDelim))
 	#end loop
 
 	fout.write('{}'.format(pathList[i]))
 #end loop
 fout.close()
-print "    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+
+
+#TODO: Save the name of the network used to a file
+#		and other params
 
 
 
-
-print "\nDone.\n"
+print("\nDone.\n")

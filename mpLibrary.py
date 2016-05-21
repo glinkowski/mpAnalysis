@@ -21,6 +21,7 @@
 #	readSampleFiles(sfile, up, down)
 #	convertToIndices(names, iDict)
 #	getPathMatrix(mpTuple, path, name, sizeOf)
+#	getSimMatrix(mpTuple, path, name, sizeOf)
 #	removeInvertedPaths(mpDict)
 #	getPathCountOne(sample, matrix)
 #	getPathCountList(samples, matrix)
@@ -38,7 +39,10 @@
 #		indexDict, cutoffPercent, eType, numRandSamples)
 #	writeRankedGenes(path, statArray, itemDict, itemIndex,
 #		hiddenSet, cutoffs)
+#	writeRankedGenes02(path, suffix, statArray, itemDict,
+#		itemIndex, hiddenSet, cutoffs)
 #	writeRankedPaths(path, ranker, mpDict)
+#	readRankedPaths(path)
 #	writeGenericLists(path, fname, columnList)
 #	getSubDirectoryList(root)
 #	getMatrixDimensions(path, name)
@@ -193,7 +197,8 @@ def verifyFile(path, name, quiet) :
 	exists = True
 
 	# First check the directory
-	exists = verifyDirectory(path, False, quiet)
+	if not (path == '') :
+		exists = verifyDirectory(path, False, quiet)
 
 	# Then look for the file
 	if not path.endswith('/') :
@@ -231,7 +236,7 @@ def saveListToText(path, name, theList) :
 		os.makedirs(path)
 	#end if
 
-	theFile = open(path + name, 'wb')
+	theFile = open(path + name, 'w')
 	firstline = True
 	for item in theList :
 		if firstline :
@@ -271,7 +276,7 @@ def checkGenesInNetwork(path, name, geneList) :
 
 	# Read in the genes from the file
 	geneSet = set()
-	fg = open(fname, 'rb')
+	fg = open(fname, 'r')
 	for line in fg :
 		line = line.rstrip()
 		geneSet.add(line)
@@ -379,7 +384,7 @@ def readKeyFile(path, name) :
 	keyDict = dict()
 
 	# Read in the file
-	fk = open(fname, "rb")
+	fk = open(fname, "r")
 	firstline = True
 	for line in fk :
 
@@ -391,6 +396,7 @@ def readKeyFile(path, name) :
 
 		# separate the values
 		line = line.rstrip()
+#		print(line)
 		lk = line.split('\t')
 		lv = lk[0].split(',')
 
@@ -431,7 +437,7 @@ def readFileAsIndexDict(fname) :
 
 	# Build the dictionary from the text file
 	iDict = dict()
-	gf = open(fname, "rb")
+	gf = open(fname, "r")
 	index = 0
 	for line in gf :
 		gene = line.rstrip()    # remove "\n"
@@ -484,7 +490,7 @@ def createRandomSamplesArray(numRows, numCols, numItems) :
 
 	# Choose the random samples
 	for r in range(0, numRows) :
-		rSamples[r,:] = random.sample(xrange(numItems),
+		rSamples[r,:] = random.sample(range(numItems),
 			numCols)
 	#end loop
 
@@ -512,7 +518,7 @@ def readFileAsList(fname) :
 	fItems = list()
 
 	# Read in from the file
-	fn = open(fname, "rb")
+	fn = open(fname, "r")
 	for line in fn :
 		fItems.append( line.rstrip() )
 	#end loop
@@ -564,7 +570,7 @@ def readSampleFiles(sfile, up, down) :
 
 	# Alert user if nothing was read in
 	if not exists :
-		print "WARNING: no file found: {}".format(sfile)
+		print("WARNING: no file found: {}".format(sfile))
 
 	# Do NOT return duplicates
 	uNodes = np.unique(sNodes) # sorted list of unique items
@@ -630,6 +636,83 @@ def getPathMatrix(mpTuple, path, name, sizeOf) :
 	# Load the matrix
 #   matrix = np.load(fname)
 #	matrix = np.loadtxt(fname)
+
+	# Declare the matrix
+	if speedVsMemory :
+		matrix = np.zeros([sizeOf, sizeOf])
+	else :
+		matrix = np.zeros([sizeOf, sizeOf], dtype=matrixDT)
+	#end if
+
+	# Read in the file, placing values into matrix
+	row = 0
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			line = line.rstrip()
+			ml = line.split()
+			matrix[row,:] = ml[:]
+			row += 1
+	#end with
+
+	# Convert to transpose if flag==True
+	if mpTuple[1] :
+		return np.transpose(matrix)
+	else :
+		return matrix
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Load the matrix containing the PathSim
+#   metric for this meta-path
+# Input ----
+#   mpTuple [int, bool]: indicates which matrix file to use
+#   path, str: path to the network files
+#   name, str: name of the network to use
+#	sizeOf, int: matrix dimensions (square)
+#		NOTE: if sizeOf == -1, will find the dims
+# Returns ----
+#   matrix, int array: num paths between node pairs
+def getSimMatrix(mpTuple, path, name, sizeOf) :
+
+	zpad = fnMatrixZPad
+#   fname = (path + name + "_MetaPaths/" +
+#       "{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
+
+	prename = (path + name + "_MetaPaths/" +
+		"Sxy-{}".format(str(mpTuple[0]).zfill(zpad)) )
+	if os.path.isfile(prename + '.gz') :
+		fname = prename + '.gz'
+#		fname = (path + name + "_MetaPaths/" +
+#		"Sxy-{}.gz".format(str(mpTuple[0]).zfill(zpad)) )
+	elif os.path.isfile(prename + '.txt') :
+		fname = prename + '.txt'
+#		fname = (path + name + "_MetaPaths/" +
+#		"Sxy-{}.txt".format(str(mpTuple[0]).zfill(zpad)) )
+	else :
+		# ERROR CHECK: verify file exists
+		print ( "ERROR: Specified file doesn't exist:" +
+			" {}.(gz/txt)".format(prename) )
+		sys.exit()
+	#end if
+
+	# Load the matrix
+#   matrix = np.load(fname)
+#	matrix = np.loadtxt(fname)
+
+	if sizeOf == -1 :
+		# Get expected matrix size
+	#TODO: pack this into a function
+		fname = (path + name + "_MetaPaths/" +
+			"{}.gz".format(str(0).zfill(fnMatrixZPad)) )
+		sizeOf = 0
+		with gzip.open(fname, 'rb') as fin :
+			for line in fin :
+				sizeOf += 1
+		#end with
+	#end if
+
 
 	# Declare the matrix
 	if speedVsMemory :
@@ -863,7 +946,7 @@ def calculateStatistics(sample, rSamples, mpDict,
 
 		if verbose :
 			if not (count % 15) :
-				print "    tested {} paths".format(count)
+				print ("    tested {} paths".format(count))
 		#end if
 		count += 1
 	#end loop
@@ -1223,11 +1306,11 @@ def createRandomSamplesBinned(path, name, sample,
 	#end if
 
 	if verbose :
-		print "Opening {}".format(fname)
+		print ("Opening {}".format(fname))
 
 
 	# Read in the file:
-	dfile = open(fname, 'rb')
+	dfile = open(fname, 'r')
 	col = -1
 	degreeDict = dict()
 	for line in dfile :
@@ -1241,7 +1324,7 @@ def createRandomSamplesBinned(path, name, sample,
 					col = i
 			# end loop
 			if verbose :
-				print "    binning along edge type: {} (column {})".format(eType, col)
+				print ("    binning along edge type: {} (column {})".format(eType, col))
 			if col == -1 :
 				print ( "ERROR: Specified edge type doesn't appear" +
 					" in node-degree.txt" )
@@ -1255,7 +1338,7 @@ def createRandomSamplesBinned(path, name, sample,
 
 
 	# Define the bin cutoffs
-	values = degreeDict.values()
+	values = list(degreeDict.values())
 	values.sort()
 	cutoffs = list()
 	for cp in cutoffPercent :
@@ -1292,8 +1375,8 @@ def createRandomSamplesBinned(path, name, sample,
 	#end loop
 
 	if verbose :
-		print "    degree distribution of sample: {}".format(distribution)
-		print "    with cutoffs: {}".format(cutoffs)
+		print ("    degree distribution of sample: {}".format(distribution))
+		print ("    with cutoffs: {}".format(cutoffs))
 	#end if
 
 
@@ -1319,7 +1402,7 @@ def createRandomSamplesBinned(path, name, sample,
 		distBins = list()
 		for i in range(len(binDict)) :
 			distBins.append(len(binDict[i]))
-		print "    degree distribution of network: {}".format(distBins)
+		print ("    degree distribution of network: {}".format(distBins))
 	#end if
 
 
@@ -1338,7 +1421,7 @@ def createRandomSamplesBinned(path, name, sample,
 			#end if
 
 			# get the indices from the list of nodes in bin
-			indices = random.sample(xrange(len(binDict[i])), distribution[i])
+			indices = random.sample(range(len(binDict[i])), distribution[i])
 			indices.sort()
 			# convert to list of indices from the passed dict
 			tempList = [indexDict[binDict[i][idx]] for idx in indices]
@@ -1385,9 +1468,9 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 	rankList['score'] = statAvg
 	rankList['inverse'] = 1 - statAvg
 	# The gene names exclude the known/test sample
-#	itemOutdex = [n for n in xrange(len(itemDict)) if not in itemIndex]
+#	itemOutdex = [n for n in range(len(itemDict)) if not in itemIndex]
 #	itemOutdex.sort()
-	itemNames = itemDict.keys()
+	itemNames = list(itemDict.keys())
 	itemNames.sort()
 #	rankList['index'] = itemNames[itemOutdex]
 #	rankList['names'] = itemNames[n for n in range(len(itemDict)) if n not in itemIndex]
@@ -1398,8 +1481,8 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 
 
 	# Open the files to write
-	fouta = open(path+rankedFile, 'wb')
-	foutb = open(path+cutoffFile, 'wb')
+	fouta = open(path+rankedFile, 'w')
+	foutb = open(path+cutoffFile, 'w')
 
 	# Write the header for the cutoffs file
 	foutb.write("Number of True Positives returned in top N predicted...")
@@ -1407,13 +1490,103 @@ def writeRankedGenes(path, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
 
 	foundCount = 0
 	firstLine = True
-	for i in xrange(len(rankList)) :
+	for i in range(len(rankList)) :
 
 		# Write the body of the ranked file
 		if not firstLine :
 			fouta.write("\n")
 		firstLine = False
 		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
+
+		# Write the body of the cutoffs file
+		if rankList['names'][i] in hiddenSet :
+			foundCount += 1
+		if i in cutoffs :
+			foutb.write("\n{}{}{}".format(i, textDelim, foundCount))
+
+	#end loop
+	fouta.close()
+	foutb.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Write a simple ranked_genes.txt file
+# Input ----
+#	path, str: directory to write output file
+#	suffix, str: suffix to the filename
+#	statArray, float array: the stat used to rank the items
+#	itemDict, {str: int} dict:
+#		key, str - name of the item
+#		value, int - index of the item within a sorted list
+#	itemIndex, int list: indices of items (known/test) against
+#		which the rest of the items (hidden/concealed) are ranked
+#	hiddenSet, str list: names of the genes which were concealed
+#	cutoffs, int list: number of genes which might be returned at once
+# Returns ----
+#	nothing
+# Creates ----
+#	ranked_genes.txt: original version of the output file
+#	returned_cutoffs.txt: shows how many desired genes exist within N predicted
+def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, cutoffs) :
+
+	rankedFile = 'ranked_genes-' + suffix + '.txt'
+	cutoffFile = 'returned_cutoffs-' + suffix + '.txt'
+
+	# Create the numpy record/structured array
+	rankList = np.recarray(statArray.shape[0],
+		dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', nodeDT)])
+	# The scores come from the average of the score array
+
+#	print(statArray)
+
+#TODO: Mean vs Sum ... any difference ??
+	statAvg = np.mean(statArray, axis=1)
+	rankList['score'] = statAvg
+	rankList['inverse'] = 0 - statAvg
+
+#	statSum = np.sum(statArray, axis=1)
+#	rankList['score'] = statSum
+#	rankList['inverse'] = 0 - statSum
+
+	# The gene names exclude the known/test sample
+#	itemOutdex = [n for n in range(len(itemDict)) if not in itemIndex]
+#	itemOutdex.sort()
+	itemNames = list(itemDict.keys())
+	itemNames.sort()
+	print(itemNames[0])
+#	rankList['index'] = itemNames[itemOutdex]
+#	rankList['names'] = itemNames[n for n in range(len(itemDict)) if n not in itemIndex]
+	rankList['names'] = [itemNames[n] for n in range(len(itemDict)) if n not in itemIndex]
+
+	# Sort by the score
+	rankList.sort(order=['inverse', 'names'])
+
+
+	# Open the files to write
+	fouta = open(path+rankedFile, 'w')
+	foutb = open(path+cutoffFile, 'w')
+
+	# Write the header for the cutoffs file
+	foutb.write("Number of True Positives returned in top N predicted...")
+	foutb.write("\nReturned{}TruePos".format(textDelim))
+
+	foundCount = 0
+	firstLine = True
+	for i in range(len(rankList)) :
+
+		# Write the body of the ranked file
+		if not firstLine :
+			fouta.write("\n")
+		firstLine = False
+#		print(rankList['score'][i])
+#		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
+		fouta.write("{}{}{}".format(rankList['score'][i],
+			textDelim, rankList['names'][i].decode('ascii')))
+#TODO: Why is this writing as a byte stream, not str ??
 
 		# Write the body of the cutoffs file
 		if rankList['names'][i] in hiddenSet :
@@ -1457,7 +1630,8 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 
 	# Create an array of the paths & stats to rank
-	pathArray = np.recarray( len(ranker), dtype=[('name', nodeDT),
+	# 	dtype=object allows me to store variable-sized str
+	pathArray = np.recarray( len(ranker), dtype=[('name', object),
 		('stat', 'f4'), ('length', 'u1'), ('stat_inverse', 'f4')] )
 
 	rankMax = np.amax(ranker)
@@ -1472,7 +1646,7 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 
 	# Write to file
-	fout = open(path+rankedFile, 'wb')
+	fout = open(path+rankedFile, 'w')
 	firstLine = True
 	for i in range(len(pathArray)) :
 		if not firstLine :
@@ -1489,6 +1663,54 @@ def writeRankedPaths(path, ranker, mpDict) :
 
 
 
+######## ######## ######## ######## 
+# Function: Read in the ranked_paths file
+# Input ----
+#   path, str: path to file
+# Returns ----
+#	np structured array :
+#		(percent, path name, length)
+def readRankedPaths(path) :
+
+	if not path.endswith('/') :
+		path = path + '/'
+
+	# ERROR CHECK: verify file exists
+	verifyFile(path, 'ranked_paths.txt', False)
+
+
+	# Get the number of lines in the file
+	fname = path + 'ranked_paths.txt'
+	nRows = 0
+	with open(fname, 'r') as fin :
+		nRows = sum(1 for line in fin)
+#		for line in fin :
+#			nRows += 1
+	#end with
+
+
+	# Create an array of the paths & stats to rank
+	# 	dtype=object allows me to store variable-sized str
+	pathArray = np.recarray( nRows, dtype=[('name', object),
+		('stat', 'f4'), ('stat_inverse', 'f4'), ('length', 'u1')] )
+
+
+	# Read in the file
+	with open(fname, 'r') as fin :
+		i = 0
+		for line in fin :
+			line = line.rstrip()    # remove "\n"
+			lv = line.split(textDelim)
+
+			pathArray[i] = (lv[1],
+				float(lv[0]), (0.0 - float(lv[0])), int(lv[2]))
+			i += 1
+	#end with
+
+	return pathArray
+#end def ######## ######## ######## 
+
+
 
 ######## ######## ######## ######## 
 # Function: Create a list of samples contained in folder
@@ -1502,7 +1724,7 @@ def getSampleNamesFromFolder(path) :
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
-	print fNames
+	print (fNames)
 
 	# Identify & create list of sample names in folder
 	sNames = list()
@@ -1541,10 +1763,10 @@ def writeGenericLists(path, fname, columnList) :
 
 	fout = open(path+fname, 'wb')
 
-	for i in xrange(len(columnList[0])) :
+	for i in range(len(columnList[0])) :
 		fout.write("{}".format(columnList[0][i]))
 
-		for j in xrange(1, len(columnList)) :
+		for j in range(1, len(columnList)) :
 			fout.write("{}{}".format(textDelim, columnList[j][i]))
 		#end loop
 
