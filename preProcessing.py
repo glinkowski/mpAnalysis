@@ -29,11 +29,11 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-useRealData = True
+useRealData = False
 
 if not useRealData :
 #	ename = 'fakeNtwk00_g2e3t10'
-	ename = 'fakeNtwk00'
+	ename = 'fakeNtwk01'
 	epath = 'networks/'
 #	epath = '../Dropbox/mp/networksFake/'
 else :

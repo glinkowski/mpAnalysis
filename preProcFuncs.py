@@ -66,14 +66,14 @@ warnDTvalue = 65000
 # Length to pad the matrix file names:
 keyZPad = 5
 # Whether to save uncompressed text version of matrix:
-saveText = False
+saveText = True
 # Considering consecutive edges of same type
 keepDouble = True
 keepTriple = True
 # File extension to use when saving the matrix
 matrixExt = '.gz'	# '.txt' or '.gz' (gz is compressed)
 # Whether to save a text-only copy of the matrices
-saveTextCopy = False
+saveTextCopy = True
 # Data delimiter to use in the output file:
 textDelim = '\t'
 # Whether to print non-error messages within these funcs
@@ -1301,7 +1301,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 	#end if
 
 	# Open the file
-	fout = open(mpath + mname + ".txt", "wb")
+	fout = open(mpath + mname + ".txt", "w")
 
 	# Write to the file
 	firstR = True
@@ -1368,7 +1368,10 @@ def saveMatrixNumpy(matrix, mname, mpath, integer) :
 
 	#ERROR CHECK: also save a text version of the matrix
 	if saveText :
-		saveMatrixText(matrix, mname, mpath, True)
+		if integer :
+			saveMatrixText(matrix, mname, mpath, True)
+		else :
+			saveMatrixText(matrix, mname, mpath, False)
 	#end if
 
 	return
@@ -1637,8 +1640,10 @@ def calcPathSimMatrix(matrix) :
 	# PathSim = (Pxy + Pyx) / (Pxx + Pyy)
 
 	# numerator
-	Sxy = matrix.transpose()
-	Sxy = np.add( matrix, Sxy )
+	Sxy = np.zeros( matrix.shape, dtype=matrixDT)
+	Sxy = np.add( Sxy, matrix.transpose() )
+#	Sxy = np.copy(matrix.transpose())
+	Sxy = np.add( Sxy, matrix)
 
 	# denominator
 	Pyy = matrix.diagonal()
@@ -1828,6 +1833,7 @@ def createMPLengthTwo(pList, path) :
 
 			# Create new matrix if file doesn't already exist
 			if not os.path.isfile(path + str(mNum).zfill(keyZPad) + matrixExt) :
+				newM = np.zeros(pList[p1].shape, dtype=matrixDT)
 				newM = np.dot(pList[p1], pList[p2])
 				saveMatrixNumpy(newM, str(mNum).zfill(keyZPad), path, True)
 				SxyMatrix = calcPathSimMatrix(newM)
