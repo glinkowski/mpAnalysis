@@ -72,7 +72,8 @@ fnConcealedGenes = 'concealed.txt'
 fnLeftOutGenes = 'ignored.txt'
 
 ## Data type used when loading edge file to memory:
-nodeDT = np.dtype('a30')
+#nodeDT = np.dtype('a30')
+nodeDT = object
 
 # Length to pad the matrix file names:
 fnMatrixZPad = 5
@@ -1538,7 +1539,7 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 
 	# Create the numpy record/structured array
 	rankList = np.recarray(statArray.shape[0],
-		dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', nodeDT)])
+		dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', object)])
 	# The scores come from the average of the score array
 
 #	print(statArray)
@@ -1557,10 +1558,13 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 #	itemOutdex.sort()
 	itemNames = list(itemDict.keys())
 	itemNames.sort()
-	print(itemNames[0])
+
+#	print(itemNames[0])
+
 #	rankList['index'] = itemNames[itemOutdex]
 #	rankList['names'] = itemNames[n for n in range(len(itemDict)) if n not in itemIndex]
 	rankList['names'] = [itemNames[n] for n in range(len(itemDict)) if n not in itemIndex]
+#TODO: Why is this writing as a byte stream, not str ??
 
 	# Sort by the score
 	rankList.sort(order=['inverse', 'names'])
@@ -1574,6 +1578,9 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 	foutb.write("Number of True Positives returned in top N predicted...")
 	foutb.write("\nReturned{}TruePos".format(textDelim))
 
+#	print("hidden {}".format(hiddenSet))
+#	print(rankList['names'])
+
 	foundCount = 0
 	firstLine = True
 	for i in range(len(rankList)) :
@@ -1585,8 +1592,7 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 #		print(rankList['score'][i])
 #		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
 		fouta.write("{}{}{}".format(rankList['score'][i],
-			textDelim, rankList['names'][i].decode('ascii')))
-#TODO: Why is this writing as a byte stream, not str ??
+			textDelim, rankList['names'][i]))
 
 		# Write the body of the cutoffs file
 		if rankList['names'][i] in hiddenSet :
@@ -1597,6 +1603,45 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 	#end loop
 	fouta.close()
 	foutb.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Save the topK chosen paths w/ scores
+# Input ----
+#	path, str: directory to write output file
+#	suffix, str: suffix to the filename
+#	pathList, str list: list of the paths to save
+#	scoreList, float list: list of the respective scores
+# Returns ----
+#	nothing
+# Creates ----
+#	ranked_paths-<suffix>.txt: list of the paths used
+def writeChosenPaths(path, suffix, pathList, scoreList) :
+
+	if len(pathList) != len(scoreList) :
+		print("ERROR: pathList ({}) and scoreList ".format(len(pathList)) +
+			"({}) are different lengths.".format(len(scoreList)))
+	#end if
+
+	# Open the output file
+	outName = 'ranked_paths-' + suffix + '.txt'
+	fout = open(path + outName, 'w')
+
+	# Write the header
+	fout.write("Top paths & scores as chosen by the" +
+		" {} method".format(suffix))
+
+	# Write the body
+	for i in range(len(scoreList)) :
+		fout.write("\n{}{}{}".format(scoreList[i],
+			textDelim, pathList[i]))
+	#end loop
+
+	fout.close()
 
 	return
 #end def ######## ######## ######## 
