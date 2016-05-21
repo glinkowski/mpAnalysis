@@ -20,7 +20,7 @@ import time
 # PARAMETERS
 
 # The network to use and directory path
-ename = 'all_v1_g2e11t0'
+ename = 'all_v3beta_g2e9t0'
 epath = '../Dropbox/mp/networks/'
 #ename = 'fakeNtwk00_g2e3t10'
 #epath = 'networks/'
@@ -38,14 +38,14 @@ calcStep = 3
 tstart = time.time()
 
 # Load the primary matrices to memory
-print "\nLoading the primary path matrices"
+print("\nLoading the primary path matrices")
 primNames, primList = pp.readPrimaryMatrices(epath, ename)
 #print primNames
 #print primList[0]
 
 mpPath = epath + ename + "_MetaPaths/"
 # Calculate the requested metapaths
-print "Creating metapaths of length {}".format(calcStep)
+print("Creating metapaths of length {}".format(calcStep))
 if calcStep == 1 :
     pp.createMPLengthOne(primList, primNames, mpPath)
 if calcStep == 2 :
@@ -57,4 +57,4 @@ elif calcStep == 4 :
 #end if
 
 
-print "\nDone.\n"
+print("\nDone.\n")

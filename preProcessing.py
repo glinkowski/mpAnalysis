@@ -23,7 +23,7 @@
 import preProcFuncs as pp
 import time
 
-
+import numpy as np
 
 ####### ####### ####### ####### 
 # PARAMETERS
@@ -37,14 +37,14 @@ if not useRealData :
 	epath = 'networks/'
 #	epath = '../Dropbox/mp/networksFake/'
 else :
-	ename = 'all_v1'
+	ename = 'all_v3beta'
 #	ename = 'toy2_hsa'
 	epath = '../Dropbox/mp/networks/'
 #end if
 
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 3
+mpDepth = 2
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'
@@ -77,7 +77,7 @@ print("    reading in the edge file {}".format(efile))
 edgeArray, nodeDict = pp.readEdgeFile(epath+efile)
 print("    initial edgeArray size: {} bytes".format(edgeArray.nbytes))
 
-#print("edgeArray: \n", edgeArray)
+print("edgeArray: \n", edgeArray[0:5,:])
 #print("nodeDict: \n", nodeDict)
 
 # Read in the corrections file
@@ -89,6 +89,8 @@ pp.applyCorrections(edgeArray, epath+cfile)
 
 # 1b) Apply normalization, thresholding, discard unwanteds
 
+#print(edgeArray.shape)
+
 # Normalize weights
 print("Normalizing weights by edge type ...")
 pp.applyNormalization(edgeArray, 0)
@@ -96,6 +98,7 @@ pp.applyNormalization(edgeArray, 0)
 print("Thresholding weights at {}".format(thresh))
 edgeArray = pp.applyThreshold(edgeArray, thresh)
 
+#print(edgeArray.shape)
 
 # Discard specified genes, edges
 edgeArray = pp.applyKeepLists(edgeArray, loseGenes,
@@ -105,6 +108,7 @@ print("    final edgeArray size: {} bytes".format(edgeArray.nbytes))
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
+#print(edgeArray.shape)
 
 # 2) Save the modified network
 
@@ -132,6 +136,7 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 print("Creating the primary gene-gene matrices ...")
 matrixList = pp.createMatrixListNoBinning(edgeArray,
 	keepEdges, indirEdges, geneList, nodeDict)
+del edgeArray
 
 # Save the primary matrices
 primpath = epath + outname + "_Primaries/"
