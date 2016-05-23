@@ -264,22 +264,67 @@ for si in dSubDirs :
 	#end loop
 
 
+
+
+
 	# 8) Write the ranked_genes files + chosen paths
+	gRanks = np.empty([len(giUnknown), 6], dtype=object)
 #	print(geneDict)
 #	print(simArrayNaive)
 #	print(topNaive)
-	mp.writeRankedGenes02(si, 'naive', simArrayNaive,
+	gRanks[:,0] = mp.writeRankedGenes02(si, 'naive', simArrayNaive,
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'naive02', simArrayNaive02,
+	gRanks[:,1] = mp.writeRankedGenes02(si, 'naive02', simArrayNaive02,
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'guided', simArrayGuided,
+	gRanks[:,2] = mp.writeRankedGenes02(si, 'guided', simArrayGuided,
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'guided02', simArrayGuided02,
+	gRanks[:,3] = mp.writeRankedGenes02(si, 'guided02', simArrayGuided02,
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'random', simArrayRandom,
+	gRanks[:,4] = mp.writeRankedGenes02(si, 'random', simArrayRandom,
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'random02', simArrayRandom02,
+	gRanks[:,5] = mp.writeRankedGenes02(si, 'random02', simArrayRandom02,
 		geneDict, giKnown, gHidden, retCutoffs)
+
+
+	# 9) Create a ranking based on voting
+	# rankVote = np.recarray( len(giUnknown),
+	# 	dtype=[('gene', 'a30'), ('rank', 'f4')])
+	# rankVote['gene'] = geneList
+	# rankVote['rank'] = np.zeros(len(giUnknown))
+
+	# # get ranks for each gene, sort by sum across methods
+	# for rank in range(len(giUnknown)) :
+	# 	for col in [0, 2, 4] :
+	# 		row = geneDict[gRanks[rank,col]]
+	# 		rankVote['rank'][idx] += r
+	# #end loop
+	# rankVote.sort(order=['rank', 'gene'])
+
+	# get ranks for each gene
+	#	invert the value to be passed to the function
+#	print(gRanks.shape)
+#	rankVote = np.zeros(gRanks.shape)
+	rankVote = np.zeros( (len(geneDict), gRanks.shape[1]))
+	for rank in range(gRanks.shape[0]) :
+		for col in range(gRanks.shape[1]) :
+			row = geneDict[gRanks[rank,col]]
+			rankVote[row,col] -= rank
+	#end loop
+	rankVote = rankVote[giUnknown,:]
+
+	# invert the stat before calling the function
+#	simArrayVoting = np.subtract(0, gRanks[:,[0, 2, 4]])
+	mp.writeRankedGenes02(si, 'voting', rankVote[:,[0,2,4]],
+		geneDict, giKnown, gHidden, retCutoffs)
+
+#	simArrayVoting = np.subtract(0, gRanks[:,[1, 3, 5]])
+	mp.writeRankedGenes02(si, 'voting02', rankVote[:,[1,3,5]],
+		geneDict, giKnown, gHidden, retCutoffs)
+
+#	simArrayVoting = np.subtract(0, gRanks[:,:])
+	mp.writeRankedGenes02(si, 'votingAll', rankVote,
+		geneDict, giKnown, gHidden, retCutoffs)
+
 
 #end loop
 

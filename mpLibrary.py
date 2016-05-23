@@ -1604,7 +1604,7 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 	fouta.close()
 	foutb.close()
 
-	return
+	return rankList['names']
 #end def ######## ######## ######## 
 
 
