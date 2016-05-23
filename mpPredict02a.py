@@ -4,6 +4,9 @@
 #		for the KnowEnG big data center at UIUC
 #		funded by the NIH
 # 
+# Approach 1: path counting & percentile beat
+#	Version 2, Step 1
+# 
 # A two-step approach to set membership prediction, using
 #	a batch approach. This file contains Step One:
 #	Rank the paths for multiple samples at once.
@@ -57,8 +60,6 @@ else :
 #end if
 
 # Output path
-#oRoot = 'outputFake/'
-#oRoot = '../Dropbox/mp/output/'
 oDirPrefix = 'pred02-batch'
 
 

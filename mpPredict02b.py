@@ -4,6 +4,9 @@
 #		for the KnowEnG big data center at UIUC
 #		funded by the NIH
 # 
+# Approach 1: path counting & percentile beat
+#	Version 2, Step 2
+#
 # A two-step approach to set membership prediction, using
 #	a batch approach. This file contains Step Two:
 #	Rank the genes for the top selected meta-paths.
@@ -60,8 +63,6 @@ matrixDT = np.float32
 
 ####### ####### ####### ####### 
 
-####### ####### ####### ####### 
-
 
 
 ####### ####### ####### ####### 
@@ -100,19 +101,15 @@ dSubDirs = mp.getSubDirectoryList(sRoot + sFolder)
 pathIgnore = []
 
 
-# For each sample (subdir), rank genes
+# For each sample (each subdirectory), rank genes
 #		save top genes & rank to a file
-
 print("Ranking genes for each sample ...")
 #for si in dSubDirs[1:2] :
 for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
-#	print(si)
-#	print(sv)
 	print("\n{}/{}/".format(sv[-3],sv[-2]))
-
 
 	# Read in the ranked paths
 	pathRanked = mp.readRankedPaths(si)
@@ -120,18 +117,14 @@ for si in dSubDirs :
 	# Sort array DESCENDING by rank and ASCENDING by length
 	pathRanked = np.sort(pathRanked, order=['stat_inverse', 'length', 'name'])
 
-
-#	print(pathRanked[0])
-
 	# Read in the non-hidden genes
-	# Create index lists for Known, Hidden, Unknown, TrueNeg
+	# Create index lists for Known, Hidden, Unknown
 	gKnown = mp.readFileAsList(si+'known.txt')
 	giKnown = mp.convertToIndices(gKnown, geneDict)
 	gHidden = mp.readFileAsList(si+'concealed.txt')
 	giHidden = mp.convertToIndices(gHidden, geneDict)
-#	giUnknown = [g for g in geneDict.values() if g not in giKnown]
-#	giTrueNeg = [g for g in giUnknown if g not in giHidden]
 	giUnknown = [i for i in range(len(geneDict)) if i not in giKnown]
+
 
 	# 4) Select top paths for naive, guided01, random tests
 
@@ -179,7 +172,6 @@ for si in dSubDirs :
 			skipPaths.append(thisPath)
 #			skipPathsLen.append(pathRanked['length'][i])
 	#end loop
-#	print (topGuidedScore)
 
 	# Select K paths at random (for comparison)
 	topRandom = list()
@@ -196,9 +188,7 @@ for si in dSubDirs :
 
 
 	# 7) Rank genes by similarity along selected metapaths
-
-	# For each path, load pathsim matrix, sum similarity
-	#TODO: weight each pathsim by that path's score ??
+	#	For each path, load pathsim matrix, sum similarity
 
 	# For each path get gene similarity, naive
 	simArrayNaive = np.empty([len(giUnknown), len(topNaive)], dtype=matrixDT)
@@ -206,20 +196,10 @@ for si in dSubDirs :
 	for p in topNaive :
 		simMatrix = mp.getSimMatrix( pathDict[p], ePath,
 			eName, (len(giKnown) + len(giUnknown)) )
-#		print("full: \n{}".format(simMatrix))
 		simCols = simMatrix[:,giKnown]
-#		print(giKnown)
-#		print(giKnown)
-#		print(giUnknown)
-#		print("rows: {}".format(simCols))
-#		print(np.sum(simCols, axis=1))
-#		print("new col: \n{}".format(np.sum(simCols, axis=1)[giUnknown]))
 		simArrayNaive[:,idx] = np.sum(simCols, axis=1)[giUnknown]
-#		print(simArrayNaive[:,idx])
 		idx += 1
-		#TODO: Multipy by the weight (make optional?)
 	#end loop
-#	print("full: \n{}".format(simArrayNaive))
 
 	# second Naive, using scores as weights
 	simArrayNaive02 = np.copy(simArrayNaive)
@@ -236,7 +216,6 @@ for si in dSubDirs :
 		simCols = simMatrix[:,giKnown]
 		simArrayGuided[:,idx] = np.sum(simCols, axis=1)[giUnknown]
 		idx += 1
-		#TODO: Multipy by the weight (make optional?)
 	#end loop
 
 	# second Guided, using scores as weights
@@ -254,7 +233,6 @@ for si in dSubDirs :
 		simCols = simMatrix[:,giKnown]
 		simArrayRandom[:,idx] = np.sum(simCols, axis=1)[giUnknown]
 		idx += 1
-		#TODO: Multipy by the weight (make optional?)
 	#end loop
 
 	# second Random, using scores as weights
@@ -264,14 +242,10 @@ for si in dSubDirs :
 	#end loop
 
 
-
-
-
 	# 8) Write the ranked_genes files + chosen paths
+
+	# gRanks to be used for voting method
 	gRanks = np.empty([len(giUnknown), 6], dtype=object)
-#	print(geneDict)
-#	print(simArrayNaive)
-#	print(topNaive)
 	gRanks[:,0] = mp.writeRankedGenes02(si, 'naive', simArrayNaive,
 		geneDict, giKnown, gHidden, retCutoffs)
 	gRanks[:,1] = mp.writeRankedGenes02(si, 'naive02', simArrayNaive02,
@@ -287,23 +261,9 @@ for si in dSubDirs :
 
 
 	# 9) Create a ranking based on voting
-	# rankVote = np.recarray( len(giUnknown),
-	# 	dtype=[('gene', 'a30'), ('rank', 'f4')])
-	# rankVote['gene'] = geneList
-	# rankVote['rank'] = np.zeros(len(giUnknown))
-
-	# # get ranks for each gene, sort by sum across methods
-	# for rank in range(len(giUnknown)) :
-	# 	for col in [0, 2, 4] :
-	# 		row = geneDict[gRanks[rank,col]]
-	# 		rankVote['rank'][idx] += r
-	# #end loop
-	# rankVote.sort(order=['rank', 'gene'])
 
 	# get ranks for each gene
 	#	invert the value to be passed to the function
-#	print(gRanks.shape)
-#	rankVote = np.zeros(gRanks.shape)
 	rankVote = np.zeros( (len(geneDict), gRanks.shape[1]))
 	for rank in range(gRanks.shape[0]) :
 		for col in range(gRanks.shape[1]) :
@@ -312,16 +272,11 @@ for si in dSubDirs :
 	#end loop
 	rankVote = rankVote[giUnknown,:]
 
-	# invert the stat before calling the function
-#	simArrayVoting = np.subtract(0, gRanks[:,[0, 2, 4]])
+	# write to file
 	mp.writeRankedGenes02(si, 'voting', rankVote[:,[0,2,4]],
 		geneDict, giKnown, gHidden, retCutoffs)
-
-#	simArrayVoting = np.subtract(0, gRanks[:,[1, 3, 5]])
 	mp.writeRankedGenes02(si, 'voting02', rankVote[:,[1,3,5]],
 		geneDict, giKnown, gHidden, retCutoffs)
-
-#	simArrayVoting = np.subtract(0, gRanks[:,:])
 	mp.writeRankedGenes02(si, 'votingAll', rankVote,
 		geneDict, giKnown, gHidden, retCutoffs)
 
