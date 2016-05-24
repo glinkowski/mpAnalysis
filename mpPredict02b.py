@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # save location of the ranked sample data
-sFolder = 'pred02-batch-011'
+sFolder = 'pred02-batch-012'
 #sRoot = '../Dropbox/mp/output/'
 
 # Number of top paths to use
@@ -75,18 +75,18 @@ mp.setParamVerbose(verbose)
 mp.setParamMatrixDT(matrixDT)
 
 
+
 # 1) Load the gene-index dictionary & path names
 print("Creating the gene-index dictionary.")
 geneDict = mp.readGenesFile(ePath, eName)
 geneList = list(geneDict.keys())
 geneList.sort()
 
-print(geneDict.keys())
-
 print("Reading in the path names.")
 pathDict = mp.readKeyFile(ePath, eName)
 pathNames = mp.removeInvertedPaths(pathDict)
 #del pathDict
+
 
 
 # 2) Get a list of the sample subdirectories
@@ -96,9 +96,11 @@ dSubDirs = mp.getSubDirectoryList(sRoot + sFolder)
 #print(dSubDirs[0])
 
 
+
 # 3) Read in the Ignore List (wich paths to ignore)
 # TODO: this.
 pathIgnore = []
+
 
 
 # For each sample (each subdirectory), rank genes
@@ -109,7 +111,7 @@ for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
-	print("\n{}/{}/".format(sv[-3],sv[-2]))
+	print("  {}/{}/".format(sv[-3],sv[-2]))
 
 	# Read in the ranked paths
 	pathRanked = mp.readRankedPaths(si)
@@ -124,6 +126,7 @@ for si in dSubDirs :
 	gHidden = mp.readFileAsList(si+'concealed.txt')
 	giHidden = mp.convertToIndices(gHidden, geneDict)
 	giUnknown = [i for i in range(len(geneDict)) if i not in giKnown]
+
 
 
 	# 4) Select top paths for naive, guided01, random tests
@@ -141,7 +144,6 @@ for si in dSubDirs :
 		topNaive.append(thisPath)
 		topNaiveScore.append(pathRanked['stat'][i])
 	#end if
-
 
 	# Select top K paths, first guided method
 	topGuided = list()
@@ -187,7 +189,8 @@ for si in dSubDirs :
 	mp.writeChosenPaths(si, 'random', topRandom, topRandomScore)
 
 
-	# 7) Rank genes by similarity along selected metapaths
+
+	# 5) Rank genes by similarity along selected metapaths
 	#	For each path, load pathsim matrix, sum similarity
 
 	# For each path get gene similarity, naive
@@ -242,7 +245,8 @@ for si in dSubDirs :
 	#end loop
 
 
-	# 8) Write the ranked_genes files + chosen paths
+
+	# 6) Write the ranked_genes files + chosen paths
 
 	# gRanks to be used for voting method
 	gRanks = np.empty([len(giUnknown), 6], dtype=object)
@@ -260,7 +264,8 @@ for si in dSubDirs :
 		geneDict, giKnown, gHidden, retCutoffs)
 
 
-	# 9) Create a ranking based on voting
+
+	# 7) Create a ranking based on voting
 
 	# get ranks for each gene
 	#	invert the value to be passed to the function
@@ -279,7 +284,6 @@ for si in dSubDirs :
 		geneDict, giKnown, gHidden, retCutoffs)
 	mp.writeRankedGenes02(si, 'votingAll', rankVote,
 		geneDict, giKnown, gHidden, retCutoffs)
-
 
 #end loop
 
