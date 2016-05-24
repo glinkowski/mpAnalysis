@@ -1539,7 +1539,7 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 
 	# Create the numpy record/structured array
 	rankList = np.recarray(statArray.shape[0],
-		dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', object)])
+		dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', nodeDT)])
 	# The scores come from the average of the score array
 
 #	print(statArray)
