@@ -79,23 +79,24 @@ print("")
 mp.setParamVerbose(verbose)
 
 
+
 # 0) Name & create a folder to store output files
 oDirectory = mp.nameOutputPath(oRoot, oDirPrefix)
 print("Files will be saved to {}".format(oDirectory))
 oPath = oRoot + oDirectory
 
-#TODO: write file w/ experiment parameters
 
 
 # 1) Load the gene-index dict
 print("Creating the gene-index dictionary.")
 geneDict = mp.readGenesFile(ePath, eName)
 
-print(geneDict)
+
 
 # 2) Get list of all samples in folder
 sNames = mp.getSampleNamesFromFolder(sPath)
 #printsNames
+
 
 
 # 3) Read the samples & create random sample sets
@@ -112,14 +113,6 @@ for s in sNames :
 	gAll = mp.readSampleFiles(sPath+s, True, True)
 	gKnown, gHidden = mp.partitionSample(ePath, eName,
 		oSubDir, gAll, percHide)
-
-
-#	print("Printing: all, all[0], keys[0], known")
-#	print(gAll)
-#	print(gAll[0])
-#	print(list(geneDict.keys())[0])
-#	print(gKnown)
-#	break
 
 	print("Analyzing metapaths in sample: {}".format(s))
 	print( "  partitioned into {} known".format(len(gKnown)) +
@@ -140,14 +133,9 @@ for s in sNames :
 			len(gKnown), len(geneDict))
 	#end if
 	rSampArrays.append(rSamps)
-
-#TODO: output gene_bins.txt or ... degree_bins ? or ?
-
 #end loop
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
-#print"len of samples list", len(oSampLists)
-#print"len of rand samp list", len(rSampArrays)
 
 
 # 4) Get the list of available paths
@@ -171,6 +159,7 @@ with gzip.open(fname, 'rb') as fin :
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
+
 # 5) Calculate scores 
 pathScores = np.zeros([len(pathList), len(sNames)])
 for i in range(len(pathList)) :
@@ -191,6 +180,7 @@ for i in range(len(pathList)) :
 	print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 #end loop
 #print"    --elapsed time: {:.3} (s)".format(time.time()-tstart)
+
 
 
 # 6) output ranked_path.txt per sample
@@ -243,8 +233,24 @@ fout.close()
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
-#TODO: Save the name of the network used to a file
-#		and other params
+
+# 8) write parameters, network, sample names to file
+with open(oPath + 'parameters.txt', 'w') as fout :
+	fout.write('network\t{}\n'.format(eName))
+	fout.write('ntwk path\t{}\n'.format(ePath))
+	fout.write('\n')
+	fout.write('percent hidden\t{:2.1%}\n'.format(percHide))
+	fout.write('random samples\t{}\n'.format(nRandSamp))
+	fout.write('used node binning\t{}\n'.format(useBinning))
+	fout.write('bin cutoffs\t{}\n'.format(nodeBins))
+	fout.write('bin edge type\t{}\n'.format(binType))
+	fout.write('\n')
+	fout.write('runtime (s)\t{:1.3}\n'.format(time.time()-tstart))
+	fout.write('samples (#)\t{}\n'.format(len(sNames)))
+	fout.write('Samples in this batch:')
+	for sn in sNames :
+		fout.write('\n\t{}'.format(sn))
+#end with
 
 
 
