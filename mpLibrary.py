@@ -1828,7 +1828,8 @@ def getSampleNamesFromFolder(path) :
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
-	print (fNames)
+	if verbose :
+		print (fNames)
 
 	# Identify & create list of sample names in folder
 	sNames = list()
@@ -1865,7 +1866,7 @@ def writeGenericLists(path, fname, columnList) :
 
 # ASSUME: the contained lists are of equal length
 
-	fout = open(path+fname, 'wb')
+	fout = open(path+fname, 'w')
 
 	for i in range(len(columnList[0])) :
 		fout.write("{}".format(columnList[0][i]))
