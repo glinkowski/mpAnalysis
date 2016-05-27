@@ -4,6 +4,9 @@
 #		for the KnowEnG big data center at UIUC
 #		funded by the NIH
 # 
+# Approach 1: path counting & percentile beat
+#	Version 2, Step 2
+#
 # A two-step approach to set membership prediction, using
 #	a batch approach. This file contains Step Two:
 #	Rank the genes for the top selected meta-paths.
@@ -30,7 +33,7 @@ import random
 # PARAMETERS
 
 # save location of the ranked sample data
-sFolder = 'pred02-batch-011'
+sFolder = 'pred02-batch-012'
 #sRoot = '../Dropbox/mp/output/'
 
 # Number of top paths to use
@@ -60,8 +63,6 @@ matrixDT = np.float32
 
 ####### ####### ####### ####### 
 
-####### ####### ####### ####### 
-
 
 
 ####### ####### ####### ####### 
@@ -72,6 +73,7 @@ print("")
 
 mp.setParamVerbose(verbose)
 mp.setParamMatrixDT(matrixDT)
+
 
 
 # 1) Load the gene-index dictionary & path names
@@ -86,6 +88,7 @@ pathNames = mp.removeInvertedPaths(pathDict)
 #del pathDict
 
 
+
 # 2) Get a list of the sample subdirectories
 if not sRoot.endswith('/') :
 	sRoot = sRoot + '/'
@@ -93,24 +96,22 @@ dSubDirs = mp.getSubDirectoryList(sRoot + sFolder)
 #print(dSubDirs[0])
 
 
+
 # 3) Read in the Ignore List (wich paths to ignore)
 # TODO: this.
 pathIgnore = []
 
 
-# For each sample (subdir), rank genes
-#		save top genes & rank to a file
 
+# For each sample (each subdirectory), rank genes
+#		save top genes & rank to a file
 print("Ranking genes for each sample ...")
-for si in dSubDirs[0:1] :
-#for si in dSubDirs :
+#for si in dSubDirs[1:2] :
+for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
-#	print(si)
-#	print(sv)
-	print("\n{}/{}/".format(sv[-3],sv[-2]))
-
+	print("  {}/{}/".format(sv[-3],sv[-2]))
 
 	# Read in the ranked paths
 	pathRanked = mp.readRankedPaths(si)
@@ -118,18 +119,15 @@ for si in dSubDirs[0:1] :
 	# Sort array DESCENDING by rank and ASCENDING by length
 	pathRanked = np.sort(pathRanked, order=['stat_inverse', 'length', 'name'])
 
-
-#	print(pathRanked[0])
-
 	# Read in the non-hidden genes
-	# Create index lists for Known, Hidden, Unknown, TrueNeg
+	# Create index lists for Known, Hidden, Unknown
 	gKnown = mp.readFileAsList(si+'known.txt')
 	giKnown = mp.convertToIndices(gKnown, geneDict)
 	gHidden = mp.readFileAsList(si+'concealed.txt')
 	giHidden = mp.convertToIndices(gHidden, geneDict)
-	giUnknown = [g for g in geneDict.values() if g not in giKnown]
-#	giTrueNeg = [g for g in giUnknown if g not in giHidden]
 	giUnknown = [i for i in range(len(geneDict)) if i not in giKnown]
+
+
 
 	# 4) Select top paths for naive, guided01, random tests
 
@@ -146,7 +144,6 @@ for si in dSubDirs[0:1] :
 		topNaive.append(thisPath)
 		topNaiveScore.append(pathRanked['stat'][i])
 	#end if
-
 
 	# Select top K paths, first guided method
 	topGuided = list()
@@ -165,6 +162,9 @@ for si in dSubDirs[0:1] :
 			if sp in thisPath :
 #			if (sp in thisPath) and ((skipPathsLen + 1) == pathRanked['length'][i]) :
 				continue
+#			if thisPath in sp :
+#				continue
+#TODO: better comparison? percent of path is similar?
 		#end if
 		topGuided.append(thisPath)
 		topGuidedScore.append(pathRanked['stat'][i])
@@ -175,7 +175,6 @@ for si in dSubDirs[0:1] :
 #			skipPathsLen.append(pathRanked['length'][i])
 	#end loop
 
-
 	# Select K paths at random (for comparison)
 	topRandom = list()
 	topRandomScore = list()
@@ -185,11 +184,14 @@ for si in dSubDirs[0:1] :
 		topRandomScore.append(pathRanked['stat'][i])
 	#end loop
 
+	mp.writeChosenPaths(si, 'naive', topNaive, topNaiveScore)
+	mp.writeChosenPaths(si, 'guided', topGuided, topGuidedScore)
+	mp.writeChosenPaths(si, 'random', topRandom, topRandomScore)
 
-	# 7) Rank genes by similarity along selected metapaths
 
-	# For each path, load pathsim matrix, sum similarity
-	#TODO: weight each pathsim by that path's score ??
+
+	# 5) Rank genes by similarity along selected metapaths
+	#	For each path, load pathsim matrix, sum similarity
 
 	# For each path get gene similarity, naive
 	simArrayNaive = np.empty([len(giUnknown), len(topNaive)], dtype=matrixDT)
@@ -197,20 +199,16 @@ for si in dSubDirs[0:1] :
 	for p in topNaive :
 		simMatrix = mp.getSimMatrix( pathDict[p], ePath,
 			eName, (len(giKnown) + len(giUnknown)) )
-#		print("full: \n{}".format(simMatrix))
 		simCols = simMatrix[:,giKnown]
-#		print(giKnown)
-#		print(giKnown)
-#		print(giUnknown)
-#		print("rows: {}".format(simCols))
-#		print(np.sum(simCols, axis=1))
-		print("new col: \n{}".format(np.sum(simCols, axis=1)[giUnknown]))
 		simArrayNaive[:,idx] = np.sum(simCols, axis=1)[giUnknown]
-		print(simArrayNaive[:,idx])
 		idx += 1
-		#TODO: Multipy by the weight (make optional?)
 	#end loop
-	print("full: \n{}".format(simArrayNaive))
+
+	# second Naive, using scores as weights
+	simArrayNaive02 = np.copy(simArrayNaive)
+	for c in range(simArrayNaive.shape[1]) :
+		simArrayNaive02[:,c] = np.multiply(simArrayNaive02[:,c], topNaiveScore[c])
+	#end loop
 
 	# For each path get gene similarity, first guided
 	simArrayGuided = np.empty([len(giUnknown), len(topGuided)], dtype=matrixDT)
@@ -221,7 +219,12 @@ for si in dSubDirs[0:1] :
 		simCols = simMatrix[:,giKnown]
 		simArrayGuided[:,idx] = np.sum(simCols, axis=1)[giUnknown]
 		idx += 1
-		#TODO: Multipy by the weight (make optional?)
+	#end loop
+
+	# second Guided, using scores as weights
+	simArrayGuided02 = np.copy(simArrayGuided)
+	for c in range(simArrayGuided.shape[1]) :
+		simArrayGuided02[:,c] = np.multiply(simArrayGuided02[:,c], topGuidedScore[c])
 	#end loop
 
 	# For each path get gene similarity, first guided
@@ -233,22 +236,57 @@ for si in dSubDirs[0:1] :
 		simCols = simMatrix[:,giKnown]
 		simArrayRandom[:,idx] = np.sum(simCols, axis=1)[giUnknown]
 		idx += 1
-		#TODO: Multipy by the weight (make optional?)
+	#end loop
+
+	# second Random, using scores as weights
+	simArrayRandom02 = np.copy(simArrayRandom)
+	for c in range(simArrayRandom.shape[1]) :
+		simArrayRandom02[:,c] = np.multiply(simArrayRandom02[:,c], topRandomScore[c])
 	#end loop
 
 
-	# 8) Write the ranked_genes files
-#	print(geneDict)
-#	print(simArrayNaive)
-#	print(topNaive)
-	mp.writeRankedGenes02(si, 'naive', simArrayNaive,
-		geneDict, giKnown, giHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'guided', simArrayGuided,
-		geneDict, giKnown, giHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'random', simArrayRandom,
-		geneDict, giKnown, giHidden, retCutoffs)
+
+	# 6) Write the ranked_genes files + chosen paths
+
+	# gRanks to be used for voting method
+	gRanks = np.empty([len(giUnknown), 6], dtype=object)
+	gRanks[:,0] = mp.writeRankedGenes02(si, 'naive', simArrayNaive,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,1] = mp.writeRankedGenes02(si, 'naive02', simArrayNaive02,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,2] = mp.writeRankedGenes02(si, 'guided', simArrayGuided,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,3] = mp.writeRankedGenes02(si, 'guided02', simArrayGuided02,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,4] = mp.writeRankedGenes02(si, 'random', simArrayRandom,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,5] = mp.writeRankedGenes02(si, 'random02', simArrayRandom02,
+		geneDict, giKnown, gHidden, retCutoffs)
 
 
- #TODO: output chosen paths for each method
+
+	# 7) Create a ranking based on voting
+
+	# get ranks for each gene
+	#	invert the value to be passed to the function
+	rankVote = np.zeros( (len(geneDict), gRanks.shape[1]))
+	for rank in range(gRanks.shape[0]) :
+		for col in range(gRanks.shape[1]) :
+			row = geneDict[gRanks[rank,col]]
+			rankVote[row,col] -= rank
+	#end loop
+	rankVote = rankVote[giUnknown,:]
+
+	# write to file
+	mp.writeRankedGenes02(si, 'voting', rankVote[:,[0,2,4]],
+		geneDict, giKnown, gHidden, retCutoffs)
+	mp.writeRankedGenes02(si, 'voting02', rankVote[:,[1,3,5]],
+		geneDict, giKnown, gHidden, retCutoffs)
+	mp.writeRankedGenes02(si, 'votingAll', rankVote,
+		geneDict, giKnown, gHidden, retCutoffs)
+
+#end loop
+
+
 
 print("\nDone.\n")

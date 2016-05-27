@@ -11,6 +11,7 @@
 #	verifyDirectory(path, create)
 #	verifyFile(path, name, quiet)
 #	saveListToText(path, name, theList)
+#	saveMatrixText(matrix, mname, mpath, integer)
 #	checkGenesInNetwork(path, name, geneList)
 #	partitionSample(nPath, nName, oPath, sample, percent)
 #	readKeyFile(path, name)
@@ -72,7 +73,8 @@ fnConcealedGenes = 'concealed.txt'
 fnLeftOutGenes = 'ignored.txt'
 
 ## Data type used when loading edge file to memory:
-nodeDT = np.dtype('a30')
+#nodeDT = np.dtype('a30')
+nodeDT = object
 
 # Length to pad the matrix file names:
 fnMatrixZPad = 5
@@ -247,6 +249,64 @@ def saveListToText(path, name, theList) :
 		theFile.write("{}".format(item))
 	#end if
 	theFile.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: save the given matrix as a .txt file
+# Input ----
+#	matrix, (NxN) list: the values to save
+#	mname, str: name of the file to save
+#	mpath, str: path to the folder to save the file
+#	integer, bool: True means save values as int()
+# Returns ----
+#	nothing
+def saveMatrixText(matrix, mname, mpath, integer) :
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# Open the file
+	if mname.endswith('.txt') :
+		fout = open(mpath + mname, "w")
+	else :
+		fout = open(mpath + mname + ".txt", "w")
+
+
+	# Write to the file
+	firstR = True
+	for i in range(0, matrix.shape[0]) :
+
+		# if not the first row, start with \n
+		if firstR :
+			firstR = False
+		else :
+			fout.write("\n")
+		#end if
+
+		firstC = True
+		for j in range(0, matrix.shape[1]) :
+
+			# if not the first col, start with \t
+			if firstC :
+				firstC = False
+			else :
+				fout.write("\t")
+			#end if
+
+			# Write the value to file
+			#	If integer = True, write as an integer
+			if integer :
+				fout.write("{}".format( float(matrix[i,j]) ))
+			else :
+				fout.write("{}".format( matrix[i,j] ))
+	#end loop
+	fout.close()
 
 	return
 #end def ######## ######## ######## 
@@ -1557,10 +1617,13 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 #	itemOutdex.sort()
 	itemNames = list(itemDict.keys())
 	itemNames.sort()
-	print(itemNames[0])
+
+#	print(itemNames[0])
+
 #	rankList['index'] = itemNames[itemOutdex]
 #	rankList['names'] = itemNames[n for n in range(len(itemDict)) if n not in itemIndex]
 	rankList['names'] = [itemNames[n] for n in range(len(itemDict)) if n not in itemIndex]
+#TODO: Why is this writing as a byte stream, not str ??
 
 	# Sort by the score
 	rankList.sort(order=['inverse', 'names'])
@@ -1574,6 +1637,9 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 	foutb.write("Number of True Positives returned in top N predicted...")
 	foutb.write("\nReturned{}TruePos".format(textDelim))
 
+#	print("hidden {}".format(hiddenSet))
+#	print(rankList['names'])
+
 	foundCount = 0
 	firstLine = True
 	for i in range(len(rankList)) :
@@ -1585,8 +1651,7 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 #		print(rankList['score'][i])
 #		fouta.write("{}{}{}".format(rankList['score'][i], textDelim, rankList['names'][i]))
 		fouta.write("{}{}{}".format(rankList['score'][i],
-			textDelim, rankList['names'][i].decode('ascii')))
-#TODO: Why is this writing as a byte stream, not str ??
+			textDelim, rankList['names'][i]))
 
 		# Write the body of the cutoffs file
 		if rankList['names'][i] in hiddenSet :
@@ -1597,6 +1662,45 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 	#end loop
 	fouta.close()
 	foutb.close()
+
+	return rankList['names']
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Save the topK chosen paths w/ scores
+# Input ----
+#	path, str: directory to write output file
+#	suffix, str: suffix to the filename
+#	pathList, str list: list of the paths to save
+#	scoreList, float list: list of the respective scores
+# Returns ----
+#	nothing
+# Creates ----
+#	ranked_paths-<suffix>.txt: list of the paths used
+def writeChosenPaths(path, suffix, pathList, scoreList) :
+
+	if len(pathList) != len(scoreList) :
+		print("ERROR: pathList ({}) and scoreList ".format(len(pathList)) +
+			"({}) are different lengths.".format(len(scoreList)))
+	#end if
+
+	# Open the output file
+	outName = 'ranked_paths-' + suffix + '.txt'
+	fout = open(path + outName, 'w')
+
+	# Write the header
+	fout.write("Top paths & scores as chosen by the" +
+		" {} method".format(suffix))
+
+	# Write the body
+	for i in range(len(scoreList)) :
+		fout.write("\n{}{}{}".format(scoreList[i],
+			textDelim, pathList[i]))
+	#end loop
+
+	fout.close()
 
 	return
 #end def ######## ######## ######## 
@@ -1724,7 +1828,8 @@ def getSampleNamesFromFolder(path) :
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
-	print (fNames)
+	if verbose :
+		print (fNames)
 
 	# Identify & create list of sample names in folder
 	sNames = list()
@@ -1761,7 +1866,7 @@ def writeGenericLists(path, fname, columnList) :
 
 # ASSUME: the contained lists are of equal length
 
-	fout = open(path+fname, 'wb')
+	fout = open(path+fname, 'w')
 
 	for i in range(len(columnList[0])) :
 		fout.write("{}".format(columnList[0][i]))
