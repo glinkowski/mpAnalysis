@@ -1,4 +1,3 @@
-
 # ---------------------------------------------------------
 # author: Greg Linkowski
 # project: Metapath Analysis
@@ -2010,6 +2009,8 @@ def createMPLengthThreeFast(pList, path) :
 				checkSet.add(mName)
 				mDict[mName] = [mNum, False]
 
+				mNum += 1
+
 				if verbose :
 					print("  #{}, {} & {}".format(mNum, mName, mNameRev))
 
@@ -2036,7 +2037,7 @@ def createMPLengthThreeFast(pList, path) :
 				#end if
 			#end if
 
-			mNum += 1
+#			mNum += 1
 		#end loop
 	#end loop
 
