@@ -1864,7 +1864,7 @@ def createMPLengthThree(pList, path) :
 	mNum = len(mDict)+1
 
 
-	pNames = pList.keys()
+	pNames = list(pList.keys())
 	pNames.sort()
 	checkSet = set()
 	for p1 in pNames :

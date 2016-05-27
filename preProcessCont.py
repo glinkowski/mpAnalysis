@@ -40,8 +40,8 @@ tstart = time.time()
 # Load the primary matrices to memory
 print("\nLoading the primary path matrices")
 primList = pp.readPrimaryMatrices(epath, ename)
-primNames = list(primList.keys())
-primNames.sort()
+#primNames = list(primList.keys())
+#primNames.sort()
 #print primNames
 #print primList[0]
 
@@ -49,13 +49,13 @@ mpPath = epath + ename + "_MetaPaths/"
 # Calculate the requested metapaths
 print("Creating metapaths of length {}".format(calcStep))
 if calcStep == 1 :
-    pp.createMPLengthOne(primList, primNames, mpPath)
+    pp.createMPLengthOne(primList, mpPath)
 if calcStep == 2 :
-    pp.createMPLengthTwo(primList, primNames, mpPath)
+    pp.createMPLengthTwo(primList, mpPath)
 elif calcStep == 3 :
-    pp.createMPLengthThree(primList, primNames, mpPath)
+    pp.createMPLengthThreeFast(primList, mpPath)
 elif calcStep == 4 :
-    pp.createMPLengthFour(primList, primNames, mpPath)
+    pp.createMPLengthFour(primList, mpPath)
 #end if
 
 
