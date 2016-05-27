@@ -36,6 +36,7 @@
 #	createMPLengthOne(pList, pNames, path)
 #	createMPLengthTwo(pList, pNames, path)
 #	createMPLengthThree(pList, pNames, path)
+#	createMPLengthThreeFast(pList, path)
 #	createMPLengthFour(pList, pNames, path)
 #	createMetaPaths(pList, pNames, gList, depth, path)
 #	readPrimaryMatrices(nName, nPath)
@@ -2008,6 +2009,9 @@ def createMPLengthThreeFast(pList, path) :
 			if mName not in checkSet :
 				checkSet.add(mName)
 				mDict[mName] = [mNum, False]
+
+				if verbose :
+					print("  #{}, {} & {}".format(mNum, mName, mNameRev))
 
 				# Check the reverse path (the transpose)
 				if mNameRev not in checkSet :
