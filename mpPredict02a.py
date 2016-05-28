@@ -60,7 +60,7 @@ else :
 #end if
 
 # Output path
-oDirPrefix = 'pred02-batch'
+oDirPrefix = 'pred02a-batch'
 
 
 # verbose feedback ?
@@ -162,6 +162,7 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 # 5) Calculate scores 
 pathScores = np.zeros([len(pathList), len(sNames)])
+pathScores2 = np.zeros([len(pathList), len(sNames)])
 for i in range(len(pathList)) :
 
 	print("Loading matrix {}, {}, {}".format(i, pathList[i], pathDict[pathList[i]]))
@@ -174,6 +175,8 @@ for i in range(len(pathList)) :
 		tCount = mp.getPathCountOne(oSampLists[j], matrix)
 		tPercent = mp.getPercentile(tCount, rSampArrays[j], matrix)
 		pathScores[i,j] = tPercent
+		tPercDiff = mp.getPercentDifference(tCount, rSampArrays[j], matrix)
+		pathScores2[i,j] = tPercDiff
 	#end loop
 
 	print("  Examined path {}".format(pathList[i]))
@@ -182,11 +185,13 @@ for i in range(len(pathList)) :
 #print"    --elapsed time: {:.3} (s)".format(time.time()-tstart)
 
 
+#TODO: save pathScores2
 
 # 6) output ranked_path.txt per sample
 for j in range(len(sNames)) :
 	oSubDir = oPath+sNames[j]+'/'
-	mp.writeRankedPaths(oSubDir, pathScores[:,j], pathDict)
+	mp.writeRankedPaths(oSubDir, 'percent', pathScores[:,j], pathDict)
+	mp.writeRankedPaths(oSubDir, 'difference', pathScores2[:,j], pathDict)
 #end loop
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
@@ -194,7 +199,7 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 # 7) output overall ranked paths for all samples (one file)
 textDelim = '\t'
-fout = open(oPath+'ranked_paths_all.txt', 'w')
+fout = open(oPath+'ranked_paths_all-percent.txt', 'w')
 
 # Write the file header
 fout.write('network:{}{}\n'.format(textDelim, eName))
@@ -232,6 +237,38 @@ for i in range(len(pathList)) :
 fout.close()
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
+
+fout = open(oPath+'ranked_paths_all-difference.txt', 'w')
+# Write the file header
+fout.write('network:{}{}\n'.format(textDelim, eName))
+fout.write('binning:{}'.format(textDelim))
+if useBinning :
+	fout.write('{}\non edge:{}{}\n'.format(nodeBins, textDelim, binType))
+else :
+	fout.write('none\n')
+#end if
+fout.write('\n')
+# Write the data header
+firstCol = True
+for i in range(len(sNames)) :
+	if not firstCol :
+		fout.write(textDelim)
+	firstCol = False
+	fout.write('{}'.format(sNames[i]))
+#end loop
+fout.write('\n')
+# Write the main data
+firstRow = True
+for i in range(len(pathList)) :
+	if not firstRow :
+		fout.write('\n')
+	firstRow = False
+	for j in range(len(sNames)) :
+		fout.write('{}{}'.format(pathScores2[i,j],textDelim))
+	#end loop
+	fout.write('{}'.format(pathList[i]))
+#end loop
+fout.close()
 
 
 # 8) write parameters, network, sample names to file
