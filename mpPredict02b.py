@@ -153,6 +153,12 @@ for si in dSubDirs :
 #	skipPathsLen = list()
 	for i in range(numTopK) :
 		thisPath = pathRanked['name'][i]
+#TODO: check the reverse path?
+		# thisPathList = thisPath.split('-')[::-1]
+		# thisPathRev = ''
+		# for i in range(len(thisPathList))[::-1] :
+		# 	thisPathRev = thisPathRev + '-' + thisPathList[i]
+		# thisP
 		# skip if contains item in Ignore list
 		for igPath in pathIgnore:
 			if igPath in thisPath :
