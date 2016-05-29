@@ -44,7 +44,7 @@
 #	writeRankedGenes02(path, suffix, statArray, itemDict,
 #		itemIndex, hiddenSet, cutoffs)
 #	writeRankedPaths(path, ranker, mpDict)
-#	readRankedPaths(path)
+#	readRankedPaths(path, name)
 #	writeGenericLists(path, fname, columnList)
 #	getSubDirectoryList(root)
 #	getMatrixDimensions(path, name)
@@ -1806,20 +1806,23 @@ def writeRankedPaths(path, suffix, ranker, mpDict) :
 # Function: Read in the ranked_paths file
 # Input ----
 #   path, str: path to file
+#	name, str: name of the file
 # Returns ----
 #	np structured array :
 #		(percent, path name, length)
-def readRankedPaths(path) :
+def readRankedPaths(path, name) :
 
 	if not path.endswith('/') :
 		path = path + '/'
 
 	# ERROR CHECK: verify file exists
-	verifyFile(path, 'ranked_paths.txt', False)
+#	verifyFile(path, 'ranked_paths.txt', False)
+	verifyFile(path, name, False)
 
 
 	# Get the number of lines in the file
-	fname = path + 'ranked_paths.txt'
+#	fname = path + 'ranked_paths.txt'
+	fname = path + name
 	nRows = 0
 	with open(fname, 'r') as fin :
 		nRows = sum(1 for line in fin)
