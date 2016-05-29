@@ -1757,7 +1757,10 @@ def writeChosenPaths(path, suffix, pathList, scoreList) :
 def writeRankedPaths(path, suffix, ranker, mpDict) :
 
 #	rankedFile = 'ranked_paths.txt'
-	rankedFile = 'ranked_paths-' + suffix + '.txt'
+	if not suffix :
+		rankedFile = 'ranked_paths.txt'
+	else :
+		rankedFile = 'ranked_paths-' + suffix + '.txt'
 
 	# The ordered list of metapaths
 	mpList = removeInvertedPaths(mpDict)
