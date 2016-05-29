@@ -936,6 +936,8 @@ def getPercentile(oCount, rSamples, matrix) :
 		if oCount > c :
 			numBeat += 1
 	#end loop
+#TODO: test this:
+#	numBeat = sum([1 for c in rCounts if (oCount > c)])
 	percentile = numBeat / float(len(rSamples)) * 100
 
 	return percentile
@@ -1430,6 +1432,7 @@ def createRandomSamplesBinned(path, name, sample,
 			degreeDict[lv[0]] = int(lv[col])
 	#end loop
 
+#	print(degreeDict)
 
 	# Define the bin cutoffs
 	values = list(degreeDict.values())
@@ -1449,6 +1452,7 @@ def createRandomSamplesBinned(path, name, sample,
 		# Find the value of the gene at cp %
 		# Goal: capture X % of nodes, sorted by degree
 		location = int(round(cp * len(values)))
+#		print("{} = {}*{}".format(location, cp, len(values)))
 		cutoffs.append(values[location])
 	#end loop
 	cutoffs.append(np.amax(values) + 1)	# The 100% ceiling
