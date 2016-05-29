@@ -932,47 +932,50 @@ def getPercentile(oCount, rSamples, matrix) :
 	# Count how many times the original sample is more
 	#   dense than a random sample
 	numBeat = 0
+	rankSum = 0
 	for c in rCounts :
+		rankSum += (oCount - c) / float(oCount + 0.001)
 		if oCount > c :
 			numBeat += 1
 	#end loop
 #TODO: test this:
 #	numBeat = sum([1 for c in rCounts if (oCount > c)])
 	percentile = numBeat / float(len(rSamples)) * 100
-
-	return percentile
-#end def ######## ######## ######## 
-
-
-
-######## ######## ######## ######## 
-# Function: For a set of samples and random counter-samples,
-#	return the average percent difference between original
-#	and random. ie: if the randoms typically had 90% of the
-#	count as the original, return +0.1; if 110%, return -0.1
-# Input ----
-#   oCount, int: number of times this path exists in test sample
-#   rSamples, int 2D array: indices of the nodes in the sample
-#       rows: individual samples
-#   matrix, int array: num paths between node pairs
-# Returns ----
-#   mean, float list: mean count of paths for each sample
-#   stdev, float list: standard deviation of counts per samp
-def getPercentDifference(oCount, rSamples, matrix) :
-
-	# Get the path counts for each random sample
-	rCounts = getPathCountList(rSamples, matrix)
-
-	# Count how many times the original sample is more
-	#   dense than a random sample
-	rankSum = 0
-	for c in rCounts :
-		rankSum += (oCount - c) / float(oCount + 0.001)
-	#end loop
 	rankAvg = rankSum / float(len(rCounts))
 
-	return rankAvg
+	return percentile, rankAvg
 #end def ######## ######## ######## 
+
+
+
+# ######## ######## ######## ######## 
+# # Function: For a set of samples and random counter-samples,
+# #	return the average percent difference between original
+# #	and random. ie: if the randoms typically had 90% of the
+# #	count as the original, return +0.1; if 110%, return -0.1
+# # Input ----
+# #   oCount, int: number of times this path exists in test sample
+# #   rSamples, int 2D array: indices of the nodes in the sample
+# #       rows: individual samples
+# #   matrix, int array: num paths between node pairs
+# # Returns ----
+# #   mean, float list: mean count of paths for each sample
+# #   stdev, float list: standard deviation of counts per samp
+# def getPercentDifference(oCount, rSamples, matrix) :
+
+# 	# Get the path counts for each random sample
+# 	rCounts = getPathCountList(rSamples, matrix)
+
+# 	# Count how many times the original sample is more
+# 	#   dense than a random sample
+# 	rankSum = 0
+# 	for c in rCounts :
+# 		rankSum += (oCount - c) / float(oCount + 0.001)
+# 	#end loop
+# 	rankAvg = rankSum / float(len(rCounts))
+
+# 	return rankAvg
+# #end def ######## ######## ######## 
 
 
 
