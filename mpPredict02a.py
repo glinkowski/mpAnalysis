@@ -173,9 +173,9 @@ for i in range(len(pathList)) :
 	# Get the percentile/score for this path, per sample
 	for j in range(len(sNames)) :
 		tCount = mp.getPathCountOne(oSampLists[j], matrix)
-		tPercent = mp.getPercentile(tCount, rSampArrays[j], matrix)
+		tPercent, tPercDiff = mp.getPercentile(tCount, rSampArrays[j], matrix)
 		pathScores[i,j] = tPercent
-		tPercDiff = mp.getPercentDifference(tCount, rSampArrays[j], matrix)
+#		tPercDiff = mp.getPercentDifference(tCount, rSampArrays[j], matrix)
 		pathScores2[i,j] = tPercDiff
 	#end loop
 
