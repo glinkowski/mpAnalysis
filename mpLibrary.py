@@ -849,11 +849,17 @@ def getPathCountOne(sample, matrix) :
 
 	# Count the paths in the sample
 	count = 0
-	for a in sample :
-		for b in sample :
-			if a != b :     # skip if a==b
-				count += matrix[a,b]
-	#end loop
+#	for a in sample :
+#		for b in sample :
+#			if a != b :     # skip if a==b
+#				count += matrix[a,b]
+#	#end loop
+
+	tempRows = matrix[sample,:]
+	tempMatrix = tempRows[:,sample]
+	count = tempMatrix.sum()
+#	count = tempMatrix.sum() - np.sum(tempMatrix.diagonal())
+#TODO: Should I remove links from node to self?
 
 	return count
 #end def ######## ######## ######## 
@@ -871,16 +877,23 @@ def getPathCountOne(sample, matrix) :
 #   counts, int list: num paths of this type in each sample
 def getPathCountList(samples, matrix) :
 
-	counts = list()
-	for i in range(0, samples.shape[0]) :
+#	counts = list()
+	counts = np.zeros( (samples.shape[0]) )
+	for i in range(samples.shape[0]) :
 		# Count the paths in the sample
-		count = 0
-		for a in samples[i,:] :
-			for b in samples[i,:] :
-				if a != b :     # skip if a==b
-					count += matrix[a,b]
-		#end loop
-		counts.append(count)
+#		count = 0
+#		for a in samples[i,:] :
+#			for b in samples[i,:] :
+#				if a != b :     # skip if a==b
+#					count += matrix[a,b]
+#		#end loop
+#		counts.append(count)
+
+		tempRows = matrix[samples[i,:],:]
+		tempMatrix = tempRows[:,samples[i,:]]
+		counts[i] = tempMatrix.sum()
+#		counts[i] = tempMatrix.sum() - np.sum(tempMatrix.diagonal())
+#TODO: Should I remove links from node to self?
 	#end loop
 
 	return counts
