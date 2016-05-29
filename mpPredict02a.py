@@ -35,7 +35,7 @@ import gzip
 
 # Variables/Quantities
 percHide = .25		# percent of genes to conceal
-nRandSamp = 300		# number of random samples to compare
+nRandSamp = 100		# number of random samples to compare
 
 # options for Node Binning
 useBinning = True
@@ -44,7 +44,7 @@ binType = 'all'
 
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -52,9 +52,9 @@ if useNtwk == 0 :
 	sPath = 'samplesFake/'
 	oRoot = '../Dropbox/mp/outputFake/'
 else :
-	eName = 'all_v1_g2e11t0'
+	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samples-subset5/'
+	sPath = '../Dropbox/mp/samples-4subs/subset01/'
 #	sPath = '../Dropbox/mp/samplesMSIG/'
 	oRoot = '../Dropbox/mp/output/'
 #end if

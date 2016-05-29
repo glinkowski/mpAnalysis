@@ -20,7 +20,7 @@ import os
 # PARAMETERS
 
 # Paths to network files & sample prediction files
-pPath = '../Dropbox/mp/output/pred03-batch-002/'
+pPath = '../Dropbox/mp/output/pred03-batch-000/'
 pFolderPrefix = ''
 #pPath = '../Dropbox/mp/output/'
 #pFolderPrefix = 'pred01-'
