@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # save location of the ranked sample data
-sFolder = 'pred02-batch-012'
+sFolder = 'pred02a-batch-005'
 #sRoot = '../Dropbox/mp/output/'
 
 # Number of top paths to use
@@ -114,10 +114,12 @@ for si in dSubDirs :
 	print("  {}/{}/".format(sv[-3],sv[-2]))
 
 	# Read in the ranked paths
-	pathRanked = mp.readRankedPaths(si)
+	pathRankedPerc = mp.readRankedPaths(si, 'ranked_paths-percent.txt')
+	pathRankedDiff = mp.readRankedPaths(si, 'ranked_paths-difference.txt')
 
 	# Sort array DESCENDING by rank and ASCENDING by length
-	pathRanked = np.sort(pathRanked, order=['stat_inverse', 'length', 'name'])
+	pathRankedPerc = np.sort(pathRankedPerc, order=['stat_inverse', 'length', 'name'])
+	pathRankedDiff = np.sort(pathRankedDiff, order=['stat_inverse', 'length', 'name'])
 
 	# Read in the non-hidden genes
 	# Create index lists for Known, Hidden, Unknown
@@ -135,14 +137,14 @@ for si in dSubDirs :
 	topNaive = list()
 	topNaiveScore = list()
 	for i in range(numTopK) :
-		thisPath = pathRanked['name'][i]
+		thisPath = pathRankedPerc['name'][i]
 		# skip if contains item in Ignore list
 		for igPath in pathIgnore:
 			if igPath in thisPath :
 				continue
 		#end if
 		topNaive.append(thisPath)
-		topNaiveScore.append(pathRanked['stat'][i])
+		topNaiveScore.append(pathRankedPerc['stat'][i])
 	#end if
 
 	# Select top K paths, first guided method
@@ -152,7 +154,7 @@ for si in dSubDirs :
 	skipPaths = list()
 #	skipPathsLen = list()
 	for i in range(numTopK) :
-		thisPath = pathRanked['name'][i]
+		thisPath = pathRankedPerc['name'][i]
 #TODO: check the reverse path?
 		# thisPathList = thisPath.split('-')[::-1]
 		# thisPathRev = ''
@@ -166,33 +168,33 @@ for si in dSubDirs :
 		# skip if contains a path already added
 		for sp in skipPaths :
 			if sp in thisPath :
-#			if (sp in thisPath) and ((skipPathsLen + 1) == pathRanked['length'][i]) :
+#			if (sp in thisPath) and ((skipPathsLen + 1) == pathRankedPerc['length'][i]) :
 				continue
 #			if thisPath in sp :
 #				continue
 #TODO: better comparison? percent of path is similar?
 		#end if
 		topGuided.append(thisPath)
-		topGuidedScore.append(pathRanked['stat'][i])
+		topGuidedScore.append(pathRankedPerc['stat'][i])
 		added += 1
 		# add to the skip list
-		if pathRanked['length'][i] >= 2 :
+		if pathRankedPerc['length'][i] >= 2 :
 			skipPaths.append(thisPath)
-#			skipPathsLen.append(pathRanked['length'][i])
+#			skipPathsLen.append(pathRankedPerc['length'][i])
 	#end loop
 
 	# Select K paths at random (for comparison)
 	topRandom = list()
 	topRandomScore = list()
-	randIdx = random.sample(range(len(pathRanked)), numTopK)
+	randIdx = random.sample(range(len(pathRankedPerc)), numTopK)
 	for i in randIdx :
-		topRandom.append(pathRanked['name'][i])
-		topRandomScore.append(pathRanked['stat'][i])
+		topRandom.append(pathRankedPerc['name'][i])
+		topRandomScore.append(pathRankedPerc['stat'][i])
 	#end loop
 
-	mp.writeChosenPaths(si, 'naive', topNaive, topNaiveScore)
-	mp.writeChosenPaths(si, 'guided', topGuided, topGuidedScore)
-	mp.writeChosenPaths(si, 'random', topRandom, topRandomScore)
+	mp.writeChosenPaths(si, 'naive-percent', topNaive, topNaiveScore)
+	mp.writeChosenPaths(si, 'guided-percent', topGuided, topGuidedScore)
+	mp.writeChosenPaths(si, 'random-percent', topRandom, topRandomScore)
 
 
 
@@ -255,19 +257,164 @@ for si in dSubDirs :
 	# 6) Write the ranked_genes files + chosen paths
 
 	# gRanks to be used for voting method
-	gRanks = np.empty([len(giUnknown), 6], dtype=object)
-	gRanks[:,0] = mp.writeRankedGenes02(si, 'naive', simArrayNaive,
+	gRanks = np.empty([len(giUnknown), 12], dtype=object)
+	gRanks[:,0] = mp.writeRankedGenes02(si, 'naive-percent', simArrayNaive,
 		geneDict, giKnown, gHidden, retCutoffs)
-	gRanks[:,1] = mp.writeRankedGenes02(si, 'naive02', simArrayNaive02,
+	gRanks[:,1] = mp.writeRankedGenes02(si, 'naive02-percent', simArrayNaive02,
 		geneDict, giKnown, gHidden, retCutoffs)
-	gRanks[:,2] = mp.writeRankedGenes02(si, 'guided', simArrayGuided,
+	gRanks[:,2] = mp.writeRankedGenes02(si, 'guided-percent', simArrayGuided,
 		geneDict, giKnown, gHidden, retCutoffs)
-	gRanks[:,3] = mp.writeRankedGenes02(si, 'guided02', simArrayGuided02,
+	gRanks[:,3] = mp.writeRankedGenes02(si, 'guided02-percent', simArrayGuided02,
 		geneDict, giKnown, gHidden, retCutoffs)
-	gRanks[:,4] = mp.writeRankedGenes02(si, 'random', simArrayRandom,
+	gRanks[:,4] = mp.writeRankedGenes02(si, 'random-percent', simArrayRandom,
 		geneDict, giKnown, gHidden, retCutoffs)
-	gRanks[:,5] = mp.writeRankedGenes02(si, 'random02', simArrayRandom02,
+	gRanks[:,5] = mp.writeRankedGenes02(si, 'random02-percent', simArrayRandom02,
 		geneDict, giKnown, gHidden, retCutoffs)
+
+
+
+	# 4b) Select top paths for naive, guided01, random tests
+	# 	Do this for the Difference metric
+
+	# Select top K paths, naive method
+	topNaive = list()
+	topNaiveScore = list()
+	for i in range(numTopK) :
+		thisPath = pathRankedDiff['name'][i]
+		# skip if contains item in Ignore list
+		for igPath in pathIgnore:
+			if igPath in thisPath :
+				continue
+		#end if
+		topNaive.append(thisPath)
+		topNaiveScore.append(pathRankedDiff['stat'][i])
+	#end if
+
+	# Select top K paths, first guided method
+	topGuided = list()
+	topGuidedScore = list()
+	added = 0
+	skipPaths = list()
+#	skipPathsLen = list()
+	for i in range(numTopK) :
+		thisPath = pathRankedDiff['name'][i]
+#TODO: check the reverse path?
+		# thisPathList = thisPath.split('-')[::-1]
+		# thisPathRev = ''
+		# for i in range(len(thisPathList))[::-1] :
+		# 	thisPathRev = thisPathRev + '-' + thisPathList[i]
+		# thisP
+		# skip if contains item in Ignore list
+		for igPath in pathIgnore:
+			if igPath in thisPath :
+				continue
+		# skip if contains a path already added
+		for sp in skipPaths :
+			if sp in thisPath :
+#			if (sp in thisPath) and ((skipPathsLen + 1) == pathRankedPerc['length'][i]) :
+				continue
+#			if thisPath in sp :
+#				continue
+#TODO: better comparison? percent of path is similar?
+		#end if
+		topGuided.append(thisPath)
+		topGuidedScore.append(pathRankedDiff['stat'][i])
+		added += 1
+		# add to the skip list
+		if pathRankedDiff['length'][i] >= 2 :
+			skipPaths.append(thisPath)
+#			skipPathsLen.append(pathRankedDiff['length'][i])
+	#end loop
+
+	# Select K paths at random (for comparison)
+	topRandom = list()
+	topRandomScore = list()
+	randIdx = random.sample(range(len(pathRankedDiff)), numTopK)
+	for i in randIdx :
+		topRandom.append(pathRankedDiff['name'][i])
+		topRandomScore.append(pathRankedDiff['stat'][i])
+	#end loop
+
+	mp.writeChosenPaths(si, 'naive-difference', topNaive, topNaiveScore)
+	mp.writeChosenPaths(si, 'guided-difference', topGuided, topGuidedScore)
+	mp.writeChosenPaths(si, 'random-difference', topRandom, topRandomScore)
+
+
+
+	# 5b) Rank genes by similarity along selected metapaths
+	#	For each path, load pathsim matrix, sum similarity
+
+	# For each path get gene similarity, naive
+	simArrayNaive = np.empty([len(giUnknown), len(topNaive)], dtype=matrixDT)
+	idx = 0
+	for p in topNaive :
+		simMatrix = mp.getSimMatrix( pathDict[p], ePath,
+			eName, (len(giKnown) + len(giUnknown)) )
+		simCols = simMatrix[:,giKnown]
+		simArrayNaive[:,idx] = np.sum(simCols, axis=1)[giUnknown]
+		idx += 1
+	#end loop
+
+	# second Naive, using scores as weights
+	simArrayNaive02 = np.copy(simArrayNaive)
+	for c in range(simArrayNaive.shape[1]) :
+		simArrayNaive02[:,c] = np.multiply(simArrayNaive02[:,c], topNaiveScore[c])
+	#end loop
+
+	# For each path get gene similarity, first guided
+	simArrayGuided = np.empty([len(giUnknown), len(topGuided)], dtype=matrixDT)
+	idx = 0
+	for p in topGuided :
+		simMatrix = mp.getSimMatrix( pathDict[p], ePath,
+			eName, (len(giKnown) + len(giUnknown)) )
+		simCols = simMatrix[:,giKnown]
+		simArrayGuided[:,idx] = np.sum(simCols, axis=1)[giUnknown]
+		idx += 1
+	#end loop
+
+	# second Guided, using scores as weights
+	simArrayGuided02 = np.copy(simArrayGuided)
+	for c in range(simArrayGuided.shape[1]) :
+		simArrayGuided02[:,c] = np.multiply(simArrayGuided02[:,c], topGuidedScore[c])
+	#end loop
+
+	# For each path get gene similarity, first guided
+	simArrayRandom = np.empty([len(giUnknown), len(topRandom)], dtype=matrixDT)
+	idx = 0
+	for p in topRandom :
+		simMatrix = mp.getSimMatrix( pathDict[p], ePath,
+			eName, (len(giKnown) + len(giUnknown)) )
+		simCols = simMatrix[:,giKnown]
+		simArrayRandom[:,idx] = np.sum(simCols, axis=1)[giUnknown]
+		idx += 1
+	#end loop
+
+	# second Random, using scores as weights
+	simArrayRandom02 = np.copy(simArrayRandom)
+	for c in range(simArrayRandom.shape[1]) :
+		simArrayRandom02[:,c] = np.multiply(simArrayRandom02[:,c], topRandomScore[c])
+	#end loop
+
+
+
+	# 6) Write the ranked_genes files + chosen paths
+
+	# gRanks to be used for voting method
+#	gRanks = np.empty([len(giUnknown), 6], dtype=object)
+	gRanks[:,6] = mp.writeRankedGenes02(si, 'naive-difference', simArrayNaive,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,7] = mp.writeRankedGenes02(si, 'naive02-difference', simArrayNaive02,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,8] = mp.writeRankedGenes02(si, 'guided-difference', simArrayGuided,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,9] = mp.writeRankedGenes02(si, 'guided02-difference', simArrayGuided02,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,10] = mp.writeRankedGenes02(si, 'random-difference', simArrayRandom,
+		geneDict, giKnown, gHidden, retCutoffs)
+	gRanks[:,11] = mp.writeRankedGenes02(si, 'random02-difference', simArrayRandom02,
+		geneDict, giKnown, gHidden, retCutoffs)
+
+
 
 
 
@@ -284,10 +431,15 @@ for si in dSubDirs :
 	rankVote = rankVote[giUnknown,:]
 
 	# write to file
-	mp.writeRankedGenes02(si, 'voting', rankVote[:,[0,2,4]],
+	mp.writeRankedGenes02(si, 'voting-weightless', rankVote[:,[0,2,4,6,8,10]],
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'voting02', rankVote[:,[1,3,5]],
+	mp.writeRankedGenes02(si, 'voting-wieghted', rankVote[:,[1,3,5,7,9,11]],
 		geneDict, giKnown, gHidden, retCutoffs)
+	mp.writeRankedGenes02(si, 'voting-percent', rankVote[:,[0,1,2,3,4,5]],
+		geneDict, giKnown, gHidden, retCutoffs)
+	mp.writeRankedGenes02(si, 'voting-difference', rankVote[:,[6,7,8,9,10,11]],
+		geneDict, giKnown, gHidden, retCutoffs)
+
 	mp.writeRankedGenes02(si, 'votingAll', rankVote,
 		geneDict, giKnown, gHidden, retCutoffs)
 

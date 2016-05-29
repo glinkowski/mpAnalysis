@@ -44,7 +44,7 @@
 #	writeRankedGenes02(path, suffix, statArray, itemDict,
 #		itemIndex, hiddenSet, cutoffs)
 #	writeRankedPaths(path, ranker, mpDict)
-#	readRankedPaths(path)
+#	readRankedPaths(path, name)
 #	writeGenericLists(path, fname, columnList)
 #	getSubDirectoryList(root)
 #	getMatrixDimensions(path, name)
@@ -849,11 +849,17 @@ def getPathCountOne(sample, matrix) :
 
 	# Count the paths in the sample
 	count = 0
-	for a in sample :
-		for b in sample :
-			if a != b :     # skip if a==b
-				count += matrix[a,b]
-	#end loop
+#	for a in sample :
+#		for b in sample :
+#			if a != b :     # skip if a==b
+#				count += matrix[a,b]
+#	#end loop
+
+	tempRows = matrix[sample,:]
+	tempMatrix = tempRows[:,sample]
+	count = tempMatrix.sum()
+#	count = tempMatrix.sum() - np.sum(tempMatrix.diagonal())
+#TODO: Should I remove links from node to self?
 
 	return count
 #end def ######## ######## ######## 
@@ -871,16 +877,23 @@ def getPathCountOne(sample, matrix) :
 #   counts, int list: num paths of this type in each sample
 def getPathCountList(samples, matrix) :
 
-	counts = list()
-	for i in range(0, samples.shape[0]) :
+#	counts = list()
+	counts = np.zeros( (samples.shape[0]) )
+	for i in range(samples.shape[0]) :
 		# Count the paths in the sample
-		count = 0
-		for a in samples[i,:] :
-			for b in samples[i,:] :
-				if a != b :     # skip if a==b
-					count += matrix[a,b]
-		#end loop
-		counts.append(count)
+#		count = 0
+#		for a in samples[i,:] :
+#			for b in samples[i,:] :
+#				if a != b :     # skip if a==b
+#					count += matrix[a,b]
+#		#end loop
+#		counts.append(count)
+
+		tempRows = matrix[samples[i,:],:]
+		tempMatrix = tempRows[:,samples[i,:]]
+		counts[i] = tempMatrix.sum()
+#		counts[i] = tempMatrix.sum() - np.sum(tempMatrix.diagonal())
+#TODO: Should I remove links from node to self?
 	#end loop
 
 	return counts
@@ -1764,7 +1777,10 @@ def writeChosenPaths(path, suffix, pathList, scoreList) :
 def writeRankedPaths(path, suffix, ranker, mpDict) :
 
 #	rankedFile = 'ranked_paths.txt'
-	rankedFile = 'ranked_paths-' + suffix + '.txt'
+	if not suffix :
+		rankedFile = 'ranked_paths.txt'
+	else :
+		rankedFile = 'ranked_paths-' + suffix + '.txt'
 
 	# The ordered list of metapaths
 	mpList = removeInvertedPaths(mpDict)
@@ -1813,20 +1829,23 @@ def writeRankedPaths(path, suffix, ranker, mpDict) :
 # Function: Read in the ranked_paths file
 # Input ----
 #   path, str: path to file
+#	name, str: name of the file
 # Returns ----
 #	np structured array :
 #		(percent, path name, length)
-def readRankedPaths(path) :
+def readRankedPaths(path, name) :
 
 	if not path.endswith('/') :
 		path = path + '/'
 
 	# ERROR CHECK: verify file exists
-	verifyFile(path, 'ranked_paths.txt', False)
+#	verifyFile(path, 'ranked_paths.txt', False)
+	verifyFile(path, name, False)
 
 
 	# Get the number of lines in the file
-	fname = path + 'ranked_paths.txt'
+#	fname = path + 'ranked_paths.txt'
+	fname = path + name
 	nRows = 0
 	with open(fname, 'r') as fin :
 		nRows = sum(1 for line in fin)
