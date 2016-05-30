@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # save location of the ranked sample data
-sFolder = 'pred02a-batch-005'
+sFolder = 'pred02a-batch-017'
 #sRoot = '../Dropbox/mp/output/'
 
 # Number of top paths to use
@@ -147,41 +147,75 @@ for si in dSubDirs :
 		topNaiveScore.append(pathRankedPerc['stat'][i])
 	#end if
 
-	# Select top K paths, first guided method
+	# Select top K paths, second guided method
 	topGuided = list()
 	topGuidedScore = list()
 	added = 0
 	skipPaths = list()
 #	skipPathsLen = list()
-	for i in range(numTopK) :
+	i = -1
+	while added < numTopK :
+		i += 1
+#	for i in range(numTopK) :
 		thisPath = pathRankedPerc['name'][i]
-#TODO: check the reverse path?
-		# thisPathList = thisPath.split('-')[::-1]
-		# thisPathRev = ''
-		# for i in range(len(thisPathList))[::-1] :
-		# 	thisPathRev = thisPathRev + '-' + thisPathList[i]
-		# thisP
+
 		# skip if contains item in Ignore list
 		for igPath in pathIgnore:
 			if igPath in thisPath :
 				continue
-		# skip if contains a path already added
-		for sp in skipPaths :
-			if sp in thisPath :
-#			if (sp in thisPath) and ((skipPathsLen + 1) == pathRankedPerc['length'][i]) :
+		# end if
+
+		# check if paths are composed of same units
+		for prevPath in skipPaths :
+			# skip if this path is a reordering of another
+			prevItems = set( prevPath.split('-') )
+			thisItems = set( thisPath.split('-') )
+			if prevItems == thisItems :
 				continue
-#			if thisPath in sp :
-#				continue
-#TODO: better comparison? percent of path is similar?
-		#end if
+
+			# skip if this path fully contains a prev one
+			prevPathLen = prevPath.count('-') + 1
+			if (prevPathLen > 1) and (prevPath in thisPath) :
+				continue
+		#end loop
+
 		topGuided.append(thisPath)
 		topGuidedScore.append(pathRankedPerc['stat'][i])
 		added += 1
+
 		# add to the skip list
-		if pathRankedPerc['length'][i] >= 2 :
-			skipPaths.append(thisPath)
-#			skipPathsLen.append(pathRankedPerc['length'][i])
+		skipPaths.append(thisPath)
 	#end loop
+
+#	for i in range(numTopK) :
+#		thisPath = pathRankedPerc['name'][i]
+##TODO: check the reverse path?
+#		# thisPathList = thisPath.split('-')[::-1]
+#		# thisPathRev = ''
+#		# for i in range(len(thisPathList))[::-1] :
+#		# 	thisPathRev = thisPathRev + '-' + thisPathList[i]
+#		# thisP
+#		# skip if contains item in Ignore list
+#		for igPath in pathIgnore:
+#			if igPath in thisPath :
+#				continue
+#		# skip if contains a path already added
+#		for sp in skipPaths :
+#			if sp in thisPath :
+##			if (sp in thisPath) and ((skipPathsLen + 1) == pathRankedPerc['length'][i]) :
+#				continue
+##			if thisPath in sp :
+##				continue
+##TODO: better comparison? percent of path is similar?
+#		#end if
+#		topGuided.append(thisPath)
+#		topGuidedScore.append(pathRankedPerc['stat'][i])
+#		added += 1
+#		# add to the skip list
+#		if pathRankedPerc['length'][i] >= 2 :
+#			skipPaths.append(thisPath)
+##			skipPathsLen.append(pathRankedPerc['length'][i])
+#	#end loop
 
 	# Select K paths at random (for comparison)
 	topRandom = list()
@@ -290,40 +324,49 @@ for si in dSubDirs :
 		topNaiveScore.append(pathRankedDiff['stat'][i])
 	#end if
 
-	# Select top K paths, first guided method
+	# Select top K paths, second guided method
 	topGuided = list()
 	topGuidedScore = list()
 	added = 0
 	skipPaths = list()
 #	skipPathsLen = list()
-	for i in range(numTopK) :
+	i = -1
+	while added < numTopK :
+		i += 1
+#	for i in range(numTopK) :
 		thisPath = pathRankedDiff['name'][i]
-#TODO: check the reverse path?
-		# thisPathList = thisPath.split('-')[::-1]
-		# thisPathRev = ''
-		# for i in range(len(thisPathList))[::-1] :
-		# 	thisPathRev = thisPathRev + '-' + thisPathList[i]
-		# thisP
+
 		# skip if contains item in Ignore list
 		for igPath in pathIgnore:
 			if igPath in thisPath :
 				continue
-		# skip if contains a path already added
-		for sp in skipPaths :
-			if sp in thisPath :
-#			if (sp in thisPath) and ((skipPathsLen + 1) == pathRankedPerc['length'][i]) :
+		# end if
+
+		# check if paths are composed of same units
+		for prevPath in skipPaths :
+			# skip if this path is a reordering of another
+			prevItems = set( prevPath.split('-') )
+			thisItems = set( thisPath.split('-') )
+			if prevItems == thisItems :
 				continue
-#			if thisPath in sp :
-#				continue
-#TODO: better comparison? percent of path is similar?
-		#end if
+
+			# skip if this path fully contains a prev one
+			prevPathLen = prevPath.count('-') + 1
+			if (prevPathLen > 1) and (prevPath in thisPath) :
+				continue
+		#end loop
+
 		topGuided.append(thisPath)
 		topGuidedScore.append(pathRankedDiff['stat'][i])
 		added += 1
+
 		# add to the skip list
-		if pathRankedDiff['length'][i] >= 2 :
-			skipPaths.append(thisPath)
-#			skipPathsLen.append(pathRankedDiff['length'][i])
+		skipPaths.append(thisPath)
+
+#		# add to the skip list
+#		if pathRankedDiff['length'][i] >= 2 :
+#			skipPaths.append(thisPath)
+##			skipPathsLen.append(pathRankedDiff['length'][i])
 	#end loop
 
 	# Select K paths at random (for comparison)
@@ -361,7 +404,7 @@ for si in dSubDirs :
 		simArrayNaive02[:,c] = np.multiply(simArrayNaive02[:,c], topNaiveScore[c])
 	#end loop
 
-	# For each path get gene similarity, first guided
+	# For each path get gene similarity, second guided
 	simArrayGuided = np.empty([len(giUnknown), len(topGuided)], dtype=matrixDT)
 	idx = 0
 	for p in topGuided :
@@ -378,7 +421,7 @@ for si in dSubDirs :
 		simArrayGuided02[:,c] = np.multiply(simArrayGuided02[:,c], topGuidedScore[c])
 	#end loop
 
-	# For each path get gene similarity, first guided
+	# For each path get gene similarity, second guided
 	simArrayRandom = np.empty([len(giUnknown), len(topRandom)], dtype=matrixDT)
 	idx = 0
 	for p in topRandom :
