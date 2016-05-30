@@ -190,7 +190,7 @@ for p in pathList :
 		print("  Examined {} of {} paths...".format(dim2, len(pathList)))
 		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 #end loop
-print("Finished examining metapaths.")
+print("Finished examining matrix similarity matrices.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
@@ -200,14 +200,49 @@ i = -1
 for sDir in oSubDirList :
 	i += 1
 
-	mp.saveMatrixText(gFeatures[:,:,i], 'feature_vectors',
+	mp.saveMatrixText(gFeatures[:,:,i], 'features_PathSim',
 		sDir, False)
 #end loop
-print("Finished writing feature vector files.")
+print("Finished writing PathSim feature vector files.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
+# # 7) Get the neighborhood of each gene (in terms of path)
+# #	Build the feature vector matrices for each sample
+# gFeatures = np.zeros( (len(geneDict), len(pathDict),
+# 	len(oSampLists)), dtype=np.float32 )
+
+# # populate dimension 2 from each path
+# dim2 = -1
+# for p in pathList :
+# 	dim2 += 1
+
+# 	# load the PathSim matrix
+# 	cMatrix = mp.getPathMatrix(pathDict[p], ePath,
+# 		eName, mxSize)
+
+# 	# populate dimension 3 from each sample
+# 	dim3 = -1
+# 	for giList in oSampLists :
+# 		dim3 += 1
+
+# 		# calculate feature for this sample variant
+# 		simSet = np.sum( simMatrix[:,giList], axis=1 )
+# 		gFeatures[:,dim2,dim3] = simSet[:]
+# 	#end loop
+
+# 	if newVerbose :
+# 		print("  Examined path {}, {}".format(dim2, p))
+# 		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+# 	elif not (dim2 % 25) :
+# 		print("  Examined {} of {} paths...".format(dim2, len(pathList)))
+# 		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+# #end loop
+# print("Finished examining matrix similarity matrices.")
+# print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
+
+print("\nDone.\n")
