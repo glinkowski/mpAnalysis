@@ -51,7 +51,7 @@ else :
 #end if
 
 # Output path
-oDirPrefix = 'pred03-batch'
+oDirPrefix = 'pred04-batch'
 
 
 # verbose feedback ?
@@ -242,6 +242,8 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 # print("Finished examining matrix similarity matrices.")
 # print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
+
+#TODO: begin output file in root of batch ?
 
 
 

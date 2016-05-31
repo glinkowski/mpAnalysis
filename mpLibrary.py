@@ -316,7 +316,7 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 
 
 ######## ######## ######## ########
-# Function: save the given matrix as a .txt file
+# Function: save the given matrix as a .gz file
 # Input ----
 #	matrix, (NxN) list: the values to save
 #	mname, str: name of the file to save
@@ -333,40 +333,51 @@ def saveMatrixGzip(matrix, mname, mpath, integer) :
 
 	# Open the file
 	if mname.endswith('.gz') :
-		fout = gzip.open(mpath + mname, "w")
+#		fout = gzip.open(mpath + mname, 'w')
+		mfull = mpath + mname
 	else :
-		fout = gzip.open(mpath + mname + ".gz", "w")
+#		fout = gzip.open(mpath + mname + '.gz', 'w')
+		mfull = mpath + mname + '.gz'
+
 
 
 	# Write to the file
-	firstR = True
-	for i in range(0, matrix.shape[0]) :
+	with gzip.open(mfull, 'wb') as fout :
+		firstR = True
+		for i in range(0, matrix.shape[0]) :
 
-		# if not the first row, start with \n
-		if firstR :
-			firstR = False
-		else :
-			fout.write("\n")
-		#end if
-
-		firstC = True
-		for j in range(0, matrix.shape[1]) :
-
-			# if not the first col, start with \t
-			if firstC :
-				firstC = False
+			# if not the first row, start with \n
+			if firstR :
+				firstR = False
 			else :
-				fout.write("\t")
+				fout.write(bytes('\n', 'UTF-8'))
 			#end if
 
-			# Write the value to file
-			#	If integer = True, write as an integer
-			if integer :
-				fout.write("{}".format( float(matrix[i,j]) ))
-			else :
-				fout.write("{}".format( matrix[i,j] ))
-	#end loop
-	fout.close()
+			firstC = True
+			for j in range(0, matrix.shape[1]) :
+
+				# if not the first col, start with \t
+				if firstC :
+					firstC = False
+				else :
+					fout.write(bytes('\t', 'UTF-8'))
+				#end if
+
+				# Write the value to file
+				#	If integer = True, write as an integer
+				if integer :
+					outstr = bytes('{}'.format(int(matrix[i,j])), 'UTF-8')
+#					fout.write("{:d}".format( int(matrix[i,j]) ))
+				else :
+#					fout.write("{:f}".format( float(matrix[i,j]) ))
+#					fout.write('{}'.format( float(matrix[i,j]) ))
+					outstr = bytes('{}'.format(float(matrix[i,j])), 'UTF-8')
+#					fout.write( bytes('{}'.format( float(matrix[i,j]) ), 'UTF-8') )
+				#end if
+				fout.write( outstr )
+		#end loop
+	#end with
+#	fout.close()
 
 	return
 #end def ######## ######## ######## 
