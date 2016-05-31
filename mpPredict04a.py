@@ -200,7 +200,7 @@ i = -1
 for sDir in oSubDirList :
 	i += 1
 
-	mp.saveMatrixText(gFeatures[:,:,i], 'features_PathSim',
+	mp.saveMatrixGzip(gFeatures[:,:,i], 'features_PathSim',
 		sDir, False)
 #end loop
 print("Finished writing PathSim feature vector files.")

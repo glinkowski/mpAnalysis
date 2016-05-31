@@ -12,6 +12,7 @@
 #	verifyFile(path, name, quiet)
 #	saveListToText(path, name, theList)
 #	saveMatrixText(matrix, mname, mpath, integer)
+#	saveMatrixGzip(matrix, mname, mpath, integer)
 #	checkGenesInNetwork(path, name, geneList)
 #	partitionSample(nPath, nName, oPath, sample, percent)
 #	readKeyFile(path, name)
@@ -277,6 +278,64 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 		fout = open(mpath + mname, "w")
 	else :
 		fout = open(mpath + mname + ".txt", "w")
+
+
+	# Write to the file
+	firstR = True
+	for i in range(0, matrix.shape[0]) :
+
+		# if not the first row, start with \n
+		if firstR :
+			firstR = False
+		else :
+			fout.write("\n")
+		#end if
+
+		firstC = True
+		for j in range(0, matrix.shape[1]) :
+
+			# if not the first col, start with \t
+			if firstC :
+				firstC = False
+			else :
+				fout.write("\t")
+			#end if
+
+			# Write the value to file
+			#	If integer = True, write as an integer
+			if integer :
+				fout.write("{}".format( float(matrix[i,j]) ))
+			else :
+				fout.write("{}".format( matrix[i,j] ))
+	#end loop
+	fout.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: save the given matrix as a .txt file
+# Input ----
+#	matrix, (NxN) list: the values to save
+#	mname, str: name of the file to save
+#	mpath, str: path to the folder to save the file
+#	integer, bool: True means save values as int()
+# Returns ----
+#	nothing
+def saveMatrixGzip(matrix, mname, mpath, integer) :
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# Open the file
+	if mname.endswith('.gz') :
+		fout = gzip.open(mpath + mname, "w")
+	else :
+		fout = gzip.open(mpath + mname + ".gz", "w")
 
 
 	# Write to the file
