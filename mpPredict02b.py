@@ -190,7 +190,7 @@ for si in dSubDirs :
 			# add to the skip list
 			skipPaths.append(thisPath)
 		#end if
-		
+
 	#end loop
 
 #	for i in range(numTopK) :
@@ -484,13 +484,13 @@ for si in dSubDirs :
 	rankVote = rankVote[giUnknown,:]
 
 	# write to file
-	mp.writeRankedGenes02(si, 'voting-weightless', rankVote[:,[0,2,4,6,8,10]],
+	mp.writeRankedGenes02(si, 'voting-weightless', rankVote[:,[0,2,6,8]],
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'voting-wieghted', rankVote[:,[1,3,5,7,9,11]],
+	mp.writeRankedGenes02(si, 'voting-wieghted', rankVote[:,[1,3,7,9]],
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'voting-percent', rankVote[:,[0,1,2,3,4,5]],
+	mp.writeRankedGenes02(si, 'voting-percent', rankVote[:,[0,1,2,3]],
 		geneDict, giKnown, gHidden, retCutoffs)
-	mp.writeRankedGenes02(si, 'voting-difference', rankVote[:,[6,7,8,9,10,11]],
+	mp.writeRankedGenes02(si, 'voting-difference', rankVote[:,[6,7,8,9]],
 		geneDict, giKnown, gHidden, retCutoffs)
 
 	mp.writeRankedGenes02(si, 'votingAll', rankVote,
