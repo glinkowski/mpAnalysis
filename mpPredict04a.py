@@ -51,7 +51,7 @@ else :
 #end if
 
 # Output path
-oDirPrefix = 'pred03-batch'
+oDirPrefix = 'pred04-batch'
 
 
 # verbose feedback ?
