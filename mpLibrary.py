@@ -1689,6 +1689,7 @@ def writeRankedGenes02(path, suffix, statArray, itemDict, itemIndex, hiddenSet, 
 
 	# Write the header for the cutoffs file
 	foutb.write("Number of True Positives returned in top N predicted...")
+	foutb.write("out of {} concealed genes".format(len(hiddenSet)))
 	foutb.write("\nReturned{}TruePos".format(textDelim))
 
 #	print("hidden {}".format(hiddenSet))
