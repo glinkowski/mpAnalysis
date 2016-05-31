@@ -243,6 +243,8 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 # print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
+#TODO: begin output file in root of batch ?
+
 
 
 print("\nDone.\n")
