@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # save location of the ranked sample data
-sFolder = 'pred02a-batch-017'
+sFolder = 'pred02a-batch-000'
 #sRoot = '../Dropbox/mp/output/'
 
 # Number of top paths to use
@@ -41,7 +41,7 @@ numTopK = 10
 
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -49,10 +49,10 @@ if useNtwk == 0 :
 	sRoot = '../Dropbox/mp/outputFake/'
 	retCutoffs = [2, 3, 5, 9, 13]
 else :
-	eName = 'all_v1_g2e11t0'
+	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
 	sRoot = '../Dropbox/mp/output/'
-	retCutoffs = [50, 100, 200, 500, 1000]
+	retCutoffs = [50, 100, 200, 500, 1000, 2000]
 #end if
 
 
@@ -165,26 +165,32 @@ for si in dSubDirs :
 				continue
 		# end if
 
-		# check if paths are composed of same units
-		for prevPath in skipPaths :
-			# skip if this path is a reordering of another
-			prevItems = set( prevPath.split('-') )
-			thisItems = set( thisPath.split('-') )
-			if prevItems == thisItems :
-				continue
 
-			# skip if this path fully contains a prev one
+		# check if paths are composed of same units
+		keep = True
+		for prevPath in skipPaths :
+			prevItems = set( prevPath.split('-') )
 			prevPathLen = prevPath.count('-') + 1
-			if (prevPathLen > 1) and (prevPath in thisPath) :
-				continue
+			thisItems = set( thisPath.split('-') )
+			# skip if this path is a reordering of another
+			if prevItems == thisItems :
+				keep = False
+				break
+			# skip if this path fully contains a prev one
+			elif (prevPathLen > 1) and (prevPath in thisPath) :
+				keep = False
+				break
 		#end loop
 
-		topGuided.append(thisPath)
-		topGuidedScore.append(pathRankedPerc['stat'][i])
-		added += 1
+		if keep :
+			topGuided.append(thisPath)
+			topGuidedScore.append(pathRankedDiff['stat'][i])
+			added += 1
 
-		# add to the skip list
-		skipPaths.append(thisPath)
+			# add to the skip list
+			skipPaths.append(thisPath)
+		#end if
+		
 	#end loop
 
 #	for i in range(numTopK) :
@@ -343,25 +349,29 @@ for si in dSubDirs :
 		# end if
 
 		# check if paths are composed of same units
+		keep = True
 		for prevPath in skipPaths :
-			# skip if this path is a reordering of another
 			prevItems = set( prevPath.split('-') )
-			thisItems = set( thisPath.split('-') )
-			if prevItems == thisItems :
-				continue
-
-			# skip if this path fully contains a prev one
 			prevPathLen = prevPath.count('-') + 1
-			if (prevPathLen > 1) and (prevPath in thisPath) :
-				continue
+			thisItems = set( thisPath.split('-') )
+			# skip if this path is a reordering of another
+			if prevItems == thisItems :
+				keep = False
+				break
+			# skip if this path fully contains a prev one
+			elif (prevPathLen > 1) and (prevPath in thisPath) :
+				keep = False
+				break
 		#end loop
 
-		topGuided.append(thisPath)
-		topGuidedScore.append(pathRankedDiff['stat'][i])
-		added += 1
+		if keep :
+			topGuided.append(thisPath)
+			topGuidedScore.append(pathRankedDiff['stat'][i])
+			added += 1
 
-		# add to the skip list
-		skipPaths.append(thisPath)
+			# add to the skip list
+			skipPaths.append(thisPath)
+		#end if
 
 #		# add to the skip list
 #		if pathRankedDiff['length'][i] >= 2 :
