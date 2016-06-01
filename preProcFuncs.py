@@ -237,7 +237,7 @@ def readEdgeFile(datafile) :
 
 #TODO: check for Python v 2/3 before running this line ?
 	# Decode the edge array from type=bytes to type=str
-#	Edges = np.char.decode(Edges, 'ascii')
+	Edges = np.char.decode(Edges, 'ascii')
 
 	return Edges, Nodes
 #end def ######## ######## ########
@@ -268,7 +268,7 @@ def applyCorrections(edges, fname) :
 	fixList = list()	# column 2
 
 #	cf = open(fname, "rb")
-	cf = open(fname, "r")
+	cf = open(fname, 'r')
 	index = 0
 	for line in cf :
 		line = line.rstrip()
