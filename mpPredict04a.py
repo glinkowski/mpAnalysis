@@ -46,7 +46,8 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samples-test1/'
+	sPath = '../Dropbox/mp/sample-4subs/subset04/'
+#	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
 
@@ -78,8 +79,8 @@ oPath = oRoot + oDirectory
 
 # Save experiment parameters to file
 fOutput = list()
-fOutput.append( ['date', 'network', 'ntwk path', '% hidden'] )
-fOutput.append( [time.strftime('%d/%m/%Y'), eName, ePath, percHide] )
+fOutput.append( ['date', 'network', 'ntwk path', '% hidden', 'samples'] )
+fOutput.append( [time.strftime('%d/%m/%Y'), eName, ePath, percHide, sPath] )
 fOutputName = 'parameters.txt'
 mp.writeGenericLists(oPath, fOutputName, fOutput)
 
