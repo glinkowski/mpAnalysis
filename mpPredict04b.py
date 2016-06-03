@@ -38,12 +38,12 @@ dDir = 'pred04-batch-000'
 # Input names & locations
 useNtwk = 0		# network & samples to use (0 means fake)
 if useNtwk == 0 :
-	eName = 'fakeNtwk01_g3e4t1'
-	ePath = 'networks/'
+#	eName = 'fakeNtwk01_g3e4t1'
+#	ePath = 'networks/'
 	dRoot = 'outputFake/'
 else :
-	eName = 'all_v1_g2e11t0'
-	ePath = '../Dropbox/mp/networks/'
+#	eName = 'all_v1_g2e11t0'
+#	ePath = '../Dropbox/mp/networks/'
 	dRoot = '../Dropbox/mp/output/'
 #end if
 
@@ -52,8 +52,9 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # LASSO params
-lAlpha01 = 0.01
-lAlpha02 = 0.005
+lAlpha01 = 0.0006
+lAlpha02 = 0.00002
+lAlphaPos = 0.005
 lMaxIter = 10000
 lNorm = True
 lPos = False
@@ -84,6 +85,24 @@ mp.setParamVerbose(newVerbose)
 
 
 # 1) Load the gene-index dictionary & path names
+if dDir.endswith('/') :
+	dPath = dRoot + dDir
+else :
+	dPath = dRoot + dDir + '/'
+with open(dPath + 'parameters.txt', 'r') as fin :
+	line = fin.readline()
+
+	line = fin.readline()
+	line = line.rstrip()
+	lv = line.split(textDelim)
+	eName = lv[1]
+
+	line = fin.readline()
+	line = line.rstrip()
+	lv = line.split(textDelim)
+	ePath = lv[1]
+#end with
+
 print("Creating the gene-index dictionary.")
 geneDict = mp.readGenesFile(ePath, eName)
 geneList = list(geneDict.keys())
@@ -104,8 +123,8 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-for si in dSubDirs[0:1] :
-#for si in dSubDirs :
+#for si in dSubDirs[0:1] :
+for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
@@ -225,22 +244,6 @@ for si in dSubDirs[0:1] :
 	cfPredLabel01 = cfLasso01.predict(testSet01)
 
 
-	# Train LASSO, as two-class	
-	cfLasso02 = lm.Lasso(alpha=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
-		 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
-	#end if
-	cfLasso02.fit(trainSet02, trainLabel02)
-
-	# The meaning of this score is questionable,
-	#	mostly keeping it for curiosity
-	cfScore02 = cfLasso02.score(trainSet02, trainLabel02)
-	print("Two-Class score: {}".format(cfScore02))
-	print("  using {} coefficients".format( len(np.nonzero(cfLasso02.coef_)[0]) ))
-
-	cfPredLabel02 = cfLasso02.predict(testSet02)
-
-
-
 	# ####### ####### ####### #######
 	# 3c) Output results to file, One-Class
 
@@ -255,8 +258,9 @@ for si in dSubDirs[0:1] :
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fPrefix = 'ranked_paths-Lasso_1Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_paths-Lasso_1Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = 'ranked_paths-Lasso_1Class.txt'
 	print("Saving data for the One-Class approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
@@ -275,8 +279,9 @@ for si in dSubDirs[0:1] :
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fPrefix = 'ranked_genes-Lasso_1Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_genes-Lasso_1Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = 'ranked_genes-Lasso_1Class.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -290,8 +295,9 @@ for si in dSubDirs[0:1] :
 
 
 	# Save the parameters & results
-	fname = mp.nameOutputFile(si, 'parameters-Lasso_1Class')
-	print("  Saving params & stats to file {}".format(fname))
+#	fname = mp.nameOutputFile(si, 'parameters-Lasso_1Class')
+#	print("  Saving params & stats to file {}".format(fname))
+	fname = 'parameters-Lasso_1Class.txt'
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
@@ -318,6 +324,23 @@ for si in dSubDirs[0:1] :
 
 
 	# ####### ####### ####### #######
+	# 3b) Perform the regression analysis
+
+	# Train LASSO, as two-class	
+	cfLasso02 = lm.Lasso(alpha=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+		 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
+	#end if
+	cfLasso02.fit(trainSet02, trainLabel02)
+
+	# The meaning of this score is questionable,
+	#	mostly keeping it for curiosity
+	cfScore02 = cfLasso02.score(trainSet02, trainLabel02)
+	print("Two-Class score: {}".format(cfScore02))
+	print("  using {} coefficients".format( len(np.nonzero(cfLasso02.coef_)[0]) ))
+
+	cfPredLabel02 = cfLasso02.predict(testSet02)
+
+
 	# 3c) Output results to file, Two-Class
 
 	# Save the selected paths & scores/weights
@@ -331,8 +354,9 @@ for si in dSubDirs[0:1] :
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fPrefix = 'ranked_paths-Lasso_2Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_paths-Lasso_2Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = 'ranked_paths-Lasso_2Class.txt'
 	print("Saving data for the Two-Class approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
@@ -351,8 +375,9 @@ for si in dSubDirs[0:1] :
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fPrefix = 'ranked_genes-Lasso_2Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_genes-Lasso_2Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = 'ranked_genes-Lasso_2Class.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -366,8 +391,9 @@ for si in dSubDirs[0:1] :
 
 
 	# Save the parameters & results
-	fname = mp.nameOutputFile(si, 'parameters-Lasso_2Class')
-	print("  Saving params & stats to file {}".format(fname))
+#	fname = mp.nameOutputFile(si, 'parameters-Lasso_2Class')
+#	print("  Saving params & stats to file {}".format(fname))
+	fname = 'parameters-Lasso_2Class.txt'
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
@@ -391,9 +417,110 @@ for si in dSubDirs[0:1] :
 		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLasso02.score(testSet02, testLabel02)))
 		fout.write('\n')
 	#end with
+
+
+
+	# ####### ####### ####### #######
+	# 3b) Perform the regression analysis, Positive coeffs
+
+	# Train LASSO, as one-class	
+	cfLasso01 = lm.Lasso(alpha=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
+		 	positive=True, fit_intercept=lFitIcpt)#, selection=lSelctn)
+	#end if
+	cfLasso01.fit(trainSet01, trainLabel01)
+
+	# The meaning of this score is questionable,
+	#	mostly keeping it for curiosity
+	cfScore01 = cfLasso01.score(trainSet01, trainLabel01)
+	print("Pos-Coeffs score: {}".format(cfScore01))
+	print("  using {} coefficients".format( len(np.nonzero(cfLasso01.coef_)[0]) ))
+
+	cfPredLabel01 = cfLasso01.predict(testSet01)
+
+
+	# ####### ####### ####### #######
+	# 3c) Output results to file, One-Class
+
+	# Save the selected paths & scores/weights
+	# 	feature coefficients are the metapath weights
+	cfCoefs = np.nonzero(cfLasso01.coef_)[0]
+	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
+	row = 0
+	for c in cfCoefs :
+		cfPaths[row] = (c, cfLasso01.coef_[c])
+		row += 1
+	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+
+	# write the file
+#	fPrefix = 'ranked_paths-Lasso_Pos'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = 'ranked_paths-Lasso_Pos.txt'
+	print("Saving data for the Positive approach ...")
+	print("  Saving top paths to file {}".format(fname))
+	with open(si+fname, 'w') as fout :
+		fout.write('intercept:{}{}'.format(textDelim, cfLasso01.intercept_))
+		for row in range(len(cfPaths)) :
+			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
+				textDelim, pathNames[cfPaths['path'][row]]))
+	#end with
+
+
+	# Save the genes from the test set to a file
+	# Sort the genes by (inverse) rank
+	cfGenes = np.recarray( len(cfPredLabel01), dtype=[('gene', 'i4'), ('rank', 'f4')] )
+	cfGenes['gene'] = giTest01
+	cfGenes['rank'] = cfPredLabel01
+	cfGenes[::-1].sort(order=['rank','gene'])
+
+	# write the file
+#	fPrefix = 'ranked_genes-Lasso_Pos'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = 'ranked_genes-Lasso_Pos.txt'
+	print("  Saving ranked genes to file {}".format(fname))
+	with open(si+fname, 'w') as fout :
+		firstRow = True
+		for row in range(len(cfGenes)) :
+			if not firstRow :
+				fout.write('\n')
+			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
+				textDelim, geneList[cfGenes['gene'][row]]))
+			firstRow = False
+	#end with
+
+
+	# Save the parameters & results
+#	fname = mp.nameOutputFile(si, 'parameters-Lasso_Pos')
+#	print("  Saving params & stats to file {}".format(fname))
+	fname = 'parameters-Lasso_Pos.txt'
+	with open(si+fname, 'w') as fout :
+		fout.write('\n')
+		fout.write('Sampling Method for Neg examples\n')
+		fout.write('  as One-Class\n')
+		fout.write('\n')
+
+		fout.write('Lasso Parameters\n')
+		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
+		fout.write('alpha:{}{}\n'.format(textDelim, lAlphaPos))
+		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
+		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
+		fout.write('positive:{}{}\n'.format(textDelim, 'True'))
+		fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
+		fout.write('selection:{}{}\n'.format(textDelim, lSelctn))
+		fout.write('\n')
+
+		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
+		fout.write('Prediction Results\n')
+		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfLasso01.coef_)[0])))
+		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLasso01.score(trainSet01, trainLabel01)))
+		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLasso01.score(testSet01, testLabel01)))
+		fout.write('\n')
+	#end with
+
 #end loop
 
-#TODO: append output file in root of batch
+
+
+#TODO: append output file in root of batch ?
 
 
 
