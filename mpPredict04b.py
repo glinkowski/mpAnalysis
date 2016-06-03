@@ -5,7 +5,8 @@
 #		funded by the NIH
 # 
 # Approach 2: learn top paths from PathSim sum, find genes
-#	Version 2, Step 2
+#	Version 2, Step 2(b)
+#	LASSO linear regression
 #
 # The first approach tries to first find the most
 #	important metapaths, then rank genes by similarity
