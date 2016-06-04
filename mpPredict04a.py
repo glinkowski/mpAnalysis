@@ -46,7 +46,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samples-test1/'
+	sPath = '../Dropbox/mp/samplesMSIG/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
 
