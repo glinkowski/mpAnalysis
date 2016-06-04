@@ -32,16 +32,16 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-batch-000'
+dDir = 'pred04-set01'
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 	eName = 'fakeNtwk01_g3e4t1'
 	ePath = 'networks/'
 	dRoot = 'outputFake/'
 else :
-	eName = 'all_v1_g2e11t0'
+	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
 	dRoot = '../Dropbox/mp/output/'
 #end if
@@ -51,8 +51,8 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # LASSO params
-lAlpha01 = 0.01
-lAlpha02 = 0.005
+lAlpha01 = 0.0006
+lAlpha02 = 0.00002
 lMaxIter = 10000
 lNorm = True
 lPos = False
@@ -103,8 +103,8 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-for si in dSubDirs[0:1] :
-#for si in dSubDirs :
+#for si in dSubDirs[0:1] :
+for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
@@ -129,7 +129,6 @@ for si in dSubDirs[0:1] :
 	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
 	features = np.divide(features, featAbsMax)
 
-
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
 	gKnown = mp.readFileAsList(si+'known.txt')
 	giKnown = mp.convertToIndices(gKnown, geneDict)
@@ -137,7 +136,7 @@ for si in dSubDirs[0:1] :
 	giHidden = mp.convertToIndices(gHidden, geneDict)
 	giUnknown = [g for g in geneDict.values() if g not in giKnown]
 	giTrueNeg = [g for g in giUnknown if g not in giHidden]
-#	print len(gKnown), len(gHidden), len(giUnknown), len(giTrueNeg)
+#	print("{}, {}, {}, {}".format(len(gKnown), len(gHidden), len(giUnknown), len(giTrueNeg)))
 
 
 	# Extract the vectors for the pos sets
@@ -254,8 +253,9 @@ for si in dSubDirs[0:1] :
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fPrefix = 'ranked_paths-Lasso_1Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_paths-Lasso_1Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = si + 'ranked_paths-Lasso_1Class.txt'
 	print("Saving data for the One-Class approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
@@ -274,8 +274,9 @@ for si in dSubDirs[0:1] :
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fPrefix = 'ranked_genes-Lasso_1Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_genes-Lasso_1Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = si + 'ranked_genes-Lasso_1Class.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -289,7 +290,8 @@ for si in dSubDirs[0:1] :
 
 
 	# Save the parameters & results
-	fname = mp.nameOutputFile(si, 'parameters-Lasso_1Class')
+#	fname = mp.nameOutputFile(si, 'parameters-Lasso_1Class')
+	fname = si + 'parameters-Lasso_1Class.txt'
 	print("  Saving params & stats to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
@@ -330,8 +332,9 @@ for si in dSubDirs[0:1] :
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fPrefix = 'ranked_paths-Lasso_2Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_paths-Lasso_2Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = si + 'ranked_paths-Lasso_2Class.txt'
 	print("Saving data for the Two-Class approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
@@ -350,8 +353,9 @@ for si in dSubDirs[0:1] :
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fPrefix = 'ranked_genes-Lasso_2Class'
-	fname = mp.nameOutputFile(si, fPrefix)
+#	fPrefix = 'ranked_genes-Lasso_2Class'
+#	fname = mp.nameOutputFile(si, fPrefix)
+	fname = si + 'ranked_genes-Lasso_2Class.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -365,12 +369,13 @@ for si in dSubDirs[0:1] :
 
 
 	# Save the parameters & results
-	fname = mp.nameOutputFile(si, 'parameters-Lasso_2Class')
+#	fname = mp.nameOutputFile(si, 'parameters-Lasso_2Class')
+	fname = si + 'parameters-Lasso_2Class.txt'
 	print("  Saving params & stats to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as One-Class\n')
+		fout.write('  as Two-Class\n')
 		fout.write('\n')
 
 		fout.write('Lasso Parameters\n')
