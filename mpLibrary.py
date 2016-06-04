@@ -2060,8 +2060,9 @@ def getMatrixDimensions(path, name) :
 
 	if name.endswith('.gz') :
 		with gzip.open(path+name, 'rb') as fin :
-			for line in fin :
+			for bline in fin :
 				nRows += 1
+				line = bline.decode('UTF-8')
 				temp = len( line.split(textDelim) )
 				if temp == 0 :
 					break
@@ -2072,7 +2073,7 @@ def getMatrixDimensions(path, name) :
 					nCols = min(temp, nCols)
 		#end with
 	elif name.endswith('.txt') :
-		with open(path+name, 'rb') as fin :
+		with open(path+name, 'r') as fin :
 			for line in fin :
 				nRows += 1
 				temp = len( line.split(textDelim) )
@@ -2112,14 +2113,15 @@ def readFileAsMatrix(path, name) :
 	if name.endswith('.gz') :
 		with gzip.open(path+name, 'rb') as fin :
 			count = 0
-			for line in fin :
+			for bline in fin :
+				line = bline.decode('UTF-8')
 				line = line.rstrip('\n')
 				lv = line.split(textDelim)
 				matrix[count,:] = lv[:]
 				count += 1
 		#end with
 	elif name.endswith('.txt') :
-		with open(path+name, 'rb') as fin :
+		with open(path+name, 'r') as fin :
 			for line in fin :
 				line = line.rstrip('\n')
 				lv = line.split(textDelim)
