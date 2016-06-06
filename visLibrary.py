@@ -122,7 +122,7 @@ def readFileColumnAsString(fname, iCol, nSkip) :
 	theList = list()
 
 	# Read in from the file
-	theFile = open(fname, 'rb')
+	theFile = open(fname, 'r')
 	count = 0
 	firstWarn = True
 	lvLen = -1
@@ -287,7 +287,7 @@ def countLinesInFile(fname) :
 	cColMax = 0
 
 	if fname[-3:0] == '.gz' : 
-		with gzip.open(fname, 'rb') as fin :
+		with gzip.open(fname, 'r') as fin :
 			for line in fin :
 				lv = line.split(textDelim)
 				lineLength = len(lv)
@@ -304,7 +304,7 @@ def countLinesInFile(fname) :
 			#end loop
 		#end with
 	else :
-		fin = open(fname, 'rb')
+		fin = open(fname, 'r')
 		for line in fin :
 			lv = line.split(textDelim)
 			lineLength = len(lv)
