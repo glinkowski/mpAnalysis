@@ -44,7 +44,7 @@ else :
 
 
 # Maximum number of steps in the calculated metapaths
-mpDepth = 2
+mpDepth = 3
 
 kfile = ename + '.keep.txt'
 efile = ename + '.edge.txt'

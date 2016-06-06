@@ -1941,7 +1941,7 @@ def createMPLengthThreeFast(pList, path) :
 	for tup in mDict.values() :
 		mNum = max( mNum, tup[0] )
 	#end loop
-	mNum += 1
+#	mNum += 1
 #	print (mNum)
 
 	# Get the length-1 paths (primary paths)
@@ -2006,10 +2006,11 @@ def createMPLengthThreeFast(pList, path) :
 
 			# Skip if this path was already calculated (is in checkSet)
 			if mName not in checkSet :
+				mNum += 1
+
 				checkSet.add(mName)
 				mDict[mName] = [mNum, False]
 
-				mNum += 1
 
 				if verbose :
 					print("  #{}, {} & {}".format(mNum, mName, mNameRev))
