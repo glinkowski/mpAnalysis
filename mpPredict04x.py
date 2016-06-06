@@ -260,7 +260,7 @@ for i in range(len(sampList)) :
 #TODO: write this into a func
 
 # Write the AUC tables to file(s)
-with open(dDir + 'results-AUC_ROC.txt', 'w') as fout :
+with open(dPath + 'results-AUC_ROC.txt', 'w') as fout :
 	fout.write('Area Under ROC Curve, per-sample')
 	fout.write('\nnetwork:{}{}'.format(textDelim, eName))
 	fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
