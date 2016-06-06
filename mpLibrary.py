@@ -91,6 +91,8 @@ verbose = True
 speedVsMemory = False	# True favors speed, disables dtype
 # Data-type for the path matrices:
 matrixDT = np.float32	#TODO: any considerations here?
+# Whether to save matrices as .txt or compressed .gz
+matrixExt = '.gz'
 
 ######## ######## ######## ######## 
 
