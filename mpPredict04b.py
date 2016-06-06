@@ -144,6 +144,10 @@ for si in dSubDirs :
 	features = mp.readFileAsMatrix(si, fSimilarity)
 #	mp.setParamMatrixDT(-2)
 
+	# NOTE: previous version of mpPredict04a had extra zeros at end of vectors
+	#	discarding those columns
+	features = features[:,0:len(pathNames)]
+
 
 	# Remove the mean, set L2 norm = 1
 	featMean = np.mean(features, axis=0)
