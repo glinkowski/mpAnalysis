@@ -12,6 +12,7 @@
 #	verifyFile(path, name, quiet)
 #	saveListToText(path, name, theList)
 #	saveMatrixText(matrix, mname, mpath, integer)
+#	saveMatrixNumpy(matrix, mname, mpath, integer)
 #	saveMatrixGzip(matrix, mname, mpath, integer)
 #	checkGenesInNetwork(path, name, geneList)
 #	partitionSample(nPath, nName, oPath, sample, percent)
@@ -309,6 +310,44 @@ def saveMatrixText(matrix, mname, mpath, integer) :
 				fout.write("{}".format( matrix[i,j] ))
 	#end loop
 	fout.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: save the given matrix as a .npy file
+# Input ----
+#	matrix, (NxN) list: the values to save
+#	mname, str: name of the file to save
+#	mpath, str: path to the folder to save the file
+#	integer, bool: True means save values as int()
+# Returns ----
+#	nothing
+def saveMatrixNumpy(matrix, mname, mpath, integer) :
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# Write to the file
+#TODO: check if the fmt option is appropriate, or pointless
+#	np.save(mpath+mname, matrix)
+	if integer :
+		np.savetxt(mpath+mname+matrixExt, matrix, fmt='%u')
+	else :
+		np.savetxt(mpath+mname+matrixExt, matrix, fmt='%f')
+	#end if
+
+#NOTE: In this case, the text file from savetxt() is much
+#	smaller than the binary file from save()
+
+#	# VERIFICATION: save as a text-readable file
+#	if saveTextCopy :
+#		saveMatrixText(matrix, "t"+mname, mpath, integer)
+#	#end if
 
 	return
 #end def ######## ######## ######## 
