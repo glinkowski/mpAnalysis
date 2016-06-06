@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set01'
+dDir = 'pred04-test01'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)
@@ -126,6 +126,7 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
+thisRound += 1
 #for si in dSubDirs[0:1] :
 for si in dSubDirs :
 
@@ -532,6 +533,9 @@ for si in dSubDirs :
 		fout.write('\n')
 	#end with
 
+	thisRound += 1
+	print("    --{} of {}".format(thisRound, len(dSubDirs)))
+	print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 #end loop
 
 
