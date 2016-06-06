@@ -46,7 +46,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesMSIG/'
+	sPath = '../Dropbox/mp/samples-4subs/subset03/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -162,7 +162,7 @@ print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 # 5) Get the similarity measure from PathSim matrices
 #	Build the feature vector matrices for each sample
-gFeatures = np.zeros( (len(geneDict), len(pathDict),
+gFeatures = np.zeros( (len(geneDict), len(pathList),
 	len(oSampLists)), dtype=np.float32 )
 
 # populate dimension 2 from each path
@@ -194,6 +194,9 @@ for p in pathList :
 print("Finished examining matrix similarity matrices.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
+
+#print("feature matrix dimensions: {}".format(gFeatures.shape))
+#print("# paths: {}".format(len(pathList)))
 
 
 # 6) Save the raw feature vectors to the sample folders
