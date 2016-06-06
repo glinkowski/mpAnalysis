@@ -52,9 +52,12 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # LASSO params
-lAlpha01 = 0.0006
-lAlpha02 = 0.00002
-lAlphaPos = 0.005
+#lAlpha01 = 0.0006
+#lAlpha02 = 0.00002
+#lAlphaPos = 0.00008
+lAlpha01 = [0.003, 0.001, 0.0008, 0.0006, 0.0004]
+lAlpha02 = [0.00007, 0.00006, 0.00005, 0.00004]
+lAlphaPos = [0.0005, 0.0004, 0.0003, 0.0001]
 lMaxIter = 10000
 lNorm = True
 lPos = False
@@ -229,16 +232,19 @@ for si in dSubDirs :
 	print("  ... performing regression ...")
 
 	# Train LASSO, as one-class	
-	cfLasso01 = lm.Lasso(alpha=lAlpha01, max_iter=lMaxIter, normalize=lNorm,
-		 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
-	#end if
+#	cfLasso01 = lm.Lasso(alpha=lAlpha01, max_iter=lMaxIter, normalize=lNorm,
+#	 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
+	cfLasso01 = lm.LassoCV(alphas=lAlpha01, max_iter=lMaxIter, normalize=lNorm,
+		positive=lPos, fit_intercept=lFitIcpt)
+
 	cfLasso01.fit(trainSet01, trainLabel01)
 
 	# The meaning of this score is questionable,
 	#	mostly keeping it for curiosity
 	cfScore01 = cfLasso01.score(trainSet01, trainLabel01)
 	print("One-Class score: {}".format(cfScore01))
-	print("  using {} coefficients".format( len(np.nonzero(cfLasso01.coef_)[0]) ))
+	print("  using {} coefficients, alpha = {}".format(
+		len(np.nonzero(cfLasso01.coef_)[0]), cfLasso01.alpha_ ))
 
 	cfPredLabel01 = cfLasso01.predict(testSet01)
 
@@ -306,6 +312,7 @@ for si in dSubDirs :
 		fout.write('Lasso Parameters\n')
 		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
 		fout.write('alpha:{}{}\n'.format(textDelim, lAlpha01))
+		fout.write('alpha:{}{}\n'.format(textDelim, cfLasso01.alpha_))
 		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
 		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
 		fout.write('positive:{}{}\n'.format(textDelim, lPos))
@@ -326,16 +333,18 @@ for si in dSubDirs :
 	# 3b) Perform the regression analysis
 
 	# Train LASSO, as two-class	
-	cfLasso02 = lm.Lasso(alpha=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
-		 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
-	#end if
+#	cfLasso02 = lm.Lasso(alpha=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+#	 	positive=lPos, fit_intercept=lFitIcpt)#, selection=lSelctn)
+	cfLasso02 = lm.LassoCV(alphas=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+		positive=lPos, fit_intercept=lFitIcpt)
 	cfLasso02.fit(trainSet02, trainLabel02)
 
 	# The meaning of this score is questionable,
 	#	mostly keeping it for curiosity
 	cfScore02 = cfLasso02.score(trainSet02, trainLabel02)
 	print("Two-Class score: {}".format(cfScore02))
-	print("  using {} coefficients".format( len(np.nonzero(cfLasso02.coef_)[0]) ))
+	print("  using {} coefficients, alpha = {}".format(
+		len(np.nonzero(cfLasso02.coef_)[0]), cfLasso02.alpha_ ))
 
 	cfPredLabel02 = cfLasso02.predict(testSet02)
 
@@ -401,7 +410,8 @@ for si in dSubDirs :
 
 		fout.write('Lasso Parameters\n')
 		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
-		fout.write('alpha:{}{}\n'.format(textDelim, lAlpha02))
+		fout.write('alphas:{}{}\n'.format(textDelim, lAlpha02))
+		fout.write('alpha:{}{}\n'.format(textDelim, cfLasso02.alpha_))
 		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
 		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
 		fout.write('positive:{}{}\n'.format(textDelim, lPos))
@@ -423,16 +433,18 @@ for si in dSubDirs :
 	# 3b) Perform the regression analysis, Positive coeffs
 
 	# Train LASSO, as one-class	
-	cfLasso01 = lm.Lasso(alpha=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
-		 	positive=True, fit_intercept=lFitIcpt)#, selection=lSelctn)
-	#end if
+#	cfLasso01 = lm.Lasso(alpha=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
+#	 	positive=True, fit_intercept=lFitIcpt)#, selection=lSelctn)
+	cfLasso01 = lm.LassoCV(alphas=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
+		positive=True, fit_intercept=lFitIcpt)
 	cfLasso01.fit(trainSet01, trainLabel01)
 
 	# The meaning of this score is questionable,
 	#	mostly keeping it for curiosity
 	cfScore01 = cfLasso01.score(trainSet01, trainLabel01)
 	print("Pos-Coeffs score: {}".format(cfScore01))
-	print("  using {} coefficients".format( len(np.nonzero(cfLasso01.coef_)[0]) ))
+	print("  using {} coefficients, alpha = {}".format(
+		len(np.nonzero(cfLasso01.coef_)[0]), cfLasso01.alpha_ ))
 
 	cfPredLabel01 = cfLasso01.predict(testSet01)
 
@@ -499,7 +511,8 @@ for si in dSubDirs :
 
 		fout.write('Lasso Parameters\n')
 		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
-		fout.write('alpha:{}{}\n'.format(textDelim, lAlphaPos))
+		fout.write('alphas:{}{}\n'.format(textDelim, lAlphaPos))
+		fout.write('alpha:{}{}\n'.format(textDelim, cfLasso01.alpha_))
 		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
 		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
 		fout.write('positive:{}{}\n'.format(textDelim, 'True'))
