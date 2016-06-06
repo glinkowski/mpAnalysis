@@ -105,10 +105,10 @@ del pathDict
 
 # 2) Get the list of unique samples
 dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
-sampSet = list()
+sampSet = set()
 prevSN = ''
-numFolds = 0
-prevNumFolds = 0
+numFolds = 1
+prevNumFolds = 1
 for si in dSubDirs :
 
 	# extract sample name from folder name
@@ -116,18 +116,25 @@ for si in dSubDirs :
 	sDir = sv[-2]
 	sdv = sDir.split('-')
 	sn = sdv[1]
+	sampSet.add(sn)
 
 	# count how many folds there are
 	if sn != prevSN :
-		if prevNumFolds != numFolds :
-			print("ERROR: inconsistent number of folders per sample.")
-			sys.exit
-		#end if
+#		if prevNumFolds != numFolds :
+#			print("ERROR: inconsistent number of folders per sample.")
+#			sys.exit()
+#		#end if
 		prevNumFolds = numFolds
-		numFolds = 0
+		numFolds = 1
 	else :
 		numFolds += 1
+	#end if
+	prevSN = sn
 #end loop
+if prevNumFolds != numFolds :
+	print("ERROR: inconsistent number of folders per sample.")
+	sys.exit()
+#end if
 sampList = list(sampSet)
 sampList.sort()
 
@@ -177,8 +184,8 @@ resultsMaxROC = np.zeros( (len(methodList), len(sampList)), dtype=np.float64)
 resultsMaxPR = np.zeros( (len(methodList), len(sampList)), dtype=np.float64)
 resultsPaths = np.zeros( (len(pathList), len(dSubDirs)), dtype=np.float64)
 resultsGenes = np.zeros( (len(geneList), len(dSubDirs)), dtype=np.float64)
-print("matrix sizes: {}, {}, {}, {}".format( len(resultsROC), len(resultsPR),
-	len(resultsPaths), len(resultsGenes) ))
+print("matrix sizes: {}, {}, {}, {}".format( resultsROC.shape, resultsAvgROC.shape,
+	resultsPaths.shape, resultsGenes.shape ))
 
 
 
@@ -247,17 +254,26 @@ for si in dSubDirs :
 		plt.close()
 #end loop
 
+
+#print(numFolds)
+#print("{}, {}".format( resultsROC.shape, resultsAvgROC.shape ))
+#print (resultsROC)
 # Get average AUC for each sample, across all folds
 for i in range(len(sampList)) :
 	left = i * numFolds
 	right = left + numFolds
 
-	resultsAvgROC[i] = np.mean(resultsROC[:,left:right], axis=0)
-	resultsAvgPR[i] = np.mean(resultsPR[:,left:right], axis=0)
+	newCol = np.mean(resultsROC[:,left:right], axis=1)
+#	print("L:{}, R:{}".format(left, right))
+#	print(newCol)
+	resultsAvgROC[:,i] = newCol[:]
+#	resultsAvgROC[i] = np.mean(resultsROC[:,left:right], axis=0)
+	resultsAvgPR[:,i] = np.mean(resultsPR[:,left:right], axis=1)
 #end loop
 
 
 #TODO: write this into a func
+#print (resultsAvgROC)
 
 # Write the AUC tables to file(s)
 with open(dPath + 'results-AUC_ROC.txt', 'w') as fout :
