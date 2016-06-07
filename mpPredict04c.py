@@ -38,7 +38,7 @@ import random
 numVotes = 100
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set01'
+dDir = 'pred04-set02'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)
@@ -57,8 +57,9 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # LASSO params
-lAlphas = [0.005, 0.003, 0.001, 0.0007, 0.0004, 0.0001]
-lMaxIter = 10000
+lAlphas = ([0.005, 0.004, 0.003, 0.002, 0.001, 0.0009, 0.0008,
+	0.0007, 0.0006, 0.0005, 0.0004, 0.0003, 0.0002, 0.0001])
+lMaxIter = 100000
 lNorm = True
 lPos = False
 lFitIcpt = True
@@ -69,7 +70,7 @@ nLabel = 0
 
 
 # verbose feedback ?
-newVerbose = True
+newVerbose = False
 
 textDelim = '\t'
 
@@ -197,6 +198,8 @@ for si in dSubDirs :
 	# Train LASSO, as one-class	
 	cfLCV = lm.LassoCV(alphas=lAlphas, max_iter=lMaxIter, normalize=lNorm,
 		positive=lPos, fit_intercept=lFitIcpt)
+#	cfLCV = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
+#		positive=lPos, fit_intercept=lFitIcpt)
 
 	cfLCV.fit(trainSet, trainLabel)
 
