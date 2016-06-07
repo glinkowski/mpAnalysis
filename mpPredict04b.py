@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-test01'
+dDir = 'pred04-set01'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)
@@ -55,9 +55,9 @@ fSimilarity = 'features_PathSim.gz'
 #lAlpha01 = 0.0006
 #lAlpha02 = 0.00002
 #lAlphaPos = 0.00008
-lAlpha01 = [0.003, 0.001, 0.0008, 0.0006, 0.0004]
-lAlpha02 = [0.00007, 0.00006, 0.00005, 0.00004]
-lAlphaPos = [0.0005, 0.0004, 0.0003, 0.0001]
+lAlpha01 = [0.003, 0.001, 0.0008, 0.0006, 0.0004, 0.0001]
+lAlpha02 = [0.00007, 0.00006, 0.00005, 0.00004, 0.00003]
+lAlphaPos = [0.0006, 0.0005, 0.0004, 0.0003, 0.0001, 0.00008]
 lMaxIter = 10000
 lNorm = True
 lPos = False
@@ -68,7 +68,7 @@ pLabel = 1
 nLabel = 0
 
 # verbose feedback ?
-newVerbose = True
+newVerbose = False
 
 
 textDelim = '\t'
@@ -126,7 +126,7 @@ dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 # 3) For each sample (subdir), perform LASSO
 #		save top paths & weights to a file
 
-thisRound += 1
+thisRound = 0
 #for si in dSubDirs[0:1] :
 for si in dSubDirs :
 
