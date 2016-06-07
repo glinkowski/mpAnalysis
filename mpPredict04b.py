@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set01'
+dDir = 'pred04-set02'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)

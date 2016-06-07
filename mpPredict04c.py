@@ -35,7 +35,7 @@ import random
 # PARAMETERS
 
 # number of rounds over which to vote
-numVotes = 100
+numVotes = 30
 
 # folder containing the pre-processed samples
 dDir = 'pred04-set02'
