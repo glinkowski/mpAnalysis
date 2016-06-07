@@ -330,7 +330,8 @@ for si in dSubDirs :
 	# write the file
 	fname = 'ranked_paths-Lasso_Voting1C_{}.txt'.format(numVotes)
 	print("Saving data for the Voting (One-Class) approach ...")
-	print("  Saving top paths to file {}".format(fname))
+	if newVerbose :
+		print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		fout.write('avg intercept:{}{}'.format( textDelim, (avgIncept / float(numVotes)) ))
 		for row in range(len(cfPaths)) :
@@ -352,7 +353,8 @@ for si in dSubDirs :
 
 	# write the file
 	fname = 'ranked_genes-Lasso_Voting1C_{}.txt'.format(numVotes)
-	print("  Saving ranked genes to file {}".format(fname))
+	if newVerbose :
+		print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
 		for row in range(len(cfGenes)) :
@@ -366,6 +368,8 @@ for si in dSubDirs :
 
 	# Save the parameters & results
 	fname = 'parameters-Lasso_Voting1C_{}.txt'.format(numVotes)
+	if newVerbose :
+		print("  Saving parameters to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
