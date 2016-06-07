@@ -35,10 +35,10 @@ import random
 # PARAMETERS
 
 # number of rounds over which to vote
-numVotes = 10
+numVotes = 30
 
 # folder containing the pre-processed samples
-dDir = 'pred04-test01'
+dDir = 'pred04-set02'
 dRoot = '../Dropbox/mp/output/'
 
 
@@ -115,8 +115,8 @@ del pathDict
 dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 
 thisRound = 0
-for si in dSubDirs[0:1] :
-#for si in dSubDirs :
+#for si in dSubDirs[0:1] :
+for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')
