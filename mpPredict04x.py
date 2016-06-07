@@ -184,12 +184,12 @@ resultsMaxROC = np.zeros( (len(methodList), len(sampList)), dtype=np.float64)
 resultsMaxPR = np.zeros( (len(methodList), len(sampList)), dtype=np.float64)
 resultsPaths = np.zeros( (len(pathList), len(dSubDirs)), dtype=np.float64)
 resultsGenes = np.zeros( (len(geneList), len(dSubDirs)), dtype=np.float64)
-print("matrix sizes: {}, {}, {}, {}".format( resultsROC.shape, resultsAvgROC.shape,
-	resultsPaths.shape, resultsGenes.shape ))
+#print("matrix sizes: {}, {}, {}, {}".format( resultsROC.shape, resultsAvgROC.shape, resultsPaths.shape, resultsGenes.shape ))
 
 
 
 # 4) Create the Area Under the Curve tables
+print("Finding AUCs for each sample ...")
 
 col = -1
 #for si in dSubDirs[0:1] :
@@ -263,36 +263,91 @@ for i in range(len(sampList)) :
 	left = i * numFolds
 	right = left + numFolds
 
-	newCol = np.mean(resultsROC[:,left:right], axis=1)
+#	newCol = np.mean(resultsROC[:,left:right], axis=1)
 #	print("L:{}, R:{}".format(left, right))
 #	print(newCol)
-	resultsAvgROC[:,i] = newCol[:]
+#	resultsAvgROC[:,i] = newCol[:]
+	resultsAvgROC[:,i] = np.mean(resultsROC[:,left:right], axis=1)
+	resultsMaxROC[:,i] = np.amax(resultsROC[:,left:right], axis=1)
 #	resultsAvgROC[i] = np.mean(resultsROC[:,left:right], axis=0)
 	resultsAvgPR[:,i] = np.mean(resultsPR[:,left:right], axis=1)
+	resultsMaxPR[:,i] = np.amax(resultsPR[:,left:right], axis=1)
 #end loop
 
 
 #TODO: write this into a func
 #print (resultsAvgROC)
 
-# Write the AUC tables to file(s)
-with open(dPath + 'results-AUC_ROC.txt', 'w') as fout :
-	fout.write('Area Under ROC Curve, per-sample')
-	fout.write('\nnetwork:{}{}'.format(textDelim, eName))
-	fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
-	fout.write('\n')
+# # Write the AUC tables to file(s)
+# with open(dPath + 'results-AUC_ROC.txt', 'w') as fout :
+# 	fout.write('Area Under ROC Curve, per-sample')
+# 	fout.write('\nnetwork:{}{}'.format(textDelim, eName))
+# 	fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
+# 	fout.write('\n')
 
-	for j in range(len(sampList)) :
-		fout.write('{}{}'.format( sampList[j], textDelim ))
-	#fout.write('\n')
+# 	for j in range(len(sampList)) :
+# 		fout.write('{}{}'.format( sampList[j], textDelim ))
+# 	#fout.write('\n')
 
-	for i in range(len(methodList)) :
+# 	for i in range(len(methodList)) :
+# 		fout.write('\n')
+# 		for j in range(len(sampList)) :
+# 			fout.write('{}{}'.format( resultsAvgROC[i,j], textDelim ))
+# 		fout.write('{}'.format(methodList[i]))
+# 	#end loop
+# #end with
+
+print("Writing the AUC tables (ROC & PR) ...")
+
+# Write the AUC tables to file(s) for the per-sample results
+fileNames = (['results-AUC_ROC_Avg.txt', 'results-AUC_ROC_Max.txt',
+	'results-AUC_PR_Avg.txt', 'results-AUC_PR_Max.txt'])
+fileHeaders = (['Average -- Area Under ROC Curve, per-sample', 'Maximum -- Area Under ROC Curve, per-sample',
+	'Average -- Area Under PR Curve, per-sample', 'Maximum -- Area Under PR Curve, per-sample'])
+fileData = ([resultsAvgROC, resultsMaxROC, resultsAvgPR, resultsMaxPR])
+for f in range(4) :
+	with open(dPath + fileNames[f], 'w') as fout :
+		fout.write(fileHeaders[f])
+		fout.write('\nnetwork:{}{}'.format(textDelim, eName))
+		fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
 		fout.write('\n')
+
 		for j in range(len(sampList)) :
-			fout.write('{}{}'.format( resultsAvgROC[i,j], textDelim ))
-		fout.write('{}'.format(methodList[i]))
-	#end loop
-#end with
+			fout.write('{}{}'.format( sampList[j], textDelim ))
+		#fout.write('\n')
+
+		for i in range(len(methodList)) :
+			fout.write('\n')
+			for j in range(len(sampList)) :
+				fout.write('{}{}'.format( fileData[f][i,j], textDelim ))
+			fout.write('{}'.format(methodList[i]))
+		#end loop
+#end loop
+
+# Write the AUC tables to file(s) for the COMPLETE results (every fold)
+fileNames = (['results-AUC_ROC_All.txt', 'results-AUC_PR_All.txt'])
+fileHeaders = (['Area Under ROC Curve, all folds', 'Area Under PR Curve, all folds'])
+fileData = ([resultsROC, resultsPR])
+for f in range(2) :
+	with open(dPath + fileNames[f], 'w') as fout :
+		fout.write(fileHeaders[f])
+		fout.write('\nnetwork:{}{}'.format(textDelim, eName))
+		fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
+		fout.write('\n')
+
+		for j in range(len(dSubDirs)) :
+			sv = dSubDirs[j].split('/')
+			fout.write('{}{}'.format( sv[-2], textDelim ))
+		#fout.write('\n')
+
+		for i in range(len(methodList)) :
+			fout.write('\n')
+			for j in range(len(dSubDirs)) :
+				fout.write('{}{}'.format( fileData[f][i,j], textDelim ))
+			fout.write('{}'.format(methodList[i]))
+		#end loop
+#end loop
+
 
 
 
