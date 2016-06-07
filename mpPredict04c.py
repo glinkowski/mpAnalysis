@@ -35,10 +35,10 @@ import random
 # PARAMETERS
 
 # number of rounds over which to vote
-numVotes = 10
+numVotes = 100
 
 # folder containing the pre-processed samples
-dDir = 'pred04-test01'
+dDir = 'pred04-set01'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)
@@ -284,8 +284,10 @@ for si in dSubDirs :
 		# The meaning of this score is questionable,
 		#	mostly keeping it for curiosity
 		cfScore = cfLPlain.score(trainSet, trainLabel)
-		print("    score: {:1.3f}, # ceoffs: {}".format(cfScore, len(np.nonzero(cfLPlain.coef_)[0])))
-
+		if newVerbose :
+			print("    score: {:1.3f}, # ceoffs: {}".format(cfScore, len(np.nonzero(cfLPlain.coef_)[0])))
+#		elif not (thisRound % 25) :
+#			print("    completed {} of {}".format(thisRound, (numVotes - 1) ))
 	
 		cfPredLabel = cfLPlain.predict(testSet)
 
