@@ -253,7 +253,7 @@ for si in dSubDirs :
 		sv = si.split('/')
 		sdir = sv[-2]
 		sdv = sdir.split('-')
-		plt.suptitle(sdv[1]+', concealed = {}'.format(numHid)+
+		plt.suptitle(sdv[1]+'{}, concealed = {}'.format(m, numHid)+
 			', ROC area = {:.3}'.format(areaROC))
 		plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=.4, hspace=None)
 
