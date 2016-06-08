@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set01'
+dDir = 'pred04-set02'
 dRoot = '../Dropbox/mp/output/'
 
 # File name containing feature vectors
@@ -44,19 +44,19 @@ retCutoffs = [50, 100, 200, 500, 1000, 2000]
 
 # Log Regression params
 #lgCs = np.logspace(-4, 1, 6)
-lgCs = 3
+lgCs = 11
 #lgCs = 10
 lgPenalty = 'l2'
 lgDual = False
-lgMaxIter = 1000
+lgMaxIter = 500
 
 # Elastic Net params
-#enRatios = [0.3, 0.5, 0.8, 0.95]
-enRatios = [0.2, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99]
+enRatios = [0.3, 0.5, 0.75, 0.9, 0.95]
+#enRatios = [0.2, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99]
 #enRatios = [0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 0.999]
 enNAlphas = 11
 #enNAlphas = 25
-enMaxIter = 100000
+enMaxIter = 1000
 #enPos = False
 enFitIncept = True
 enNorm = True
@@ -121,8 +121,8 @@ del pathDict
 dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
 
 thisRound = 0
-for si in dSubDirs[0:1] :
-#for si in dSubDirs :
+#for si in dSubDirs[0:1] :
+for si in dSubDirs :
 
 	# Display directory to examine
 	sv = si.split('/')

@@ -35,10 +35,10 @@ import random
 # PARAMETERS
 
 # number of rounds over which to vote
-numVotes = 30
+numVotes = 100
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set02'
+dDir = 'pred04-set01'
 dRoot = '../Dropbox/mp/output/'
 
 
