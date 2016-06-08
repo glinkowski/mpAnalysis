@@ -36,7 +36,7 @@ import sys
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-test01'
+dDir = 'pred04-set02'
 dRoot = '../Dropbox/mp/output/'
 
 # # Input names & locations
@@ -100,6 +100,14 @@ print("Reading in the path names.")
 pathDict = mp.readKeyFile(ePath, eName)
 pathList = mp.removeInvertedPaths(pathDict)
 del pathDict
+
+# Make new pathDict to give index of pathList
+pathDict = dict()
+idx = -1
+for item in pathList :
+	idx += 1
+	pathDict[item] = idx
+#end loop
 
 
 
@@ -275,6 +283,9 @@ for i in range(len(sampList)) :
 #end loop
 
 
+
+# 5) Output to file(s)
+
 #TODO: write this into a func
 #print (resultsAvgROC)
 
@@ -310,7 +321,7 @@ for f in range(4) :
 		fout.write(fileHeaders[f])
 		fout.write('\nnetwork:{}{}'.format(textDelim, eName))
 		fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
-		fout.write('\n')
+		fout.write('\n\n')
 
 		for j in range(len(sampList)) :
 			fout.write('{}{}'.format( sampList[j], textDelim ))
@@ -333,7 +344,7 @@ for f in range(2) :
 		fout.write(fileHeaders[f])
 		fout.write('\nnetwork:{}{}'.format(textDelim, eName))
 		fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
-		fout.write('\n')
+		fout.write('\n\n')
 
 		for j in range(len(dSubDirs)) :
 			sv = dSubDirs[j].split('/')
@@ -350,6 +361,102 @@ for f in range(2) :
 
 
 
+# 6) Create the path score tables
+print("Finding path scores for each sample ...")
 
-#TODO: get path ranks per sample
+pScoreFolds = np.zeros( (len(pathList), len(dSubDirs)) )
+pScoreSamples = np.zeros( (len(pathList), len(sampList)) )
+
+fcol = -1
+#for si in dSubDirs[0:1] :
+for si in dSubDirs :
+	fcol += 1
+
+	pScoreEvery = np.zeros( (len(pathList), len(methodList)) )
+
+	# Get data relating to each method
+	ecol = -1
+	for m in methodList :
+		ecol += 1
+
+		fn = 'ranked_paths-' + m + '.txt'
+		with open(si + fn, 'r') as fin :
+			firstLine = fin.readline()
+			for line in fin :
+				line = line.rstrip()
+				lv = line.split(textDelim)
+
+				idx = pathDict[lv[1]]
+				pScoreEvery[idx,ecol] = float(lv[0])
+		#end with
+
+		# normalize to [-1, 1]
+		absVals = np.absolute( pScoreEvery[:,ecol] )
+		divVal = np.amax( absVals )
+		pScoreEvery[:,ecol] = np.divide(pScoreEvery[:,ecol], divVal)
+#		print(np.amax(pScoreEvery[:,ecol]))
+
+		# place average/sum (?) into larger table
+		pScoreFolds[:,fcol] = np.sum(pScoreEvery, axis=1)
+#end loop
+
+
+# Get average path scores for each sample, across all folds
+for i in range(len(sampList)) :
+	left = i * numFolds
+	right = left + numFolds
+
+	pScoreSamples[:,i] = np.mean(pScoreFolds[:,left:right], axis=1)
+#end loop
+
+
+
+# 7) Output to file(s)
+
+
+print("Writing the path score files ...")
+
+with open(dPath + 'results-PathScores_Avg.txt', 'w') as fout :
+	fout.write('Path Scores for each sample, averaged across folds')
+	fout.write('\nnetwork:{}{}'.format(textDelim, eName))
+	fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
+	fout.write('\n\n')
+
+	for j in range(len(sampList)) :
+		fout.write('{}{}'.format( sampList[j], textDelim ))
+	#fout.write('\n')
+
+	for i in range(len(pathList)) :
+		fout.write('\n')
+		for j in range(len(sampList)) :
+			fout.write('{}{}'.format( pScoreSamples[i,j], textDelim ))
+		fout.write('{}'.format(pathList[i]))
+#end with
+
+
+with open(dPath + 'results-PathScores_All.txt', 'w') as fout :
+	fout.write('Path Scores for each fold, averaged across all methods')
+	fout.write('\nnetwork:{}{}'.format(textDelim, eName))
+	fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
+	fout.write('\n\n')
+
+	for j in range(len(dSubDirs)) :
+		sv = dSubDirs[j].split('/')
+		fout.write('{}{}'.format( sv[-2], textDelim ))
+	#fout.write('\n')
+
+	for i in range(len(pathList)) :
+		fout.write('\n')
+		for j in range(len(dSubDirs)) :
+			fout.write('{}{}'.format( pScoreFolds[i,j], textDelim ))
+		fout.write('{}'.format(pathList[i]))
+#end with
+
+
+
+
+
 #TODO: get gene stats ... ??
+
+
+print('\nDone.\n')
