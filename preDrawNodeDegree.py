@@ -13,7 +13,6 @@
 #	edge types.
 # ---------------------------------------------------------
 
-import preProcFuncs as pp
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -23,6 +22,8 @@ import time
 ####### ####### ####### ####### 
 # PARAMETERS
 
+showFigures = True
+
 # The network to use and directory path
 #eName = 'all_v3beta_g2e9t0'
 #ePath = '../Dropbox/mp/networks/'
@@ -30,8 +31,8 @@ eName = 'fakeNtwk00_g2e3t10'
 ePath = 'networks/'
 
 # # The number of bins to draw
-# numBinsMin = 10
-# numBinsMax = 1000
+numBinsMin = 4
+numBinsMax = 50
 #http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.hist
 
 ####### ####### ####### ####### 
@@ -93,7 +94,18 @@ with open(fName, 'r') as fin :
 
 
 
-# 2) Draw the degree distribution images (and save)
+# 2) Determine the number of bins to use
+if nodeDegrees.shape[0] > 10000 :
+	useBins = numBinsMax
+elif nodeDegrees.shape[0] > 50 :
+	useBins = 10
+else :
+	useBins = numBinsMin
+#end if
+
+
+
+# 3) Draw the degree distribution images (and save)
 
 for col in range(len(typeNames)) :
 #for col in range(1) :
@@ -101,17 +113,14 @@ for col in range(len(typeNames)) :
 	thisName = typeNames[col]
 	thisVals = nodeDegrees[:,col]
 
-	plt.hist(thisVals)
+	plt.hist(thisVals, bins=useBins)
 	plt.title('Node Degrees for type: {}'.format(thisName))
 	plt.xlabel('Degree')
 	plt.ylabel('Number of Nodes')
 
-#	fig = plt.gcf()
-
-#	plt.show()
 	plt.savefig(ePath + eName + 'nodeDeg-{}.png'.format(thisName))
-#		plt.savefig(pDir+'AUC_'+pFolder+'.png')
-	plt.show()
+	if showFigures :
+		plt.show()
 	plt.close()
 
 #end loop
