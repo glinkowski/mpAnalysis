@@ -141,7 +141,7 @@ for name in pathNames :
 
 # 4) Apply log() to fix scaling of feature values
 print("Applying logarithmic scaling to the feature values...")
-featMod = np.add(featVals, 0.0001)
+featMod = np.add(featVals, 1.0)
 featMod = np.log(featMod)
 
 
@@ -159,8 +159,8 @@ with open(fPath + 'featNeighbor_Names.txt', 'w') as fout :
 
 # write the feature matrices, original and modified
 pp.setParamSaveTextCopy(True)
-pp.saveMatrixNumpy(featVals, 'featNeighbor_Orig.gz', fPath, False)
-pp.saveMatrixNumpy(featMod, 'featNeighbor_LogScale.gz', fPath, False)
+pp.saveMatrixNumpy(featVals, 'featNeighbor_Orig', fPath, False)
+pp.saveMatrixNumpy(featMod, 'featNeighbor_LogScale', fPath, False)
 
 
 
