@@ -80,6 +80,85 @@ verbose = True
 
 
 
+
+######## ######## ######## ########
+# Functions to set the global library parameters
+# Input ----
+#	NOTE: an input value of...
+#		-1 keeps the parameter unchanged
+#		-2 resets parameter to default
+def setParamVerbose(newVal) :
+	global verbose
+
+	if newVal :
+		verbose = True
+	else :
+		verbose = False
+	#end if
+
+	return
+#end def ######## ######## ######## 
+def setParamTextDelim(newVal) :
+	global textDelim
+
+	if str(newVal) == '-1' :
+		textDelim = textDelim
+	elif str(newVal) == '-2' :
+		textDelim = '\t'
+	else :
+		textDelim = str(newVal)
+	#end if
+
+	return
+#end def ######## ######## ######## 
+# def setParamFileZeroPad(newMval, newOval) :
+# 	global fnMatrixZPad
+# 	global fnOutputZPad
+
+# 	if newMval == -1 :
+# 		fnMatrixZPad = fnMatrixZPad
+# 	elif newMval == -2 :
+# 		fnMatrixZPad = 5
+# 	else :
+# 		fnMatrixZPad = newMval
+# 	#end if
+# 	if newOval == -1 :
+# 		fnOutputZPad = fnOutputZPad
+# 	elif newOval == -2 :
+# 		fnOutputZPad = 3
+# 	else :
+# 		fnOutputZPad = newMval
+# 	#end if
+
+# 	return
+# #end def ######## ######## ######## 
+def setParamMatrixDT(newVal) :
+	global matrixDT
+
+	if newVal == -1 :
+		matrixDT = matrixDT
+	elif newVal == -2 :
+		matrixDT = np.float32
+	else :
+		matrixDT = newVal
+	#end if
+
+	return
+#end def ######## ######## ######## 
+def setParamSaveTextCopy(newVal) :
+	global saveTextCopy
+
+	if newVal :
+		saveTextCopy = True
+	else :
+		saveTextCopy = False
+	#end if
+
+	return
+#end def ######## ######## ######## 
+
+
+
 ######## ######## ######## ########
 # Function: Read in the keep file corresponding to
 #	the specified network edge file
@@ -1681,6 +1760,12 @@ def calcPathSimMatrix(matrix) :
 #			bool where True means use matrix transpose
 def readKeyFilePP(path) :
 
+	if not path.endswith('_MetaPaths/') :
+		if path.endswith('/') :
+			path = path[0:-1] + '_MetaPaths/'
+		else :
+			path = path + '_MetaPaths/'
+	#end if
 	fname = path + "key.txt"
 	# ERROR CHECK: verify file exists
 	if not os.path.isfile(fname) :
