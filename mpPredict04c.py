@@ -35,10 +35,10 @@ import random
 # PARAMETERS
 
 # number of rounds over which to vote
-numVotes = 30
+numVotes = 100
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set02'
+dDir = 'pred04-set03'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)

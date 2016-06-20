@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set02'
+dDir = 'pred04-set04'
 dRoot = '../Dropbox/mp/output/'
 
 # File name containing feature vectors
