@@ -6,7 +6,8 @@
 # 
 # Approach 2: learn top paths from PathSim sum, find genes
 #	Version 2, Step 2(e)
-#	log regression; elastic net
+#	use the 2-class version of sampling
+#	lasso, lasso positive, elastic net positive
 #
 # The first approach tries to first find the most
 #	important metapaths, then rank genes by similarity
@@ -33,8 +34,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set04'
-dRoot = '../Dropbox/mp/output/'
+sDir = '../Dropbox/mp/output/pred04-set04'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
@@ -42,30 +42,27 @@ fSimilarity = 'features_PathSim.gz'
 retCutoffs = [50, 100, 200, 500, 1000, 2000]
 
 
-# Log Regression params
-#lgCs = np.logspace(-4, 1, 6)
-lgCs = 11
-#lgCs = 10
-lgPenalty = 'l2'
-lgDual = False
-lgMaxIter = 500
+# LASSO params
+lAlpha02 = [0.0008, 0.0007, 0.0006, 0.0005, 0.0004, 0.0003]
+lAlphaPos = [0.001, 0.0007, 0.0006, 0.0005, 0.0004, 0.0003, 0.0001, 0.00008]
+lMaxIter = 10000
+lNorm = True
+lFitIcpt = True
+
 
 # Elastic Net params
-enRatios = [0.3, 0.5, 0.75, 0.9, 0.95]
-#enRatios = [0.2, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99]
-#enRatios = [0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 0.999]
+#enRatios = [0.4, 0.7, 0.85, 0.9, 0.95]
+enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
 enNAlphas = 11
-#enNAlphas = 25
-enMaxIter = 1000
-#enPos = False
+enMaxIter = 2000
 enFitIncept = True
 enNorm = True
 enCopy = True
 
 
-# Lables for pos & neg training sets
-pLabel = 1
-nLabel = 0
+# # Lables for pos & neg training sets
+# pLabel = 1
+# nLabel = 0
 
 # verbose feedback ?
 newVerbose = True
@@ -80,45 +77,22 @@ textDelim = '\t'
 # BEGIN MAIN FUNCTION
 
 tstart = time.time()
-print("")
+print("\nPerforming regression(s) on {} ...".format(sDir))
 
 mp.setParamVerbose(newVerbose)
 
 
 
 # 1) Load the gene-index dictionary & path names
-if dDir.endswith('/') :
-	dPath = dRoot + dDir
-else :
-	dPath = dRoot + dDir + '/'
-with open(dPath + 'parameters.txt', 'r') as fin :
-	line = fin.readline()
-
-	line = fin.readline()
-	line = line.rstrip()
-	lv = line.split(textDelim)
-	eName = lv[1]
-
-	line = fin.readline()
-	line = line.rstrip()
-	lv = line.split(textDelim)
-	ePath = lv[1]
-#end with
-
-print("Creating the gene-index dictionary.")
-geneDict = mp.readGenesFile(ePath, eName)
-geneList = list(geneDict.keys())
-geneList.sort()
-
-print("Reading in the path names.")
-pathDict = mp.readKeyFile(ePath, eName)
+geneDict, pathDict = mp.getGeneAndPathDict(sDir)
+geneNames = list(geneDict.keys())
+geneNames.sort()
 pathNames = mp.removeInvertedPaths(pathDict)
 del pathDict
 
 
-
 # 2) Loop over all the subdirectories
-dSubDirs = mp.getSubDirectoryList(dRoot+dDir)
+dSubDirs = mp.getSubDirectoryList(sDir)
 
 thisRound = 0
 #for si in dSubDirs[0:1] :
@@ -140,123 +114,62 @@ for si in dSubDirs :
 	#	discarding those columns
 	features = features[:,0:len(pathNames)]
 
+#TODO: add neighborhood features ?
 
-	# Remove the mean, set L2 norm = 1
-	featMean = np.mean(features, axis=0)
-	features = np.subtract(features, featMean)
-	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
-	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
-	features = np.divide(features, featAbsMax)
-
-	# Create index lists for Known, Hidden, Unknown, TrueNeg
-	gKnown = mp.readFileAsList(si+'known.txt')
-	giKnown = mp.convertToIndices(gKnown, geneDict)
-	gHidden = mp.readFileAsList(si+'concealed.txt')
-	giHidden = mp.convertToIndices(gHidden, geneDict)
-	giUnknown = [g for g in geneDict.values() if g not in giKnown]
-	giTrueNeg = [g for g in giUnknown if g not in giHidden]
-#	print("{}, {}, {}, {}".format(len(gKnown), len(gHidden), len(giUnknown), len(giTrueNeg)))
-
-
-	# Extract the vectors for the pos sets
-	posTrain = features[giKnown,:]
-	posTest = features[giHidden,:]
-
-	posTrainLabel = np.ones( (len(giKnown), 1) ) * pLabel
-	posTestLabel = np.ones( (len(giHidden), 1) ) * pLabel
-
-
-	# Extract the vectors for neg & Test sets
-	# as one-class: train with rand samp from Unknown
-	#		test with all Unknown (TrueNeg + Hidden)
-	nExamples = min( 2 * len(giKnown), (len(geneDict) - len(giKnown)) )
-	giTrainNeg = random.sample(giUnknown, nExamples)
-
-	negTrain = features[giTrainNeg]
-	negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * nLabel
-
-	negTest = features[giTrueNeg]
-	negTestLabel = np.ones( (len(giTrueNeg), 1) ) * nLabel
-
-	giTest = np.hstack( (giHidden, giTrueNeg) )
-
-
-	# Combine to create the full train & test data sets
-	# as one-class:
-	trainSet = np.vstack( (posTrain, negTrain) )
-	trainLabel = np.vstack( (posTrainLabel, negTrainLabel) )
-
-	testSet = np.vstack( (posTest, negTest) )
-	testLabel = np.vstack( (posTestLabel, negTestLabel) )
-
-	# Some versions want the labels reshaped
-	trainLabel = np.reshape(trainLabel, [trainLabel.shape[0],])
-	testLabel = np.reshape(testLabel, [testLabel.shape[0],])
+	# Normalize & Create train/test sets
+	trainSet, trainLabel, testSet, testLabel, giTest = mp.createTrainTestSets(si, geneDict, features, False)
 
 
 
 	# ####### ####### ####### #######
-	# 4) Perform the regression analysis, Logarithmic
-	print("Logarithmic Regression ...")
-	print("  ... performing regression ...")
+	# 4) Perform the regression analysis, Lasso 2-class
+	print("Lasso Regression ...")
 
-	# Train Log Regression
-	cfLog = lm.LogisticRegressionCV(Cs=lgCs, penalty=lgPenalty, dual=lgDual, max_iter=lgMaxIter)
-	cfLog.fit(trainSet, trainLabel)
+	# Train Lasso Regression
+	cfLassoStd = lm.LassoCV(alphas=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+		positive=False, fit_intercept=lFitIcpt)
+	cfLassoStd.fit(trainSet, trainLabel)
 
 	# The meaning of this score is questionable,
 	#	mostly keeping it for curiosity
-	cfScore = cfLog.score(trainSet, trainLabel)
-	print("Log Regression score: {}".format(cfScore))
-	print("  using {} coefficients, C = {} = e^{}".format(
-		len(np.nonzero(cfLog.coef_)[0]), cfLog.C_,  np.log(cfLog.C_) ))
+	cfScore = cfLassoStd.score(trainSet, trainLabel)
+	print("Lasso Regression score: {}".format(cfScore))
+	print("  using {} coefficients, alpha = {}".format(
+		len(np.nonzero(cfLassoStd.coef_)[0]), cfLassoStd.alpha_ ))
 
-	cfPredLabel = cfLog.predict(testSet)
-#	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
+	cfPredLabel = cfLassoStd.predict(testSet)
 	cfPredLabel = np.ravel(cfPredLabel)
 
 
-
-	# 5) Output results to file, Logarithmic
+	# 5) Output results to file, Lasso 2-class
 
 	# Save the selected paths & scores/weights
 	# 	feature coefficients are the metapath weights
-	cfCoefs = cfLog.coef_[0]
-#	print(cfLog.coef_)
-#	print(cfCoefs)
+	cfCoefs = np.nonzero(cfLassoStd.coef_)[0]
 	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
 	for row in range(len(cfCoefs)) :
 		cfPaths[row] = (row, cfCoefs[row])
-	# row = 0
-	# for c in cfCoefs :
-	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
-	# 	row += 1
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fname = 'ranked_paths-LogRegression.txt'
-	print("Saving data for the Log Regression approach ...")
+	fname = 'ranked_paths-Lasso_2ClassStd.txt'
+	print("Saving data for the Lasso standard approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
-		fout.write('intercept:{}{}'.format(textDelim, cfLog.intercept_))
+		fout.write('intercept:{}{}'.format(textDelim, cfLassoStd.intercept_))
 		for row in range(len(cfPaths)) :
 			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
 				textDelim, pathNames[cfPaths['path'][row]]))
 	#end with
 
-#	# Save the genes from the test set to a file
-#	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
-#		giHidden, retCutoffs)
-
 	#Sort the genes by (inverse) rank
 	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
 	cfGenes['gene'] = giTest
-#	cfGenes['rank'] = np.ravel(cfPredLabel)
 	cfGenes['rank'] = cfPredLabel
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fname = 'ranked_genes-LogRegression.txt'
+	fname = 'ranked_genes-Lasso_2ClassStd.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -264,101 +177,86 @@ for si in dSubDirs :
 			if not firstRow :
 				fout.write('\n')
 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
-				textDelim, geneList[cfGenes['gene'][row]]))
+				textDelim, geneNames[cfGenes['gene'][row]]))
 			firstRow = False
 	#end with
 
 	# Save the parameters & results
-	fname = 'parameters-LogRegression.txt'
+	fname = 'parameters-Lasso_2ClassStd.txt'
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as One-Class\n')
+		fout.write('  as Two-Class\n')
 		fout.write('\n')
 
-		fout.write('Log Regression Parameters\n')
-		fout.write('method:{}Log Reg CV\n'.format(textDelim))
-		fout.write('C range:{}{}\n'.format(textDelim, lgCs))
-		fout.write('C chosen:{}{}\n'.format(textDelim, cfLog.C_))
-		fout.write('n_iter:{}{}\n'.format(textDelim, cfLog.n_iter_))
-		fout.write('intercept:{}{}\n'.format(textDelim, cfLog.intercept_))
+		fout.write('Lasso Parameters\n')
+		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
+		fout.write('a_range:{}{}\n'.format(textDelim, lAlpha02))
+		fout.write('alpha:{}{}\n'.format(textDelim, cfLassoStd.alpha_))
+		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
+		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
+		fout.write('positive:{}{}\n'.format(textDelim, 'False'))
+		fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
 		fout.write('\n')
 
 		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
 		fout.write('Prediction Results\n')
-		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfLog.coef_)[0])))
-		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLog.score(trainSet, trainLabel)))
-		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLog.score(testSet, testLabel)))
+		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfLassoStd.coef_)[0])))
+		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLassoStd.score(trainSet, trainLabel)))
+		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLassoStd.score(testSet, testLabel)))
 		fout.write('\n')
 	#end with
 
 
-
 	# ####### ####### ####### #######
-	# 4) Perform the regression analysis, Elastic Net (non-Pos)
-	print("Elastic Net ...")
-	print("  ... performing regression ...")
+	# 4) Perform the regression analysis, Lasso 2-class
+	print("Lasso (positive) Regression ...")
 
-	# Train Log Regression
-	cfENet = lm.ElasticNetCV(l1_ratio=enRatios, positive=False, fit_intercept=enFitIncept,
-		n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
-	cfENet.fit(trainSet, trainLabel)
+	# Train Lasso Regression
+	cfLassoPos = lm.LassoCV(alphas=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
+		positive=False, fit_intercept=lFitIcpt)
+	cfLassoPos.fit(trainSet, trainLabel)
 
 	# The meaning of this score is questionable,
 	#	mostly keeping it for curiosity
-	cfScore = cfENet.score(trainSet, trainLabel)
-	print("Elastic Net stuff:".format(cfScore))
-	print("  # coefficients: {}".format( len(np.nonzero(cfENet.coef_)[0]) ))
-	print("  l1 ratio: {}".format(cfENet.l1_ratio_))
-	print("  alpha: {}".format(cfENet.alpha_))
-	print("  iterations: {}".format(cfENet.n_iter_))
-#	print("  all alphas: {}".format(cfENet.alphas_))
+	cfScore = cfLassoPos.score(trainSet, trainLabel)
+	print("Lasso Regression score: {}".format(cfScore))
+	print("  using {} coefficients, alpha = {}".format(
+		len(np.nonzero(cfLassoPos.coef_)[0]), cfLassoPos.alpha_ ))
 
-	cfPredLabel = cfENet.predict(testSet)
-#	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
+	cfPredLabel = cfLassoPos.predict(testSet)
 	cfPredLabel = np.ravel(cfPredLabel)
 
 
-
-	# 5) Output results to file, Elastic Net (non-Pos)
+	# 5) Output results to file, Lasso 2-class
 
 	# Save the selected paths & scores/weights
 	# 	feature coefficients are the metapath weights
-	cfCoefs = cfENet.coef_
-#	print(cfENet.coef_)
-#	print(cfCoefs)
+	cfCoefs = np.nonzero(cfLassoPos.coef_)[0]
 	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
 	for row in range(len(cfCoefs)) :
 		cfPaths[row] = (row, cfCoefs[row])
-	# row = 0
-	# for c in cfCoefs :
-	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
-	# 	row += 1
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fname = 'ranked_paths-ElasticNet.txt'
-	print("Saving data for the Elastic Net approach ...")
+	fname = 'ranked_paths-Lasso_2C_Pos.txt'
+	print("Saving data for the Lasso standard approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
-		fout.write('intercept:{}{}'.format(textDelim, cfENet.intercept_))
+		fout.write('intercept:{}{}'.format(textDelim, cfLassoPos.intercept_))
 		for row in range(len(cfPaths)) :
 			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
 				textDelim, pathNames[cfPaths['path'][row]]))
 	#end with
 
-#	# Save the genes from the test set to a file
-#	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
-#		giHidden, retCutoffs)
-
 	#Sort the genes by (inverse) rank
 	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
 	cfGenes['gene'] = giTest
-	cfGenes['rank'] = np.ravel(cfPredLabel)
+	cfGenes['rank'] = cfPredLabel
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fname = 'ranked_genes-ElasticNet.txt'
+	fname = 'ranked_genes-Lasso_2C_Pos.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -366,32 +264,33 @@ for si in dSubDirs :
 			if not firstRow :
 				fout.write('\n')
 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
-				textDelim, geneList[cfGenes['gene'][row]]))
+				textDelim, geneNames[cfGenes['gene'][row]]))
 			firstRow = False
 	#end with
 
 	# Save the parameters & results
-	fname = 'parameters-ElasticNet.txt'
+	fname = 'parameters-Lasso_2C_Pos.txt'
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as One-Class\n')
+		fout.write('  as Two-Class\n')
 		fout.write('\n')
 
-		fout.write('Log Regression Parameters\n')
-		fout.write('method:{}ElasticNet CV\n'.format(textDelim))
-		fout.write('ratio range:{}{}\n'.format(textDelim, lgCs))
-		fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
-		fout.write('alpha chosen:{}{}\n'.format(textDelim, cfENet.alpha_))
-		fout.write('n_iter:{}{}\n'.format(textDelim, cfENet.n_iter_))
-		fout.write('intercept:{}{}\n'.format(textDelim, cfENet.intercept_))
+		fout.write('Lasso Parameters\n')
+		fout.write('method:{}Lasso (pos coeffs)\n'.format(textDelim))
+		fout.write('a_range:{}{}\n'.format(textDelim, lAlpha02))
+		fout.write('alpha:{}{}\n'.format(textDelim, cfLassoPos.alpha_))
+		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
+		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
+		fout.write('positive:{}{}\n'.format(textDelim, 'True'))
+		fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
 		fout.write('\n')
 
 		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
 		fout.write('Prediction Results\n')
-		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfENet.coef_)[0])))
-		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfENet.score(trainSet, trainLabel)))
-		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfENet.score(testSet, testLabel)))
+		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfLassoPos.coef_)[0])))
+		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLassoPos.score(trainSet, trainLabel)))
+		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLassoPos.score(testSet, testLabel)))
 		fout.write('\n')
 	#end with
 
@@ -400,7 +299,6 @@ for si in dSubDirs :
 	# ####### ####### ####### #######
 	# 4) Perform the regression analysis, Elastic Net (Pos Coeffs only)
 	print("Elastic Net w/ only Positive coefficients ...")
-	print("  ... performing regression ...")
 
 	# Train Log Regression
 	cfENet = lm.ElasticNetCV(l1_ratio=enRatios, positive=True, fit_intercept=enFitIncept,
@@ -415,10 +313,8 @@ for si in dSubDirs :
 	print("  l1 ratio: {}".format(cfENet.l1_ratio_))
 	print("  alpha: {}".format(cfENet.alpha_))
 	print("  iterations: {}".format(cfENet.n_iter_))
-#	print("  all alphas: {}".format(cfENet.alphas_))
 
 	cfPredLabel = cfENet.predict(testSet)
-#	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
 	cfPredLabel = np.ravel(cfPredLabel)
 
 
@@ -428,19 +324,13 @@ for si in dSubDirs :
 	# Save the selected paths & scores/weights
 	# 	feature coefficients are the metapath weights
 	cfCoefs = cfENet.coef_
-#	print(cfENet.coef_)
-#	print(cfCoefs)
 	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
 	for row in range(len(cfCoefs)) :
 		cfPaths[row] = (row, cfCoefs[row])
-	# row = 0
-	# for c in cfCoefs :
-	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
-	# 	row += 1
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fname = 'ranked_paths-ElasticNet_Pos.txt'
+	fname = 'ranked_paths-ElasticNet_2C_Pos.txt'
 	print("Saving data for the Elastic Net approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
@@ -450,10 +340,6 @@ for si in dSubDirs :
 				textDelim, pathNames[cfPaths['path'][row]]))
 	#end with
 
-#	# Save the genes from the test set to a file
-#	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
-#		giHidden, retCutoffs)
-
 	#Sort the genes by (inverse) rank
 	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
 	cfGenes['gene'] = giTest
@@ -461,7 +347,7 @@ for si in dSubDirs :
 	cfGenes[::-1].sort(order=['rank','gene'])
 
 	# write the file
-	fname = 'ranked_genes-ElasticNet_Pos.txt'
+	fname = 'ranked_genes-ElasticNet_2C_Pos.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
@@ -469,21 +355,21 @@ for si in dSubDirs :
 			if not firstRow :
 				fout.write('\n')
 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
-				textDelim, geneList[cfGenes['gene'][row]]))
+				textDelim, geneNames[cfGenes['gene'][row]]))
 			firstRow = False
 	#end with
 
 	# Save the parameters & results
-	fname = 'parameters-ElasticNet_Pos.txt'
+	fname = 'parameters-ElasticNet_2C_Pos.txt'
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as One-Class\n')
+		fout.write('  as Two-Class\n')
 		fout.write('\n')
 
 		fout.write('Log Regression Parameters\n')
 		fout.write('method:{}ElasticNet CV\n'.format(textDelim))
-		fout.write('ratio range:{}{}\n'.format(textDelim, lgCs))
+		fout.write('ratio range:{}{}\n'.format(textDelim, enNAlphas))
 		fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
 		fout.write('alpha chosen:{}{}\n'.format(textDelim, cfENet.alpha_))
 		fout.write('n_iter:{}{}\n'.format(textDelim, cfENet.n_iter_))

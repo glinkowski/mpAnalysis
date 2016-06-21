@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # save location of the ranked sample data
-sFolder = 'pred02a-batch-002'
+sFolder = 'pred02a-batch-004'
 #sRoot = '../Dropbox/mp/output/'
 
 # Number of top paths to use

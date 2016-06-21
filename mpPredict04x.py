@@ -36,7 +36,7 @@ import sys
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-set02'
+dDir = 'pred04-set04'
 dRoot = '../Dropbox/mp/output/'
 
 # # Input names & locations
@@ -393,6 +393,7 @@ for si in dSubDirs :
 		# normalize to [-1, 1]
 		absVals = np.absolute( pScoreEvery[:,ecol] )
 		divVal = np.amax( absVals )
+		divVal = divVal + 0.0001	# hack so as not to divide by 0
 		pScoreEvery[:,ecol] = np.divide(pScoreEvery[:,ecol], divVal)
 #		print(np.amax(pScoreEvery[:,ecol]))
 

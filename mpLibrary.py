@@ -50,7 +50,7 @@
 #	writeGenericLists(path, fname, columnList)
 #	getSubDirectoryList(root)
 #	getMatrixDimensions(path, name)
-#	
+#	getGeneAndPathDict(path1, path2)
 #	
 #	
 # ---------------------------------------------------------
@@ -2176,3 +2176,135 @@ def readFileAsMatrix(path, name) :
 
 	return matrix
 #end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Get the specified geneDict & pathDict from parameters.txt
+# Input ----
+#	path, str: path to the samples' parameter.txt file
+#		(parameters.txt tells where the network is stored/named)
+# Returns ----
+#	geneDict
+#	pathDict
+def getGeneAndPathDict(path) :
+
+	# get the network path & name from the parameters.txt file
+	if not path.endswith('/') :
+		path = path + '/'
+	with open(path + 'parameters.txt', 'r') as fin :
+		line = fin.readline()
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		eName = lv[1]
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		ePath = lv[1]
+	#end with
+
+	if verbose :
+		print("Reading gene and path dictionaries for {}".format(eName))
+	geneDict = readGenesFile(ePath, eName)
+	pathDict = readKeyFile(ePath, eName)
+
+	return geneDict, pathDict
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Separate the features into train & test data
+# Input ----
+#	path, str: path to the sample files
+#	geneDict: gene-index dictionary
+#	features: array of features
+#		each row is a vector of features corresponding to a gene
+#	oneClass, bool: True = sample as one-class, False = sample as two-class
+# Returns ----
+#	trainSet, trainLabel
+#	testSet, testLabel
+#	giTest: indices of the genes in the test set
+def createTrainTestSets(path, geneDict, features, oneClass) :
+
+	pLabel = 1
+	nLabel = 0
+
+	# Center each column about the mean
+	featMean = np.mean(features, axis=0)
+	features = np.subtract(features, featMean)
+	# Set the L2 norm = 1
+	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
+	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
+	features = np.divide(features, featAbsMax)
+
+	# Create index lists for Known, Hidden, Unknown, TrueNeg
+	gKnown = readFileAsList(path+'known.txt')
+	giKnown = convertToIndices(gKnown, geneDict)
+	gHidden = readFileAsList(path+'concealed.txt')
+	giHidden = convertToIndices(gHidden, geneDict)
+	giUnknown = [g for g in geneDict.values() if g not in giKnown]
+	giTrueNeg = [g for g in giUnknown if g not in giHidden]
+
+
+	# Extract the vectors for the pos sets
+	posTrain = features[giKnown,:]
+	posTest = features[giHidden,:]
+
+	posTrainLabel = np.ones( (len(giKnown), 1) ) * pLabel
+	posTestLabel = np.ones( (len(giHidden), 1) ) * pLabel
+
+
+	# Extract the vectors for neg & Test sets
+	if oneClass :
+		# as one-class: train with rand samp from Unknown
+		#		test with all Unknown (TrueNeg + Hidden)
+		nExamples = min( 1.5 * len(giKnown), (len(geneDict) - len(giKnown)) )
+		giTrainNeg = random.sample(giUnknown, nExamples)
+		giTestNeg = giTrueNeg
+	else :
+		# as two-class: train rand samp from >= TrueNeg (1/8)
+		#		test with remaining (TrueNeg * 7/8 + Hidden)
+		nExamples = max( len(giKnown), int(len(giTrueNeg) / 8))
+		nExamples = min( nExamples, (len(geneDict) - nExamples))
+		giTrainNeg = random.sample(giTrueNeg, nExamples)
+		giTestNeg = [g for g in giTrueNeg if g not in giTrainNeg]
+	#end if
+
+	negTrain = features[giTrainNeg]
+	negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * nLabel
+
+	negTest = features[giTestNeg]
+	negTestLabel = np.ones( (len(giTestNeg), 1) ) * nLabel
+
+	giTest = np.hstack( (giHidden, giTestNeg) )
+
+
+#	# save the negative training set
+#	gTrainNeg = [geneNames[g] for g in giTrainNeg]
+#	gTrainNeg.sort()
+#	mp.saveListToText(path, 'negTrain.txt', gTrainNeg)
+
+	# Combine to create the full train & test data sets
+	trainSet = np.vstack( (posTrain, negTrain) )
+	trainLabel = np.vstack( (posTrainLabel, negTrainLabel) )
+
+	testSet = np.vstack( (posTest, negTest) )
+	testLabel = np.vstack( (posTestLabel, negTestLabel) )
+
+	# Some claspathfiers want the labels reshaped
+	trainLabel = np.reshape(trainLabel, [trainLabel.shape[0],])
+	testLabel = np.reshape(testLabel, [testLabel.shape[0],])
+
+
+
+
+
+	return trainSet, trainLabel, testSet, testLabel, giTest
+#end def ######## ######## ######## 
+
