@@ -22,17 +22,17 @@ import time
 ####### ####### ####### ####### 
 # PARAMETERS
 
-showFigures = True
+showFigures = False
 
 # The network to use and directory path
-#eName = 'all_v3beta_g2e9t0'
-#ePath = '../Dropbox/mp/networks/'
-eName = 'fakeNtwk00_g2e3t10'
-ePath = 'networks/'
+eName = 'all_v3beta_g2e9t0'
+ePath = '../Dropbox/mp/networks/'
+#eName = 'fakeNtwk00_g2e3t10'
+#ePath = 'networks/'
 
 # # The number of bins to draw
 numBinsMin = 4
-numBinsMax = 50
+numBinsMax = 200
 #http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.hist
 
 ####### ####### ####### ####### 
@@ -51,7 +51,7 @@ if not eName.endswith('/') :
 if not ePath.endswith('/') :
 	ePath = ePath + '/'
 fName = ePath + eName + 'node-degree.txt'
-print("Reading {} ...".format(fName))
+print("\nReading {} ...".format(fName))
 
 #typeNames = list()
 #nodeDegrees = np.zeros( ())
@@ -114,7 +114,8 @@ for col in range(len(typeNames)) :
 	thisVals = nodeDegrees[:,col]
 
 	plt.hist(thisVals, bins=useBins)
-	plt.title('Node Degrees for type: {}'.format(thisName))
+	plt.title('Node Degrees for type: {}\n'.format(thisName) +
+		'avg = {:.2f}; max = {:d}'.format( np.mean(thisVals), int(np.amax(thisVals)) ))
 	plt.xlabel('Degree')
 	plt.ylabel('Number of Nodes')
 

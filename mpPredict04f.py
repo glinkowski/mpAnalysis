@@ -5,7 +5,7 @@
 #		funded by the NIH
 # 
 # Approach 2: learn top paths from PathSim sum, find genes
-#	Version 2, Step 2(e)
+#	Version 2, Step 2(f)
 #	use the 2-class version of sampling
 #	lasso, lasso positive, elastic net positive
 #
@@ -15,10 +15,13 @@
 #	similarity along each metapath, then tries to learn
 #	the most important paths.
 #
-# Step 2b: From the pre-built per-gene feature vector,
+# Step 2f: From the pre-built per-gene feature vector,
 #	apply LASSO linear regression to select a small number
 #	of important paths. Follow these paths to find genes
 #	connected to the set, and rank those by similarity.
+# NOTE: This version uses the two-class method of defining
+#	negatives, where it is assumed the true neg and true pos
+#	are fully defined and known beforehand. Then
 # ---------------------------------------------------------
 
 import mpLibrary as mp
@@ -34,7 +37,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set04'
+sDir = '../Dropbox/mp/output/pred04-set01'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
@@ -53,8 +56,8 @@ lFitIcpt = True
 # Elastic Net params
 #enRatios = [0.4, 0.7, 0.85, 0.9, 0.95]
 enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
-enNAlphas = 11
-enMaxIter = 2000
+enNAlphas = 17
+enMaxIter = 5000
 enFitIncept = True
 enNorm = True
 enCopy = True
@@ -126,7 +129,9 @@ for si in dSubDirs :
 	print("Lasso Regression ...")
 
 	# Train Lasso Regression
-	cfLassoStd = lm.LassoCV(alphas=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+#	cfLassoStd = lm.LassoCV(alphas=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+#		positive=False, fit_intercept=lFitIcpt)	
+	cfLassoStd = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
 		positive=False, fit_intercept=lFitIcpt)
 	cfLassoStd.fit(trainSet, trainLabel)
 
@@ -134,8 +139,11 @@ for si in dSubDirs :
 	#	mostly keeping it for curiosity
 	cfScore = cfLassoStd.score(trainSet, trainLabel)
 	print("Lasso Regression score: {}".format(cfScore))
-	print("  using {} coefficients, alpha = {}".format(
-		len(np.nonzero(cfLassoStd.coef_)[0]), cfLassoStd.alpha_ ))
+	print("  coefficients: {}".format( len(np.nonzero(cfLassoStd.coef_)[0]) ))
+	print("  chosen alpha: {}".format( cfLassoStd.alpha_ ))
+	print("  iterations: {}".format( cfLassoStd.n_iter_ ))
+#	print("  using {} coefficients, alpha = {}".format(
+#		len(np.nonzero(cfLassoStd.coef_)[0]), cfLassoStd.alpha_ ))
 
 	cfPredLabel = cfLassoStd.predict(testSet)
 	cfPredLabel = np.ravel(cfPredLabel)
@@ -213,7 +221,9 @@ for si in dSubDirs :
 	print("Lasso (positive) Regression ...")
 
 	# Train Lasso Regression
-	cfLassoPos = lm.LassoCV(alphas=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
+#	cfLassoPos = lm.LassoCV(alphas=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
+#		positive=False, fit_intercept=lFitIcpt)
+	cfLassoPos = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
 		positive=False, fit_intercept=lFitIcpt)
 	cfLassoPos.fit(trainSet, trainLabel)
 
@@ -221,8 +231,11 @@ for si in dSubDirs :
 	#	mostly keeping it for curiosity
 	cfScore = cfLassoPos.score(trainSet, trainLabel)
 	print("Lasso Regression score: {}".format(cfScore))
-	print("  using {} coefficients, alpha = {}".format(
-		len(np.nonzero(cfLassoPos.coef_)[0]), cfLassoPos.alpha_ ))
+#	print("  using {} coefficients, alpha = {}".format(
+#		len(np.nonzero(cfLassoPos.coef_)[0]), cfLassoPos.alpha_ ))
+	print("  coefficients: {}".format( len(np.nonzero(cfLassoStd.coef_)[0]) ))
+	print("  chosen alpha: {}".format( cfLassoStd.alpha_ ))
+	print("  iterations: {}".format( cfLassoStd.n_iter_ ))
 
 	cfPredLabel = cfLassoPos.predict(testSet)
 	cfPredLabel = np.ravel(cfPredLabel)
