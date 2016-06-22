@@ -51,6 +51,7 @@
 #	getSubDirectoryList(root)
 #	getMatrixDimensions(path, name)
 #	getGeneAndPathDict(path1, path2)
+#	getFeaturesNeighborhood(path, suffix)
 #	
 #	
 # ---------------------------------------------------------
@@ -2213,6 +2214,51 @@ def getGeneAndPathDict(path) :
 	pathDict = readKeyFile(ePath, eName)
 
 	return geneDict, pathDict
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Get the neighborhood features from parameters.txt
+# Input ----
+#	path, str: path to the samples' parameter.txt file
+#		(parameters.txt tells where the network is stored/named)
+#	suffix, str: filename suffix (which version of feature to load)
+# Returns ----
+#	featVals
+#	featNames
+def getFeaturesNeighborhood(path, suffix) :
+
+	# get the network path & name from the parameters.txt file
+	if not path.endswith('/') :
+		path = path + '/'
+	with open(path + 'parameters.txt', 'r') as fin :
+		line = fin.readline()
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		eName = lv[1]
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		ePath = lv[1]
+	#end with
+
+	if verbose :
+		print("Reading gene and path dictionaries for {}".format(eName))
+	
+	if not ePath.endswith('/') :
+		ePath = ePath + '/'
+	if not eName.endswith('/') :
+		eName = eName + '/'
+
+	featVals = readFileAsMatrix(ePath + eName, 'featNeighbor_' + suffix + '.gz' )
+	featNames = readFileAsList(ePath + eName + 'featNeighbor_Names.txt')
+
+	return featVals, featNames
 #end def ######## ######## ######## 
 
 
