@@ -25,10 +25,10 @@ import mpLibrary as mp
 # PARAMETERS
 
 # The network to use and directory path
-#eName = 'all_v3beta_g2e9t0'
-#ePath = '../Dropbox/mp/networks/'
-eName = 'fakeNtwk00_g2e3t10'
-ePath = 'networks/'
+eName = 'all_v3beta_g2e9t0'
+ePath = '../Dropbox/mp/networks/'
+#eName = 'fakeNtwk00_g2e3t10'
+#ePath = 'networks/'
 
 # expected size of matrix file name
 keyZPad = 5
@@ -69,8 +69,8 @@ print("\nCreating neighborhood features for {}".format(eName))
 print("Loading the primary path matrices ...")
 fPath = concatenatePaths(ePath, eName)
 pathDict = pp.readKeyFilePP(fPath)
+#pathNames = list(pathDict.keys())
 pathNames = mp.removeInvertedPaths(pathDict)
-pathNames = list(pathDict.keys())
 pathNames.sort()
 
 #print(pathNames)
@@ -81,14 +81,14 @@ print("len pathNames = {}; unique path names = {}".format( len(pathNames), len(n
 # 2) Allocate space for the features
 
 # Determine number of columns
-# nCols = 0
-# for name in pathNames :
-# 	nCols += 1
-# 	revName = reverseName(name)
-# 	if revName != name :
-# 		nCols += 1
-# #end loop
-nCols = len(pathNames)
+nCols = 0
+for name in pathNames :
+	nCols += 1
+	revName = reverseName(name)
+	if revName != name :
+		nCols += 1
+#end loop
+# nCols = len(pathNames)
 
 # Determine number of rows
 nRows = 0
@@ -161,6 +161,8 @@ with open(fPath + 'featNeighbor_Names.txt', 'w') as fout :
 pp.setParamSaveTextCopy(True)
 pp.saveMatrixNumpy(featVals, 'featNeighbor_Orig', fPath, False)
 pp.saveMatrixNumpy(featMod, 'featNeighbor_LogScale', fPath, False)
+
+print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
