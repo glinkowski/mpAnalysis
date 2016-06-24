@@ -129,23 +129,23 @@ for si in dSubDirs :
 	print("Lasso Regression ...")
 
 	# Train Lasso Regression
-#	cfLassoStd = lm.LassoCV(alphas=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
+#	cfLassoPos = lm.LassoCV(alphas=lAlpha02, max_iter=lMaxIter, normalize=lNorm,
 #		positive=False, fit_intercept=lFitIcpt)	
-	cfLassoStd = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
+	cfLassoPos = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
 		positive=False, fit_intercept=lFitIcpt)
-	cfLassoStd.fit(trainSet, trainLabel)
+	cfLassoPos.fit(trainSet, trainLabel)
 
 	# The meaning of this score is questionable,
 	#	mostly keeping it for curiosity
-	cfScore = cfLassoStd.score(trainSet, trainLabel)
+	cfScore = cfLassoPos.score(trainSet, trainLabel)
 	print("Lasso Regression score: {}".format(cfScore))
-	print("  coefficients: {}".format( len(np.nonzero(cfLassoStd.coef_)[0]) ))
-	print("  chosen alpha: {}".format( cfLassoStd.alpha_ ))
-	print("  iterations: {}".format( cfLassoStd.n_iter_ ))
+	print("  coefficients: {}".format( len(np.nonzero(cfLassoPos.coef_)[0]) ))
+	print("  chosen alpha: {}".format( cfLassoPos.alpha_ ))
+	print("  iterations: {}".format( cfLassoPos.n_iter_ ))
 #	print("  using {} coefficients, alpha = {}".format(
-#		len(np.nonzero(cfLassoStd.coef_)[0]), cfLassoStd.alpha_ ))
+#		len(np.nonzero(cfLassoPos.coef_)[0]), cfLassoPos.alpha_ ))
 
-	cfPredLabel = cfLassoStd.predict(testSet)
+	cfPredLabel = cfLassoPos.predict(testSet)
 	cfPredLabel = np.ravel(cfPredLabel)
 
 
@@ -153,7 +153,7 @@ for si in dSubDirs :
 
 	# Save the selected paths & scores/weights
 	# 	feature coefficients are the metapath weights
-	cfCoefs = np.nonzero(cfLassoStd.coef_)[0]
+	cfCoefs = np.nonzero(cfLassoPos.coef_)[0]
 	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
 	for row in range(len(cfCoefs)) :
 		cfPaths[row] = (row, cfCoefs[row])
@@ -164,7 +164,7 @@ for si in dSubDirs :
 	print("Saving data for the Lasso standard approach ...")
 	print("  Saving top paths to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
-		fout.write('intercept:{}{}'.format(textDelim, cfLassoStd.intercept_))
+		fout.write('intercept:{}{}'.format(textDelim, cfLassoPos.intercept_))
 		for row in range(len(cfPaths)) :
 			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
 				textDelim, pathNames[cfPaths['path'][row]]))
@@ -200,7 +200,7 @@ for si in dSubDirs :
 		fout.write('Lasso Parameters\n')
 		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
 		fout.write('a_range:{}{}\n'.format(textDelim, lAlpha02))
-		fout.write('alpha:{}{}\n'.format(textDelim, cfLassoStd.alpha_))
+		fout.write('alpha:{}{}\n'.format(textDelim, cfLassoPos.alpha_))
 		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
 		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
 		fout.write('positive:{}{}\n'.format(textDelim, 'False'))
@@ -209,9 +209,9 @@ for si in dSubDirs :
 
 		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
 		fout.write('Prediction Results\n')
-		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfLassoStd.coef_)[0])))
-		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLassoStd.score(trainSet, trainLabel)))
-		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLassoStd.score(testSet, testLabel)))
+		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfLassoPos.coef_)[0])))
+		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfLassoPos.score(trainSet, trainLabel)))
+		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfLassoPos.score(testSet, testLabel)))
 		fout.write('\n')
 	#end with
 
@@ -224,7 +224,7 @@ for si in dSubDirs :
 #	cfLassoPos = lm.LassoCV(alphas=lAlphaPos, max_iter=lMaxIter, normalize=lNorm,
 #		positive=False, fit_intercept=lFitIcpt)
 	cfLassoPos = lm.LassoCV(max_iter=lMaxIter, normalize=lNorm,
-		positive=False, fit_intercept=lFitIcpt)
+		positive=True, fit_intercept=lFitIcpt)
 	cfLassoPos.fit(trainSet, trainLabel)
 
 	# The meaning of this score is questionable,
@@ -233,9 +233,9 @@ for si in dSubDirs :
 	print("Lasso Regression score: {}".format(cfScore))
 #	print("  using {} coefficients, alpha = {}".format(
 #		len(np.nonzero(cfLassoPos.coef_)[0]), cfLassoPos.alpha_ ))
-	print("  coefficients: {}".format( len(np.nonzero(cfLassoStd.coef_)[0]) ))
-	print("  chosen alpha: {}".format( cfLassoStd.alpha_ ))
-	print("  iterations: {}".format( cfLassoStd.n_iter_ ))
+	print("  coefficients: {}".format( len(np.nonzero(cfLassoPos.coef_)[0]) ))
+	print("  chosen alpha: {}".format( cfLassoPos.alpha_ ))
+	print("  iterations: {}".format( cfLassoPos.n_iter_ ))
 
 	cfPredLabel = cfLassoPos.predict(testSet)
 	cfPredLabel = np.ravel(cfPredLabel)
