@@ -62,6 +62,8 @@ import sys
 import numpy as np
 import random
 import gzip
+from sklearn import cluster as skc
+import warnings
 
 
 
@@ -2255,8 +2257,10 @@ def getFeaturesNeighborhood(path, suffix) :
 	if not eName.endswith('/') :
 		eName = eName + '/'
 
-	featVals = readFileAsMatrix(ePath + eName, 'featNeighbor_' + suffix + '.gz' )
+#	featVals = readFileAsMatrix(ePath + eName, 'featNeighbor_' + suffix + '.gz' )
+	featVals = np.loadtxt(ePath + eName + 'featNeighbor_' + suffix + '.gz')
 	featNames = readFileAsList(ePath + eName + 'featNeighbor_Names.txt')
+	featNames = np.reshape(featNames, (1, len(featNames)))
 
 	return featVals, featNames
 #end def ######## ######## ######## 
@@ -2367,6 +2371,10 @@ def createTrainTestSets(path, geneDict, features, oneClass) :
 #	classLabels: indicating the (pos/neg) class for each gene
 def clusterTrainSets(path, geneDict, features) :
 
+#	if not verbose :
+	warnings.filterwarnings("ignore", category=DeprecationWarning)
+#	#end if
+
 	# Labels for the pos/neg data
 	pLabel = 1
 	nLabel = 0
@@ -2407,17 +2415,24 @@ def clusterTrainSets(path, geneDict, features) :
 
 	# Cluster the Unknown feature vectors
 	nClusters = int(round( len(giUnknown) / len(giKnown) ))
+	if verbose :
+		print("  Clustering the Unknown samples ...")
+		print("  Known: {}, Unknown: {}, clusters: {}".format(
+			len(giKnown), len(giUnknown), nClusters ))
+	#end if
+
 
 #NOTE: MiniBatchKMeans supoosed to be faster than KMeans
 # when num samples > 10k
-	grouper = sklearn.cluster.MiniBatchKMeans(
-		n_clusters=nClusters, init='kmeans++')
-#	grouper = sklearn.cluster.KMeans(n_clusters=nClusters,
+	grouper = skc.MiniBatchKMeans(n_clusters=nClusters, init='k-means++') #,
+	#	verbose=verbose)
+#	grouper = skc.KMeans(n_clusters=nClusters,
 #		init='kmeans++')
 	grouper.fit_predict(fUnknown)
 	lUnknown = grouper.labels_
 	# Increment by +1 such that 0 = Known
 	#	(cluster labels start at '1')
+#	print(np.amin(lUnknown))
 	lUnknown = np.add(lUnknown, 1)
 
 # 	# Prepare the labels to pass back to calling func
