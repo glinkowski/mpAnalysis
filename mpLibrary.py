@@ -2278,9 +2278,11 @@ def getFeaturesNeighborhood(path, suffix) :
 #	giTest: indices of the genes in the test set
 def createTrainTestSets(path, geneDict, features, oneClass) :
 
+	# Labels for the pos/neg data
 	pLabel = 1
 	nLabel = 0
 
+	# Normalize the feature values
 	# Center each column about the mean
 	featMean = np.mean(features, axis=0)
 	features = np.subtract(features, featMean)
@@ -2347,10 +2349,100 @@ def createTrainTestSets(path, geneDict, features, oneClass) :
 	trainLabel = np.reshape(trainLabel, [trainLabel.shape[0],])
 	testLabel = np.reshape(testLabel, [testLabel.shape[0],])
 
-
-
-
-
 	return trainSet, trainLabel, testSet, testLabel, giTest
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Separate the features into train & test data
+# Input ----
+#	path, str: path to the sample files
+#	geneDict: gene-index dictionary
+#	features: array of features
+#		each row is a vector of features corresponding to a gene
+# Returns ----
+#	clusLabels: labels for each cluster (0 = TrainPos)
+#	classLabels: indicating the (pos/neg) class for each gene
+def clusterTrainSets(path, geneDict, features) :
+
+	# Labels for the pos/neg data
+	pLabel = 1
+	nLabel = 0
+
+	# Normalize the feature values
+	# Center each column about the mean
+	featMean = np.mean(features, axis=0)
+	features = np.subtract(features, featMean)
+	# Set the L2 norm = 1
+	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
+	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
+	features = np.divide(features, featAbsMax)
+
+	# Create index lists for Known, Hidden, Unknown, TrueNeg
+	gKnown = readFileAsList(path+'known.txt')
+	giKnown = convertToIndices(gKnown, geneDict)
+	gHidden = readFileAsList(path+'concealed.txt')
+	giHidden = convertToIndices(gHidden, geneDict)
+	giUnknown = [g for g in geneDict.values() if g not in giKnown]
+	giTrueNeg = [g for g in giUnknown if g not in giHidden]
+
+
+#	# Extract the vectors for the pos sets (Known & Unknown)
+#	posTrain = features[giKnown,:]
+#	posTest = features[giHidden,:]
+#
+#	posTrainLabel = np.ones( (len(giKnown), 1) ) * pLabel
+#	posTestLabel = np.ones( (len(giHidden), 1) ) * pLabel
+
+
+	# Extract the vectors for the Known & Unknown sets
+	fKnown = features[giKnown,:]
+	lKnown = np.zeros( (len(giKnown), 1) )
+
+	fUnknown = features[giUnknown,:]
+#	lUnknown = np.ones( (len(giUnknown), 1) )
+
+
+	# Cluster the Unknown feature vectors
+	nClusters = int(round( len(giUnknown) / len(giKnown) ))
+
+#NOTE: MiniBatchKMeans supoosed to be faster than KMeans
+# when num samples > 10k
+	grouper = sklearn.cluster.MiniBatchKMeans(
+		n_clusters=nClusters, init='kmeans++')
+#	grouper = sklearn.cluster.KMeans(n_clusters=nClusters,
+#		init='kmeans++')
+	grouper.fit_predict(fUnknown)
+	lUnknown = grouper.labels_
+	# Increment by +1 such that 0 = Known
+	#	(cluster labels start at '1')
+	lUnknown = np.add(lUnknown, 1)
+
+# 	# Prepare the labels to pass back to calling func
+# 	# Increment all labels by +1, such that Known = 0
+# 	lUnknown = grouper.labels_
+# 	lUnknown = np.reshape( (len(giUnknown), 1) )
+# #	lUnknown = np.ravel(lUnknown)
+# 	lUnknown = np.add(lUnknown, 1)	
+
+# 	clusLabels = np.vstack( (lKnown, lUnknown) )
+# 	clusFeatures = np.vstack( (fKnown, fUnknown) )
+
+
+	# Place labels into an array such that they correspond
+	#	to the order of the original feature vectors
+	#	ie: the genes are in alphabetical order
+	clusLabels = np.zeros( (len(geneDict), 1) )
+	# Similarly, arrange the class labels to match original order
+	classLabels = np.ones( (len(geneDict), 1) ) * pLabel
+	for i in range(len(giUnknown)) :
+		clusLabels[giUnknown[i]] = lUnknown[i]
+		classLabels[giUnknown[i]] = nLabel
+	#end loop
+
+
+	return clusLabels, classLabels
 #end def ######## ######## ######## 
 
