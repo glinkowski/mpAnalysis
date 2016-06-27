@@ -162,49 +162,46 @@ for si in dSubDirs :
 	if newVerbose :
 		print("verify: amax={}, (unique-1)={}".format(
 			np.amax(clusLabel), len(clusVals) - 1))
-	print("The Unknown set was grouped into {} clusters.".format(nClus))
+	print("  The Unknown set was grouped into {} clusters.".format(nClus))
 #	print(np.unique(clusLabel))
 
 
 	# For each cluster, use label 0 + label N to train
 	#	then predict on the rest
-	geneRanks = np.zeros( (len(geneDict), nClus) )
+	geneRanks = np.zeros( (len(geneDict), nClus), dtype=np.int32 )
 
+	col = -1
 	for cv in clusVals :
-		
+		col += 1
+
 		# Skip cv == 0 (will use 0 as pos train set)
 		if cv == 0 :
 			continue
 
 		# Extract the train set & labels
-#		fIndices = np.where( (clusLabel == 0) or (clusLabel == cv) )
 		trainIdx = np.hstack(( np.where(clusLabel == 0)[0], np.where(clusLabel == cv)[0] ))
 		trainIdx.sort()
 #		print(trainIdx.shape)
 		trainSet = features[trainIdx,:]
 		trainLabel = featLabel[trainIdx]
-#		print(trainLabel.shape)
-#		trainLabel = np.reshape( trainLabel, (len(trainLabel), 1) )
 		trainLabel = np.ravel(trainLabel)
-#		print(np.unique(trainLabel))
-#		print(trainSet.shape)
 
 		# Extract the test set & labels
-#		teIndices = np.where( (clusLabel != 0) and (clusLabel != cv) )
 		testIdx = [idx for idx in range(len(clusLabel)) if idx not in trainIdx]
+		testIdx = np.asarray(testIdx)
+#		testIdx = np.reshape(testIdx, (len(testIdx),1))
 #		print(testIdx.shape)
 		testSet = features[testIdx,:]
-		testLabel = featLabel[testIdx]
-#		print(testLabel.shape)
-#		testLabel = np.reshape( testLabel, (len(testLabel), 1) )
-		testLabel = np.ravel(testLabel)
+#		testLabel = featLabel[testIdx]
+#		testLabel = np.ravel(testLabel)
+#		testNames = geneNames[testIdx]
 
 		# 6) Train the classifier
 		if useCfier == 1 :	# 1 = Lasso
-			# cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
-			# 	max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
-			cfier = lm.LassoCV(positive=usePos,
+			cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
 				max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
+			# cfier = lm.LassoCV(positive=usePos,
+			# 	max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
 		elif useCfier == 2 :	# 2 = ElasticNet
 #TODO: this
 			cfier = lm.ElasticNetCV()
@@ -212,22 +209,54 @@ for si in dSubDirs :
 			print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
 		#end if
 
-#		print("{}, {}".format(trainSet.shape, trainLabel.shape))
 		cfier.fit(trainSet, trainLabel)
 
 		if newVerbose :
 			# view quick statistics from this training session
 			print("Clus {}; cfier {}; pos={}; score: {:.3f}; coeffs: {}".format(cv, useCfier,
 				usePos, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
-#			print("  score: {:.5f}; coeffs: {} ".format(cfier.score(trainSet, trainLabel),
-#				len(np.nonzero(cfier.coef_)[0]) ))
 			print("  iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
 			if useCfier == 2 :	# 2 = ElasticNet
 				print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
-#			print("    chosen alpha: {}".format( cfier.alpha_ ))
+		#end if
+
+#TODO: collect feature names & stats
+
+		# 7) Predict on the test set
+		#	score the genes, then sort, place rank into array geneRanks
+		geneScores = np.recarray(testSet.shape[0],
+#			dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', 'a20')])
+			dtype=[('inverse', 'f4'), ('score', 'f4'), ('nameIdx', 'a20')])
+
+
+		cfPredLabel = cfier.predict(testSet)
+		cfPredLabel = np.ravel(cfPredLabel)
+
+		geneScores['score'] = cfPredLabel
+		geneScores['inverse'] = 0 - cfPredLabel
+#		geneScores['names'] = testNames
+		geneScores['nameIdx'] = testIdx
+#		for r in len(geneScores) :
+#			row = [ 0 - cfPredLabel[r], cfPredLabel[r], r]
+#			geneScores[r] = row
+#		#end loop
+
+#		geneScores.sort(order=['inverse', 'names'])
+		geneScores.sort(order=['inverse', 'nameIdx'])
+
+		rank = 0
+		for entry in geneScores :
+			rank += 1
+#			row = geneDict[entry['names']]
+			row = int(entry['nameIdx'])
+			geneRanks[row, col] = rank
+		#end loop
+
+		print(geneRanks[row,col])
 
 
 		break
+	#end loop
 
 
 	break
@@ -240,38 +269,6 @@ for si in dSubDirs :
 #	Then: vote, collect & output results
 
 
-	# 6) Train the classifier
-	if useCfier == 1 :	# 1 = Lasso
-		cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
-			max_iter=cMaxIter, normalize=cNorm, fit_intercept=cFitIcpt)
-	elif useCfier == 2 :	# 2 = ElasticNet
-#TODO: this
-		cfier = lm.ElasticNetCV()
-	else :
-		print("ERROR: specified classifier unrecognized. useCfier = {}".format(useCfier))
-	#end if
-
-	cfier.fit(trainSet, trainLabel)
-
-	# view quick statistics from this training session
-	print("Classifier: {}, pos={}".format(useCfier, usePos))
-	print("  training score: {}".format( cfier.score(trainSet, trainLabel) ))
-	print("  coefficients: {}".format( len(np.nonzero(cfier.coef_)[0]) ))
-	if useCfier == 2 :	# 2 = ElasticNet
-		print("  l1 ratio: {}".format( cfier.l1_ratio_ ))
-	print("  chosen alpha: {}".format( cfier.alpha_ ))
-	print("  iterations: {}".format( cfier.n_iter_ ))
-
-
-#TODO: cluster the testSet
-#	predict on each cluster
-#	collect the results & vote
-
-	# 7) Cluster the 
-
-	# 7) Test the classifier (use as predictor)
-	cfPredLabel = cfier.predict(testSet)
-	cfPredLabel = np.ravel(cfPredLabel)
 
 
 
