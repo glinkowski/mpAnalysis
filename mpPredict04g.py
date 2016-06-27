@@ -46,11 +46,18 @@ fSimilarity = 'features_PathSim.gz'
 retCutoffs = [50, 100, 200, 500, 1000, 2000]
 
 
-useCfier = 'Lasso'
+useCfier = 1
+	# 1 = Lasso, 2 = ElasticNet, ...
 usePos = True
+	# True/False
+useFeatPaths = True
+	# True/False: use the pathsim sum features
 useFeatNeighbor = True
-useGivenRange = 'None'	# NONE means auto-search for alphas
+	# True/False: use the neighborhood features
+useGivenRange = np.linspace(0.00005, 0.002, num=23)
+	# array of vals; 'None' means to auto-search for alphas
 useLabel = 'Lasso_Cluster_cP_fPN'
+	# string: label for the output files
 
 
 # LASSO params
@@ -88,7 +95,7 @@ textDelim = '\t'
 # BEGIN MAIN FUNCTION
 
 tstart = time.time()
-print("\nPerforming regression(s) on {} ...".format(sDir))
+print("\nPerforming regression(s) on {}".format(sDir))
 
 mp.setParamVerbose(newVerbose)
 
@@ -129,13 +136,14 @@ for si in dSubDirs :
 
 
 	# 5) Prepare the test/train vectors & labels
-	print("  ... creating train & test data ...")
+	print("  Creating train & test data ...")
 
 	if useFeatNeighbor :
-		print("    including neighborhood features")
+		print("    ... including neighborhood features")
 		features = np.hstack( (featNbVals, featPSVals) )
 		featNames = np.hstack( (featNbNames, featPSNames) )
 	else :
+#TODO: make pathsim features optional
 		features = featPSVals
 		featNames = featPSNames
 	#end if
@@ -144,12 +152,13 @@ for si in dSubDirs :
 #	trainSet, trainLabel, testSet, testLabel, giTest = mp.createTrainTestSets(si, geneDict, features, True)
 
 #	print(np.amax(features[:,0]))
-	clusLabel, allLabel = mp.clusterTrainSets(si, geneDict, features)
+	clusLabel, featLabel = mp.clusterTrainSets(si, geneDict, features)
 #	print(np.amax(features[:,0]))
+#	print(np.unique(featLabel))
 
 	clusVals = np.unique(clusLabel)	
 #	nClus = np.amax(clusLabel)
-	nClus = len(clusVals)
+	nClus = len(clusVals) - 1	# less 1 b/c first label is the Known set
 	if newVerbose :
 		print("verify: amax={}, (unique-1)={}".format(
 			np.amax(clusLabel), len(clusVals) - 1))
@@ -161,11 +170,64 @@ for si in dSubDirs :
 	#	then predict on the rest
 	geneRanks = np.zeros( (len(geneDict), nClus) )
 
-	for c in clusVals :
+	for cv in clusVals :
 		
+		# Skip cv == 0 (will use 0 as pos train set)
+		if cv == 0 :
+			continue
+
+		# Extract the train set & labels
+#		fIndices = np.where( (clusLabel == 0) or (clusLabel == cv) )
+		trainIdx = np.hstack(( np.where(clusLabel == 0)[0], np.where(clusLabel == cv)[0] ))
+		trainIdx.sort()
+#		print(trainIdx.shape)
+		trainSet = features[trainIdx,:]
+		trainLabel = featLabel[trainIdx]
+#		print(trainLabel.shape)
+#		trainLabel = np.reshape( trainLabel, (len(trainLabel), 1) )
+		trainLabel = np.ravel(trainLabel)
+#		print(np.unique(trainLabel))
+#		print(trainSet.shape)
+
+		# Extract the test set & labels
+#		teIndices = np.where( (clusLabel != 0) and (clusLabel != cv) )
+		testIdx = [idx for idx in range(len(clusLabel)) if idx not in trainIdx]
+#		print(testIdx.shape)
+		testSet = features[testIdx,:]
+		testLabel = featLabel[testIdx]
+#		print(testLabel.shape)
+#		testLabel = np.reshape( testLabel, (len(testLabel), 1) )
+		testLabel = np.ravel(testLabel)
+
+		# 6) Train the classifier
+		if useCfier == 1 :	# 1 = Lasso
+			# cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
+			# 	max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
+			cfier = lm.LassoCV(positive=usePos,
+				max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
+		elif useCfier == 2 :	# 2 = ElasticNet
+#TODO: this
+			cfier = lm.ElasticNetCV()
+		else :
+			print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
+		#end if
+
+#		print("{}, {}".format(trainSet.shape, trainLabel.shape))
+		cfier.fit(trainSet, trainLabel)
+
+		if newVerbose :
+			# view quick statistics from this training session
+			print("Clus {}; cfier {}; pos={}; score: {:.3f}; coeffs: {}".format(cv, useCfier,
+				usePos, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
+#			print("  score: {:.5f}; coeffs: {} ".format(cfier.score(trainSet, trainLabel),
+#				len(np.nonzero(cfier.coef_)[0]) ))
+			print("  iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
+			if useCfier == 2 :	# 2 = ElasticNet
+				print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
+#			print("    chosen alpha: {}".format( cfier.alpha_ ))
 
 
-
+		break
 
 
 	break
@@ -179,10 +241,10 @@ for si in dSubDirs :
 
 
 	# 6) Train the classifier
-	if useCfier is 'Lasso' :
+	if useCfier == 1 :	# 1 = Lasso
 		cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
 			max_iter=cMaxIter, normalize=cNorm, fit_intercept=cFitIcpt)
-	elif useCfier is 'ElasticNet' :
+	elif useCfier == 2 :	# 2 = ElasticNet
 #TODO: this
 		cfier = lm.ElasticNetCV()
 	else :
@@ -195,7 +257,7 @@ for si in dSubDirs :
 	print("Classifier: {}, pos={}".format(useCfier, usePos))
 	print("  training score: {}".format( cfier.score(trainSet, trainLabel) ))
 	print("  coefficients: {}".format( len(np.nonzero(cfier.coef_)[0]) ))
-	if useCfier is 'ElasticNet' :
+	if useCfier == 2 :	# 2 = ElasticNet
 		print("  l1 ratio: {}".format( cfier.l1_ratio_ ))
 	print("  chosen alpha: {}".format( cfier.alpha_ ))
 	print("  iterations: {}".format( cfier.n_iter_ ))
