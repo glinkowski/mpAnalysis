@@ -2250,7 +2250,7 @@ def getFeaturesNeighborhood(path, suffix) :
 	#end with
 
 	if verbose :
-		print("Reading gene and path dictionaries for {}".format(eName))
+		print("Reading neighborhood features file for {}".format(eName))
 	
 	if not ePath.endswith('/') :
 		ePath = ePath + '/'
@@ -2422,7 +2422,7 @@ def clusterTrainSets(path, geneDict, features) :
 	#end if
 
 
-#NOTE: MiniBatchKMeans supoosed to be faster than KMeans
+#NOTE: MiniBatchKMeans supposed to be faster than KMeans
 # when num samples > 10k
 	grouper = skc.MiniBatchKMeans(n_clusters=nClusters, init='k-means++') #,
 	#	verbose=verbose)
@@ -2446,11 +2446,11 @@ def clusterTrainSets(path, geneDict, features) :
 # 	clusFeatures = np.vstack( (fKnown, fUnknown) )
 
 
-	# Place labels into an array such that they correspond
+	# Place cluster labels into an array such that they correspond
 	#	to the order of the original feature vectors
 	#	ie: the genes are in alphabetical order
-	clusLabels = np.zeros( (len(geneDict), 1) )
 	# Similarly, arrange the class labels to match original order
+	clusLabels = np.zeros( (len(geneDict), 1) )
 	classLabels = np.ones( (len(geneDict), 1) ) * pLabel
 	for i in range(len(giUnknown)) :
 		clusLabels[giUnknown[i]] = lUnknown[i]
