@@ -38,12 +38,12 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-test01'
+sDir = '../Dropbox/mp/output/pred04-set01'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
 
-retCutoffs = [50, 100, 200, 500, 1000, 2000]
+#retCutoffs = [50, 100, 200, 500, 1000, 2000]
 
 
 # Adjustible classifier parameters
@@ -349,7 +349,7 @@ for si in dSubDirs :
 		#end loop
 
 
-		break
+#		break
 	#end loop
 
 
