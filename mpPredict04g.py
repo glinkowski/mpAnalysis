@@ -315,7 +315,7 @@ for si in dSubDirs :
 			if not firstRow :
 				fout.write('\n')
 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
-				textDelim, geneNames[cfGenes['gene'][row]]))
+				textDelim, geneNames[cfGenes['geneIdx'][row]]))
 			firstRow = False
 	#end with
 
