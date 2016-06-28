@@ -57,10 +57,10 @@ useFeatNeighbor = True
 	# True/False: use the neighborhood features
 useGivenRange = np.linspace(0.00005, 0.002, num=13)
 	# array of vals; 'None' means to auto-search for alphas
-useLabel = 'ClusVote_cLasP_fPN'
-	# string: label for the output files
-	# ie: ClusVote_c<Las/Enet/Log><P for Pos>_f<P for pathsim><N for neighborhood>
-#TODO: automate useLabel based on params
+# useLabel = 'ClusVote_cLasP_fPN'
+# 	# string: label for the output files
+# 	# ie: ClusVote_c<Las/Enet/Log><P for Pos>_f<P for pathsim><N for neighborhood>
+# #TODO: automate useLabel based on params
 
 
 # LASSO params
@@ -96,6 +96,27 @@ mp.setParamVerbose(newVerbose)
 
 
 
+# 0) Create the useLabel variable
+# string: label for the output files
+# ie: ClusVote_c<Las/Enet/Log><P for Pos>_f<P for pathsim><N for neighborhood>
+useLabel = 'ClusVote_c'
+if useCfier == 1 :
+	useLabel = useLabel + 'Las'
+elif useCfier == 2 :
+	useLabel = useLabel + 'Enet'
+else :
+	print("ERROR: useCfier value is unrecognized: {}".format(useCfier))
+if usePos :
+	useLabel = useLabel + 'Pos'
+useLabel = useLabel + '_f'
+if useFeatPaths :
+	useLabel = useLabel + 'P'
+if useFeatNeighbor :
+	useLabel = useLabel + 'N'
+#end if
+
+
+
 # 1) Load the gene-index dictionary & path names
 geneDict, pathDict = mp.getGeneAndPathDict(sDir)
 geneNames = list(geneDict.keys())
@@ -108,6 +129,8 @@ del pathDict
 # 2) Load the neighborhood features
 if useFeatNeighbor :
 	featNbVals, featNbNames = mp.getFeaturesNeighborhood(sDir, 'LogScale')
+	featNbNames = np.ravel(featNbNames)
+#end if
 
 
 
@@ -131,7 +154,7 @@ for si in dSubDirs :
 		#	discarding those columns
 		featPSVals = featPSVals[:,0:len(pathNames)]
 		featPSNames = pathNames
-		featPSNames = np.reshape(featPSNames, (1, len(featPSNames)))
+#		featPSNames = np.reshape(featPSNames, (1, len(featPSNames)))
 	#end if
 
 
@@ -140,16 +163,24 @@ for si in dSubDirs :
 	features = np.zeros( (len(geneDict), 0), dtype=np.float32)
 	featNames = list()
 
-	print("{},{}".format(features.shape, featPSVals.shape))
+#	print(featNames)
+
+#	print("{},{}".format(features.shape, featPSVals.shape))
 	if useFeatPaths :
 		print("    ... including PathSim sum features")
 		features = np.hstack( (features, featPSVals) )
 		featNames.extend(featPSNames)
+#		featNames.extend(np.ravel(featPSNames))
 #		featNames = np.hstack( (featNames, featPSNames))
+#		print(len(featPSNames))
+#		print(len(featNames))
 	if useFeatNeighbor :
 		print("    ... including neighborhood features")
 		features = np.hstack( (features, featNbVals) )
-		featNames = np.hstack( (featNames, featNbNames) )
+		featNames.extend(np.ravel(featNbNames))
+#		featNames = np.hstack( (featNames, featNbNames) )
+#		print(len(featNbNames))
+#		print(len(featNames))
 	# verify some features have been loaded
 	if features.shape[1] == 0 :
 		print("ERROR: No features were specified for classification.")
@@ -161,15 +192,15 @@ for si in dSubDirs :
 	# 6) Prepare the test/train vectors & labels
 	print("  Creating train & test data ...")
 
-	if useFeatNeighbor :
-		print("    ... including neighborhood features")
-		features = np.hstack( (featNbVals, featPSVals) )
-		featNames = np.hstack( (featNbNames, featPSNames) )
-	else :
-#TODO: make pathsim features optional
-		features = featPSVals
-		featNames = featPSNames
-	#end if
+# 	if useFeatNeighbor :
+# 		print("    ... including neighborhood features")
+# 		features = np.hstack( (featNbVals, featPSVals) )
+# 		featNames = np.hstack( (featNbNames, featPSNames) )
+# 	else :
+# #TODO: make pathsim features optional
+# 		features = featPSVals
+# 		featNames = featPSNames
+# 	#end if
 
 	# Cluster to create train/test sets
 #	trainSet, trainLabel, testSet, testLabel, giTest = mp.createTrainTestSets(si, geneDict, features, True)
@@ -183,9 +214,9 @@ for si in dSubDirs :
 #	nClus = np.amax(clusLabel)
 	nClus = len(clusVals) - 1	# less 1 b/c first label is the Known set
 	if newVerbose :
-		print("verify: amax={}, (unique-1)={}".format(
-			np.amax(clusLabel), len(clusVals) - 1))
-	print("  The Unknown set was grouped into {} clusters.".format(nClus))
+#		print("verify: amax={}, (unique-1)={}".format(
+#			np.amax(clusLabel), len(clusVals) - 1))
+		print("  The Unknown set was grouped into {} clusters.".format(nClus))
 #	print(np.unique(clusLabel))
 
 
@@ -193,10 +224,10 @@ for si in dSubDirs :
 	#	then predict on the rest
 	geneRanks = np.zeros( (len(geneDict), nClus), dtype=np.int32 )
 	geneScores = np.zeros( (len(geneDict), nClus), dtype=np.float32 )
-	pathT1Dict = dict()
-	pathT1Set = set()
-	pathT5Dict = dict()
-	pathT5Set = set()
+	featT1Dict = dict()
+	featT1Set = set()
+	featT5Dict = dict()
+	featT5Set = set()
 
 	col = -1
 	for cv in clusVals :
@@ -301,24 +332,24 @@ for si in dSubDirs :
 		#end if
 
 		# Increment count for the Top 1 path
-		if topPaths[0] in pathT1Set :
-			pathT1Dict[topPaths[0]] += 1
+		if topPaths[0] in featT1Set :
+			featT1Dict[topPaths[0]] += 1
 		else :
-			pathT1Dict[topPaths[0]] = 1
-			pathT1Set.add(topPaths[0])
+			featT1Dict[topPaths[0]] = 1
+			featT1Set.add(topPaths[0])
 		#end if
 
 		# Increment count for the Top 5 paths
 		for num in range(5) :
-			if topPaths[num] in pathT5Set :
-				pathT5Dict[topPaths[num]] += 1
+			if topPaths[num] in featT5Set :
+				featT5Dict[topPaths[num]] += 1
 			else :
-				pathT5Dict[topPaths[num]] = 1
-				pathT5Set.add(topPaths[num])
+				featT5Dict[topPaths[num]] = 1
+				featT5Set.add(topPaths[num])
 		#end loop
 
 
-#		break
+		break
 	#end loop
 
 
@@ -383,43 +414,53 @@ for si in dSubDirs :
 #TODO: this!
 
 	# Sort the Top 1 paths
-	pathT1Sort = np.recarray( len(pathT1Dict), dtype=[('pathIdx', 'i4'), ('count', 'f4')])
-	pathIdxList = list(pathT1Dict.keys_)
+	featT1Sort = np.recarray( len(featT1Dict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
+	pathIdxList = list(featT1Dict.keys())
 	row = -1
 	for item in pathIdxList :
 		row += 1
-		pathT1Sort['pathIdx'] = item
-		pathT1Sort['count'] = pathT1Dict[item]
+		featT1Sort['pathIdx'] = item
+		featT1Sort['count'] = featT1Dict[item]
 	#end if
-	pathT1Sort[::-1].sort(order=['count', 'pathIdx'])
+	featT1Sort[::-1].sort(order=['count', 'pathIdx'])
+
+#	print(featT1Sort)
+#	print(len(featNames))
+#	print(featNames)
 
 	# Save the Top 1 paths to file
-	fname = 'ranked_paths-' + useLabel + '_Top1.txt'
+	fname = 'ranked_features_Top1-' + useLabel + '.txt'
 	with open(si + fname, 'w') as fout :
 #		fout.write('intercept:{}{}'.format(textDelim, cfier.intercept_))
-		for row in range(len(pathT1Sort)) :
-			fout.write('\n{}{}{}'.format(pathT1Sort['count'][row],
-				textDelim, pathNames[pathT1Sort['pathIdx'][row]]))
+		for row in range(len(featT1Sort)) :
+
+#			print(featT1Sort['pathIdx'][row])
+#			print(featT1Sort[row]['pathIdx'])
+#			print('{},{}'.format(row, featT1Sort['pathIdx'][row]))
+#			print('{},{}'.format(row, featT1Sort['count'][row]))
+
+			fout.write('\n{}{}{}'.format(featT1Sort['count'][row],
+				textDelim, featNames[featT1Sort['pathIdx'][row]]))
 	#end with
 
 	# Sort the Top 5 paths
-	pathT5Sort = np.recarray( len(pathT5Dict), dtype=[('pathIdx', 'i4'), ('count', 'f4')])
-	pathIdxList = list(pathT5Dict.keys_)
+	featT5Sort = np.recarray( len(featT5Dict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
+	pathIdxList = list(featT5Dict.keys())
 	row = -1
 	for item in pathIdxList :
 		row += 1
-		pathT5Sort['pathIdx'] = item
-		pathT5Sort['count'] = pathT5Dict[item]
+		featT5Sort['pathIdx'][row] = item
+		featT5Sort['count'][row] = featT5Dict[item]
 	#end if
-	pathT5Sort[::-1].sort(order=['count', 'pathIdx'])
+	featT5Sort[::-1].sort(order=['count', 'pathIdx'])
 
 	# Save the Top 5 paths to file
-	fname = 'ranked_paths-' + useLabel + '_Top5.txt'
+	fname = 'ranked_features_Top5-' + useLabel + '.txt'
 	with open(si + fname, 'w') as fout :
 #		fout.write('intercept:{}{}'.format(textDelim, cfier.intercept_))
-		for row in range(len(pathT5Sort)) :
-			fout.write('\n{}{}{}'.format(pathT5Sort['count'][row],
-				textDelim, pathNames[pathT5Sort['pathIdx'][row]]))
+		for row in range(len(featT5Sort)) :
+			fout.write('\n{}{}{}'.format(featT5Sort['count'][row],
+				textDelim, featNames[featT5Sort['pathIdx'][row]]))
 	#end with
 
 
