@@ -46,30 +46,27 @@ fSimilarity = 'features_PathSim.gz'
 retCutoffs = [50, 100, 200, 500, 1000, 2000]
 
 
+# Adjustible classifier parameters
 useCfier = 1
 	# 1 = Lasso, 2 = ElasticNet, ...
 usePos = True
-	# True/False
+	# True/False: limit to only Positive coefficient values
 useFeatPaths = True
 	# True/False: use the pathsim sum features
 useFeatNeighbor = True
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00005, 0.002, num=23)
+useGivenRange = np.linspace(0.00005, 0.002, num=19)
 	# array of vals; 'None' means to auto-search for alphas
 useLabel = 'Lasso_Cluster_cP_fPN'
 	# string: label for the output files
 
 
 # LASSO params
-#lAlpha02 = [0.0008, 0.0007, 0.0006, 0.0005, 0.0004, 0.0003]
-#lAlphaPos = [0.001, 0.0007, 0.0006, 0.0005, 0.0004, 0.0003, 0.0001, 0.00008]
 lMaxIter = 3000
 lNorm = True
 lFitIcpt = True
 
-
 # Elastic Net params
-#enRatios = [0.4, 0.7, 0.85, 0.9, 0.95]
 enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
 enNAlphas = 17
 enMaxIter = 5000
@@ -77,10 +74,6 @@ enFitIncept = True
 enNorm = True
 enCopy = True
 
-
-# # Lables for pos & neg training sets
-# pLabel = 1
-# nLabel = 0
 
 # verbose feedback ?
 newVerbose = True
@@ -109,8 +102,11 @@ pathNames = mp.removeInvertedPaths(pathDict)
 del pathDict
 
 
+
 # 2) Load the neighborhood features
-featNbVals, featNbNames = mp.getFeaturesNeighborhood(sDir, 'LogScale')
+if useFeatNeighbor :
+	featNbVals, featNbNames = mp.getFeaturesNeighborhood(sDir, 'LogScale')
+
 
 
 # 3) Loop over all the subdirectories
@@ -125,17 +121,42 @@ for si in dSubDirs :
 	print("\n{}/{}/".format(sv[-3],sv[-2]))
 
 
+
 	# 4) Load the PathSim features
-	featPSVals = mp.readFileAsMatrix(si, fSimilarity)
-	# NOTE: previous version of mpPredict04a had extra zeros at end of vectors
-	#	discarding those columns
-	featPSVals = featPSVals[:,0:len(pathNames)]
-	featPSNames = pathNames
-	featPSNames = np.reshape(featPSNames, (1, len(featPSNames)))
+	if useFeatPaths :
+		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
+		# NOTE: previous version of mpPredict04a had extra zeros at end of vectors
+		#	discarding those columns
+		featPSVals = featPSVals[:,0:len(pathNames)]
+		featPSNames = pathNames
+		featPSNames = np.reshape(featPSNames, (1, len(featPSNames)))
+	#end if
 
 
 
-	# 5) Prepare the test/train vectors & labels
+	# 5) Combine the features as specified by parameters (useFeat...)
+	features = np.zeros( (len(geneDict), 0), dtype=np.float32)
+	featNames = list()
+
+	print("{},{}".format(features.shape, featPSVals.shape))
+	if useFeatPaths :
+		print("    ... including PathSim sum features")
+		features = np.hstack( (features, featPSVals) )
+		featNames.extend(featPSNames)
+#		featNames = np.hstack( (featNames, featPSNames))
+	if useFeatNeighbor :
+		print("    ... including neighborhood features")
+		features = np.hstack( (features, featNbVals) )
+		featNames = np.hstack( (featNames, featNbNames) )
+	# verify some features have been loaded
+	if features.shape[1] == 0 :
+		print("ERROR: No features were specified for classification.")
+		sys.exit 
+	#end if
+
+
+
+	# 6) Prepare the test/train vectors & labels
 	print("  Creating train & test data ...")
 
 	if useFeatNeighbor :
@@ -169,14 +190,15 @@ for si in dSubDirs :
 	# For each cluster, use label 0 + label N to train
 	#	then predict on the rest
 	geneRanks = np.zeros( (len(geneDict), nClus), dtype=np.int32 )
+	geneScores = np.zeros( (len(geneDict), nClus), dtype=np.float32 )
 
 	col = -1
 	for cv in clusVals :
-		col += 1
-
 		# Skip cv == 0 (will use 0 as pos train set)
 		if cv == 0 :
 			continue
+
+		col += 1
 
 		# Extract the train set & labels
 		trainIdx = np.hstack(( np.where(clusLabel == 0)[0], np.where(clusLabel == cv)[0] ))
@@ -196,7 +218,9 @@ for si in dSubDirs :
 #		testLabel = np.ravel(testLabel)
 #		testNames = geneNames[testIdx]
 
-		# 6) Train the classifier
+
+
+		# 7) Train the classifier
 		if useCfier == 1 :	# 1 = Lasso
 			cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
 				max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
@@ -220,11 +244,11 @@ for si in dSubDirs :
 				print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
 		#end if
 
-#TODO: collect feature names & stats
 
-		# 7) Predict on the test set
+
+		# 8) Predict on the test set
 		#	score the genes, then sort, place rank into array geneRanks
-		geneScores = np.recarray(testSet.shape[0],
+		ranker = np.recarray(testSet.shape[0],
 #			dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', 'a20')])
 			dtype=[('inverse', 'f4'), ('score', 'f4'), ('nameIdx', 'a20')])
 
@@ -232,80 +256,62 @@ for si in dSubDirs :
 		cfPredLabel = cfier.predict(testSet)
 		cfPredLabel = np.ravel(cfPredLabel)
 
-		geneScores['score'] = cfPredLabel
-		geneScores['inverse'] = 0 - cfPredLabel
-#		geneScores['names'] = testNames
-		geneScores['nameIdx'] = testIdx
-#		for r in len(geneScores) :
+		ranker['score'] = cfPredLabel
+		ranker['inverse'] = 0 - cfPredLabel
+#		ranker['names'] = testNames
+		ranker['nameIdx'] = testIdx
+#		for r in len(ranker) :
 #			row = [ 0 - cfPredLabel[r], cfPredLabel[r], r]
-#			geneScores[r] = row
+#			ranker[r] = row
 #		#end loop
 
-#		geneScores.sort(order=['inverse', 'names'])
-		geneScores.sort(order=['inverse', 'nameIdx'])
+#		ranker.sort(order=['inverse', 'names'])
+		ranker.sort(order=['inverse', 'nameIdx'])
 
 		rank = 0
-		for entry in geneScores :
+		for entry in ranker :
 			rank += 1
 #			row = geneDict[entry['names']]
 			row = int(entry['nameIdx'])
 			geneRanks[row, col] = rank
+			geneScores[row,col] = entry['score']
 		#end loop
 
-		print(geneRanks[row,col])
+#		print(geneRanks[row,col])
 
 
-		break
+		# 9) 
+#TODO: collect feature names & meaningful stats
+
+
+
+#		break
 	#end loop
 
 
-	break
-
-#TODO: 
-#	cluster the Unknown, get those labels
-#	for each cluster, create train/test sets
-#	train the classifier
-#	return test prediction results
-#	Then: vote, collect & output results
+#	break
 
 
 
+	# 10) Output the ranked genes to file
 
-
-
-	# 5) Output results to file, Lasso 2-class
-
-	# Save the selected paths & scores/weights
-	# 	feature coefficients are the metapath weights
-	cfCoefs = np.nonzero(cfLassoStd.coef_)[0]
-	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
-	for row in range(len(cfCoefs)) :
-		cfPaths[row] = (row, cfCoefs[row])
-	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+	# First, vote across the clusters and sort by rank
+	# NOTE: any genes in the Known Set should have rank == 0
+	cfGenes = np.recarray( len(geneDict), dtype=[('geneIdx', 'i4'), ('rank', 'f4')])
+	cfGenes['geneIdx'] = np.arange(len(geneDict))
+	cfGenes['rank'] = np.mean(geneRanks, axis=1)
+	cfGenes.sort(order=['rank','geneIdx'])
 
 	# write the file
-	fname = 'ranked_paths-Lasso_2ClassStd.txt'
-	print("Saving data for the Lasso standard approach ...")
-	print("  Saving top paths to file {}".format(fname))
-	with open(si+fname, 'w') as fout :
-		fout.write('intercept:{}{}'.format(textDelim, cfLassoStd.intercept_))
-		for row in range(len(cfPaths)) :
-			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
-				textDelim, pathNames[cfPaths['path'][row]]))
-	#end with
-
-	#Sort the genes by (inverse) rank
-	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
-	cfGenes['gene'] = giTest
-	cfGenes['rank'] = cfPredLabel
-	cfGenes[::-1].sort(order=['rank','gene'])
-
-	# write the file
-	fname = 'ranked_genes-Lasso_2ClassStd.txt'
+	fname = 'ranked_genes-' + useLabel + '.txt'
 	print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
 		firstRow = True
 		for row in range(len(cfGenes)) :
+			# Skip any genes whose rank == 0 (the Known Set)
+			if cfGenes['rank'][row] == 0 :
+				continue
+			#end if
 			if not firstRow :
 				fout.write('\n')
 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
@@ -313,22 +319,63 @@ for si in dSubDirs :
 			firstRow = False
 	#end with
 
-	# Save the parameters & results
-	fname = 'parameters-Lasso_2ClassStd.txt'
+
+
+	# 11) Output the selected feature info to file
+#TODO: this!
+
+
+#	# Save the selected paths & scores/weights
+#	# 	feature coefficients are the metapath weights
+#	cfCoefs = np.nonzero(cfLassoStd.coef_)[0]
+#	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
+#	for row in range(len(cfCoefs)) :
+#		cfPaths[row] = (row, cfCoefs[row])
+#	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+#
+#	# write the file
+#	fname = 'ranked_paths-Lasso_2ClassStd.txt'
+#	print("Saving data for the Lasso standard approach ...")
+#	print("  Saving top paths to file {}".format(fname))
+#	with open(si+fname, 'w') as fout :
+#		fout.write('intercept:{}{}'.format(textDelim, cfLassoStd.intercept_))
+#		for row in range(len(cfPaths)) :
+#			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
+#				textDelim, pathNames[cfPaths['path'][row]]))
+#	#end with
+
+
+
+	# 12) Output the parameters to file
+	fname = 'parameters-' + useLabel + '.txt'
 	with open(si+fname, 'w') as fout :
 		fout.write('\n')
 		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as Two-Class\n')
+		fout.write('  as One-Class w/ clustering on the Unknown set\n')
+		fout.write('\n')
+		fout.write('using features\n')
+		fout.write('PathSim sum:{}{}'.format(textDelim, useFeatPaths))
+		fout.write('Neighborhood:{}{}'.format(textDelim, useFeatNeighbor))
 		fout.write('\n')
 
-		fout.write('Lasso Parameters\n')
-		fout.write('method:{}Lasso (standard)\n'.format(textDelim))
-		fout.write('a_range:{}{}\n'.format(textDelim, lAlpha02))
-		fout.write('alpha:{}{}\n'.format(textDelim, cfLassoStd.alpha_))
-		fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
-		fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
-		fout.write('positive:{}{}\n'.format(textDelim, 'False'))
-		fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
+#TODO: collect some stats (ie: common alphas, l1 ratios, etc)
+		fout.write('Classifier Parameters\n')
+		if useCfier == 1 :
+			fout.write('method:{}Lasso\n'.format(textDelim))
+			fout.write('positive:{}{}\n'.format(textDelim, usePos))
+			# fout.write('alpha range:{}{}\n'.format(textDelim, useGivenRange))
+			# fout.write('alpha chosen:{}{}\n'.format(textDelim, cfier.alpha_))
+			fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
+			fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
+			fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
+		elif useCfier == 2 :
+			fout.write('method:{}ElasticNet\n'.format(textDelim))
+			fout.write('ratio range:{}{}\n'.format(textDelim, enRatios))
+			# fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
+			fout.write('num alphas:{}{}'.format(textDelim, enNAlphas))
+			fout.write('max_iter:{}{}\n'.format(textDelim, enMaxIter))
+			fout.write('normalize:{}{}\n'.format(textDelim, enNorm))
+			fout.write('fit_intercept:{}{}\n'.format(textDelim, enFitIncept))
 		fout.write('\n')
 
 		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
@@ -342,8 +389,8 @@ for si in dSubDirs :
 
 
 	thisRound += 1
-	print("    --{} of {}".format(thisRound, len(dSubDirs)))
-	print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+	print("--{} of {}".format(thisRound, len(dSubDirs)))
+	print("--elapsed time: {:.3} (s)".format(time.time()-tstart))
 #end loop
 
 
