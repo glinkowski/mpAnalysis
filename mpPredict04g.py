@@ -438,7 +438,7 @@ for si in dSubDirs :
 #			print(featT1Sort[row]['pathIdx'])
 #			print('{},{}'.format(row, featT1Sort['pathIdx'][row]))
 #			print('{},{}'.format(row, featT1Sort['count'][row]))
-
+			fout.write('Clusters:{}{}'.format(textDelim, nClus))
 			fout.write('\n{}{}{}'.format(featT1Sort['count'][row],
 				textDelim, featNames[featT1Sort['pathIdx'][row]]))
 	#end with
@@ -459,6 +459,7 @@ for si in dSubDirs :
 	with open(si + fname, 'w') as fout :
 #		fout.write('intercept:{}{}'.format(textDelim, cfier.intercept_))
 		for row in range(len(featT5Sort)) :
+			fout.write('Clusters:{}{}'.format(textDelim, nClus))
 			fout.write('\n{}{}{}'.format(featT5Sort['count'][row],
 				textDelim, featNames[featT5Sort['pathIdx'][row]]))
 	#end with
