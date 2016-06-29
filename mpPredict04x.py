@@ -36,7 +36,7 @@ import sys
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-test01'
+dDir = 'pred04-set04'
 dRoot = '../Dropbox/mp/output/'
 
 # # Input names & locations
@@ -380,6 +380,9 @@ for si in dSubDirs :
 		ecol += 1
 
 		fn = 'ranked_paths-' + m + '.txt'
+		# Skip the ranked_paths file if missing
+		if not os.path.isfile(si + fn) :
+			continue
 		with open(si + fn, 'r') as fin :
 			firstLine = fin.readline()
 			for line in fin :
