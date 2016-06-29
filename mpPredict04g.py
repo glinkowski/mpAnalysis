@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set03'
+sDir = '../Dropbox/mp/output/pred04-set01'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
@@ -53,7 +53,7 @@ usePos = True
 	# True/False: limit to only Positive coefficient values
 useFeatPaths = True
 	# True/False: use the pathsim sum features
-useFeatNeighbor = True
+useFeatNeighbor = False
 	# True/False: use the neighborhood features
 useGivenRange = np.linspace(0.00005, 0.002, num=13)
 	# array of vals; 'None' means to auto-search for alphas
