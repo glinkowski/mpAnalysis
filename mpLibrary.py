@@ -2379,14 +2379,14 @@ def clusterTrainSets(path, geneDict, features) :
 	pLabel = 1
 	nLabel = 0
 
-	# Normalize the feature values
-	# Center each column about the mean
-	featMean = np.mean(features, axis=0)
-	features = np.subtract(features, featMean)
-	# Set the L2 norm = 1
-	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
-	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
-	features = np.divide(features, featAbsMax)
+	# # Normalize the feature values
+	# # Center each column about the mean
+	# featMean = np.mean(features, axis=0)
+	# features = np.subtract(features, featMean)
+	# # Set the L2 norm = 1
+	# featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
+	# featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
+	# features = np.divide(features, featAbsMax)
 
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
 	gKnown = readFileAsList(path+'known.txt')

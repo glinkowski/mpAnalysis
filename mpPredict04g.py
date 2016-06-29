@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set01'
+sDir = '../Dropbox/mp/output/pred04-set02'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
@@ -47,7 +47,7 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # Adjustible classifier parameters
-useCfier = 1
+useCfier = 2
 	# 1 = Lasso, 2 = ElasticNet, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
@@ -71,7 +71,7 @@ lFitIcpt = True
 # Elastic Net params
 enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
 enNAlphas = 17
-enMaxIter = 5000
+enMaxIter = 3000
 enFitIncept = True
 enNorm = True
 enCopy = True
@@ -189,6 +189,17 @@ for si in dSubDirs :
 
 
 
+	# Normalize the feature values
+	# Center each column about the mean
+	featMean = np.mean(features, axis=0)
+	features = np.subtract(features, featMean)
+	# Set the L2 norm = 1
+	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
+	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
+	features = np.divide(features, featAbsMax)
+
+
+
 	# 6) Prepare the test/train vectors & labels
 	print("  Creating train & test data ...")
 
@@ -265,7 +276,8 @@ for si in dSubDirs :
 			# 	max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
 		elif useCfier == 2 :	# 2 = ElasticNet
 #TODO: this
-			cfier = lm.ElasticNetCV()
+			cfier = lm.ElasticNetCV(l1_ratio=enRatios, positive=usePos, fit_intercept=enFitIncept,
+				n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
 		else :
 			print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
 		#end if
