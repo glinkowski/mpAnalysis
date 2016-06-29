@@ -2414,7 +2414,7 @@ def clusterTrainSets(path, geneDict, features) :
 
 
 	# Cluster the Unknown feature vectors
-	nClusters = int(round( len(giUnknown) / len(giKnown) ))
+	nClusters = int(round( len(giUnknown) / len(giKnown) / 2))
 	if verbose :
 		print("  Clustering the Unknown samples ...")
 		print("  Known: {}, Unknown: {}, clusters: {}".format(
