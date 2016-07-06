@@ -46,7 +46,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesDBGAP69/subset01/'
+	sPath = '../Dropbox/mp/samplesDBGAP69/subset02/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -179,8 +179,19 @@ for p in pathList :
 	for giList in oSampLists :
 		dim3 += 1
 
+#TODO: Explore this thought...
+#	Why are length-2 paths so dominant?
+#	Should I remove the diagonal from the PathSim sum?
+#	Does the diagonal over-weight b/c of similarity to self?
+#		# get the diagonal, the similarity of each gene to self
+#		simDiag = np.diag(simMatrix)
+#
 		# calculate feature for this sample variant
 		simSet = np.sum( simMatrix[:,giList], axis=1 )
+#
+#		# remove the similarity of the gene to itself,
+#		#	sum of similiarity over the set, minus similarity to self
+#
 		gFeatures[:,dim2,dim3] = simSet[:]
 	#end loop
 
