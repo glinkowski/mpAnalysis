@@ -12,12 +12,11 @@
 #
 # Input: _rawSets_<source>.txt, tab-delimited
 #	each line: set_name, gene_name, ?_value, source
-# Output: <set_name>.txt
+# Output: <set_name>-<# of genes>.txt
 #	sorted list of genes in the set
 # ---------------------------------------------------------
 
 import preProcFuncs as pp
-import time
 
 
 
@@ -35,26 +34,19 @@ sDir = '../Dropbox/mp/samplesEnrichr'
 ####### ####### ####### ####### 
 # BEGIN MAIN FUNCTION
 
-tstart = time.time()
-
-
 
 # 1) Read the input file
 if not sDir.endswith('/') :
-	fname = sDir + '/' + sFile
-else :
-	fname = sDir + sFile
-#end if
+	sDir = sDir + '/'
+fname = sDir + sFile
 
-# store genes in a dict of lists
+# Store genes in a dict of lists
 #	key: sampName; value: list(geneName)
 sampDict = dict()
 sampSet = set()
 
-print("Reading input file {}".format(sFile))
+print("\nReading input file {}".format(sFile))
 fin = open(fname, 'r')
-# #TODO: ?? write to gzip file (compress the file) -- maybe
-# fzip = gzip.open(fname + '.gz', 'wb')
 
 # Read each line in the file
 lineCount = 0
@@ -78,12 +70,41 @@ for line in fin :
 		sampSet.add(sampName)
 		sampDict[sampName] = [geneName]
 #end loop
+fin.close()
 
 # Get the unique list of sample names
-sampList = list(sampSet)
-sampList.sort()
+sampNames = list(sampSet)
+sampNames.sort()
 sampSet.clear()
 del sampSet
 
 
 
+# 2) Save each set to a file
+#		as a sorted list of gene names
+print("Saving the sample files to {}".format(sDir))
+for sn in sampNames :
+
+	# Retrieve the list of genes in this sample
+	geneList = sampDict[sn]
+	geneList.sort()
+
+	# Write the file
+	fname = sDir + sn + '-{}.txt'.format(len(geneList))
+	fout = open(fname, 'w')
+
+	# each line contains a gene name, no empties at end
+	lineCount = 0
+	for gn in geneList :
+		lineCount += 1
+		if lineCount > 1 :
+			fout.write('\n')
+		fout.write(gn)
+	#end loop
+	fout.close()
+#end loop
+print("Wrote {} sample files.".format(len(sampNames)))
+
+
+
+print("\nDone.\n")
