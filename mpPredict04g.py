@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set02'
+sDir = '../Dropbox/mp/output/pred04-set04'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
@@ -47,7 +47,7 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # Adjustible classifier parameters
-useCfier = 2
+useCfier = 1
 	# 1 = Lasso, 2 = ElasticNet, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
@@ -64,14 +64,14 @@ useGivenRange = np.linspace(0.00005, 0.002, num=13)
 
 
 # LASSO params
-lMaxIter = 2000
+lMaxIter = 850
 lNorm = True
 lFitIcpt = True
 
 # Elastic Net params
 enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
-enNAlphas = 17
-enMaxIter = 3000
+enNAlphas = 11
+enMaxIter = 900
 enFitIncept = True
 enNorm = True
 enCopy = True
