@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set02'
+sDir = '../Dropbox/mp/output/pred04-set01'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz' 
@@ -47,7 +47,7 @@ fSimilarity = 'features_PathSim.gz'
 
 
 # Adjustible classifier parameters
-useCfier = 2
+useCfier = 1
 	# 1 = Lasso, 2 = ElasticNet, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
@@ -217,7 +217,7 @@ for si in dSubDirs :
 #	trainSet, trainLabel, testSet, testLabel, giTest = mp.createTrainTestSets(si, geneDict, features, True)
 
 #	print(np.amax(features[:,0]))
-	clusLabel, featLabel = mp.clusterTrainSets(si, geneDict, features)
+	clusLabel, featLabel = mp.clusterTrainSets(si, geneDict, features, 11)
 #	print(np.amax(features[:,0]))
 #	print(np.unique(featLabel))
 
