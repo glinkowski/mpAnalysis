@@ -52,7 +52,7 @@
 #	getMatrixDimensions(path, name)
 #	getGeneAndPathDict(path1, path2)
 #	getFeaturesNeighborhood(path, suffix)
-#	
+#	clusterTrainSets(path, geneDict, features, nMaxClus)
 #	
 # ---------------------------------------------------------
 
@@ -2366,10 +2366,12 @@ def createTrainTestSets(path, geneDict, features, oneClass) :
 #	geneDict: gene-index dictionary
 #	features: array of features
 #		each row is a vector of features corresponding to a gene
+#	nMaxClus: maximum number of clusters to calculate
+#		if nMaxClus < 1, will create rand neg samples at 2x size of pos
 # Returns ----
 #	clusLabels: labels for each cluster (0 = TrainPos)
 #	classLabels: indicating the (pos/neg) class for each gene
-def clusterTrainSets(path, geneDict, features) :
+def clusterTrainSets(path, geneDict, features, nMaxClus) :
 
 #	if not verbose :
 	warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -2415,6 +2417,12 @@ def clusterTrainSets(path, geneDict, features) :
 
 	# Cluster the Unknown feature vectors
 	nClusters = int(round( len(giUnknown) / len(giKnown) / 2))
+
+	# Apply the max cluster cutoff to nClusters
+	if (nMaxClus > 0) and (nMaxClus < nClusters) :
+		nClusters = nMaxClus
+	#end if
+
 	if verbose :
 		print("  Clustering the Unknown samples ...")
 		print("  Known: {}, Unknown: {}, clusters: {}".format(
