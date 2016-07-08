@@ -180,16 +180,8 @@ for si in dSubDirs :
 		sys.exit 
 	#end if
 
-
-
 	# Normalize the feature values
-	# Center each column about the mean
-	featMean = np.mean(features, axis=0)
-	features = np.subtract(features, featMean)
-	# Set the L2 norm = 1
-	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
-	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
-	features = np.divide(features, featAbsMax)
+	features = mp.normalizeFeatureColumns(features)
 
 
 
