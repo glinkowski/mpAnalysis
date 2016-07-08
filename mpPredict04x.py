@@ -39,17 +39,10 @@ import sys
 dDir = 'pred04-set04'
 dRoot = '../Dropbox/mp/output/'
 
-# # Input names & locations
-# useNtwk = 1		# network & samples to use (0 means fake)
-# if useNtwk == 0 :
-# 	eName = 'fakeNtwk01_g3e4t1'
-# 	ePath = 'networks/'
-# 	dRoot = 'outputFake/'
-# else :
-# 	eName = 'all_v3beta_g2e9t0'
-# 	ePath = '../Dropbox/mp/networks/'
-# 	dRoot = '../Dropbox/mp/output/'
-# #end if
+
+#retCutoffs = [50, 100, 200, 500, 1000, 2000]
+# TODO: Incorporate the return cutoffs into the AUC data
+
 
 # verbose feedback ?
 newVerbose = True
