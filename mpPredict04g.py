@@ -38,10 +38,10 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set04'
+sDir = '../Dropbox/mp/output/pred04-set01'
 
 # File name containing feature vectors
-fSimilarity = 'features_PathSim.gz' 
+fSimilarity = 'features_PathSim.gz'
 
 
 # verbose feedback ?
@@ -197,7 +197,7 @@ for si in dSubDirs :
 	print("  Creating train & test data ...")
 
 	# Cluster to create train/test sets
-	clusLabel, featLabel = mp.clusterTrainSets(si, geneDict, features)
+	clusLabel, featLabel = mp.clusterTrainSets(si, geneDict, features, maxClusters)
 	clusVals = np.unique(clusLabel)	
 	nClus = len(clusVals) - 1	# less 1 b/c first label is the Known set
 	if newVerbose :
