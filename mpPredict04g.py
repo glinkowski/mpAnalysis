@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set01'
+sDir = '../Dropbox/mp/output/pred04-set03'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -57,7 +57,7 @@ useFeatPaths = True
 	# True/False: use the pathsim sum features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00005, 0.002, num=13)
+useGivenRange = np.linspace(0.00005, 0.002, num=17)
 	# array of vals; 'None' means to auto-search for alphas
 maxClusters = 11
 	# maximum number of clusters to use
@@ -65,7 +65,7 @@ maxClusters = 11
 
 
 # LASSO params
-lMaxIter = 850
+lMaxIter = 1000
 lNorm = True
 lFitIcpt = True
 
