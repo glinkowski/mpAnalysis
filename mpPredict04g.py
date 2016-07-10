@@ -22,7 +22,7 @@
 #	votes from each predictor.
 #
 # Updates: option to include the Neighborhood features
-#	along side the PathSim ones
+#	alongside the PathSim ones
 # ---------------------------------------------------------
 
 import mpLibrary as mp
@@ -38,12 +38,18 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
+<<<<<<< HEAD
 sDir = '../Dropbox/mp/output/pred04-set01'
+=======
+sDir = '../Dropbox/mp/output/pred04-set03'
+>>>>>>> 2e619899ca468a8e6d81dda683d8a8d2b70ae04e
 
 # File name containing feature vectors
-fSimilarity = 'features_PathSim.gz' 
+fSimilarity = 'features_PathSim.gz'
 
-#retCutoffs = [50, 100, 200, 500, 1000, 2000]
+
+# verbose feedback ?
+newVerbose = True
 
 
 # Adjustible classifier parameters
@@ -55,16 +61,15 @@ useFeatPaths = True
 	# True/False: use the pathsim sum features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00005, 0.002, num=13)
+useGivenRange = np.linspace(0.00005, 0.002, num=17)
 	# array of vals; 'None' means to auto-search for alphas
-# useLabel = 'ClusVote_cLasP_fPN'
-# 	# string: label for the output files
-# 	# ie: ClusVote_c<Las/Enet/Log><P for Pos>_f<P for pathsim><N for neighborhood>
-# #TODO: automate useLabel based on params
+maxClusters = 11
+	# maximum number of clusters to use
+	#	-1 = no maximum value is set
 
 
 # LASSO params
-lMaxIter = 850
+lMaxIter = 1000
 lNorm = True
 lFitIcpt = True
 
@@ -77,9 +82,7 @@ enNorm = True
 enCopy = True
 
 
-# verbose feedback ?
-newVerbose = True
-
+# text delimiter in output files
 textDelim = '\t'
 
 ####### ####### ####### ####### 
@@ -99,13 +102,18 @@ mp.setParamVerbose(newVerbose)
 # 0) Create the useLabel variable
 # string: label for the output files
 # ie: ClusVote_c<Las/Enet/Log><P for Pos>_f<P for pathsim><N for neighborhood>
-useLabel = 'ClusVote_c'
+if maxClusters > 0 :
+	useLabel = 'Clus{}Vote_c'.format(maxClusters)
+else :
+	useLabel = 'ClusVote_c'
+#end if
 if useCfier == 1 :
 	useLabel = useLabel + 'Las'
 elif useCfier == 2 :
 	useLabel = useLabel + 'Enet'
 else :
 	print("ERROR: useCfier value is unrecognized: {}".format(useCfier))
+#end if
 if usePos :
 	useLabel = useLabel + 'Pos'
 useLabel = useLabel + '_f'
@@ -150,11 +158,10 @@ for si in dSubDirs :
 	# 4) Load the PathSim features
 	if useFeatPaths :
 		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
-		# NOTE: previous version of mpPredict04a had extra zeros at end of vectors
+		# NOTE: previous version of mpPredict04a had extra zeros at end of vectors;
 		#	discarding those columns
 		featPSVals = featPSVals[:,0:len(pathNames)]
 		featPSNames = pathNames
-#		featPSNames = np.reshape(featPSNames, (1, len(featPSNames)))
 	#end if
 
 
@@ -163,57 +170,30 @@ for si in dSubDirs :
 	features = np.zeros( (len(geneDict), 0), dtype=np.float32)
 	featNames = list()
 
-#	print(featNames)
-
-#	print("{},{}".format(features.shape, featPSVals.shape))
 	if useFeatPaths :
 		print("    ... including PathSim sum features")
 		features = np.hstack( (features, featPSVals) )
 		featNames.extend(featPSNames)
-#		featNames.extend(np.ravel(featPSNames))
-#		featNames = np.hstack( (featNames, featPSNames))
-#		print(len(featPSNames))
-#		print(len(featNames))
 	if useFeatNeighbor :
 		print("    ... including neighborhood features")
 		features = np.hstack( (features, featNbVals) )
 		featNames.extend(np.ravel(featNbNames))
-#		featNames = np.hstack( (featNames, featNbNames) )
-#		print(len(featNbNames))
-#		print(len(featNames))
 	# verify some features have been loaded
 	if features.shape[1] == 0 :
 		print("ERROR: No features were specified for classification.")
 		sys.exit 
 	#end if
 
-
-
 	# Normalize the feature values
-	# Center each column about the mean
-	featMean = np.mean(features, axis=0)
-	features = np.subtract(features, featMean)
-	# Set the L2 norm = 1
-	featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
-	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
-	features = np.divide(features, featAbsMax)
+	features = mp.normalizeFeatureColumns(features)
 
 
 
 	# 6) Prepare the test/train vectors & labels
 	print("  Creating train & test data ...")
 
-# 	if useFeatNeighbor :
-# 		print("    ... including neighborhood features")
-# 		features = np.hstack( (featNbVals, featPSVals) )
-# 		featNames = np.hstack( (featNbNames, featPSNames) )
-# 	else :
-# #TODO: make pathsim features optional
-# 		features = featPSVals
-# 		featNames = featPSNames
-# 	#end if
-
 	# Cluster to create train/test sets
+<<<<<<< HEAD
 #	trainSet, trainLabel, testSet, testLabel, giTest = mp.createTrainTestSets(si, geneDict, features, True)
 
 #	print(np.amax(features[:,0]))
@@ -221,15 +201,14 @@ for si in dSubDirs :
 #	print(np.amax(features[:,0]))
 #	print(np.unique(featLabel))
 
+=======
+	clusLabel, featLabel = mp.clusterTrainSets(si, geneDict, features, maxClusters)
+>>>>>>> 2e619899ca468a8e6d81dda683d8a8d2b70ae04e
 	clusVals = np.unique(clusLabel)	
-#	nClus = np.amax(clusLabel)
 	nClus = len(clusVals) - 1	# less 1 b/c first label is the Known set
 	if newVerbose :
-#		print("verify: amax={}, (unique-1)={}".format(
-#			np.amax(clusLabel), len(clusVals) - 1))
 		print("  The Unknown set was grouped into {} clusters.".format(nClus))
-#	print(np.unique(clusLabel))
-
+	#end if
 
 	# For each cluster, use label 0 + label N to train
 	#	then predict on the rest
@@ -245,13 +224,11 @@ for si in dSubDirs :
 		# Skip cv == 0 (will use 0 as pos train set)
 		if cv == 0 :
 			continue
-
 		col += 1
 
 		# Extract the train set & labels
 		trainIdx = np.hstack(( np.where(clusLabel == 0)[0], np.where(clusLabel == cv)[0] ))
 		trainIdx.sort()
-#		print(trainIdx.shape)
 		trainSet = features[trainIdx,:]
 		trainLabel = featLabel[trainIdx]
 		trainLabel = np.ravel(trainLabel)
@@ -259,12 +236,10 @@ for si in dSubDirs :
 		# Extract the test set & labels
 		testIdx = [idx for idx in range(len(clusLabel)) if idx not in trainIdx]
 		testIdx = np.asarray(testIdx)
-#		testIdx = np.reshape(testIdx, (len(testIdx),1))
-#		print(testIdx.shape)
 		testSet = features[testIdx,:]
 		testLabel = featLabel[testIdx]
 		testLabel = np.ravel(testLabel)
-#		testNames = geneNames[testIdx]
+	#end loop
 
 
 
@@ -272,10 +247,7 @@ for si in dSubDirs :
 		if useCfier == 1 :	# 1 = Lasso
 			cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
 				max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
-			# cfier = lm.LassoCV(positive=usePos,
-			# 	max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
 		elif useCfier == 2 :	# 2 = ElasticNet
-#TODO: this
 			cfier = lm.ElasticNetCV(l1_ratio=enRatios, positive=usePos, fit_intercept=enFitIncept,
 				n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
 		else :
@@ -298,7 +270,6 @@ for si in dSubDirs :
 		# 8) Predict on the test set
 		#	score the genes, then sort, place rank into array geneRanks
 		ranker = np.recarray(testSet.shape[0],
-#			dtype=[('inverse', 'f4'), ('score', 'f4'), ('names', 'a20')])
 			dtype=[('inverse', 'f4'), ('score', 'f4'), ('nameIdx', 'a20')])
 
 
@@ -307,26 +278,18 @@ for si in dSubDirs :
 
 		ranker['score'] = cfPredLabel
 		ranker['inverse'] = 0 - cfPredLabel
-#		ranker['names'] = testNames
 		ranker['nameIdx'] = testIdx
-#		for r in len(ranker) :
-#			row = [ 0 - cfPredLabel[r], cfPredLabel[r], r]
-#			ranker[r] = row
-#		#end loop
 
-#		ranker.sort(order=['inverse', 'names'])
 		ranker.sort(order=['inverse', 'nameIdx'])
 
 		rank = 0
 		for entry in ranker :
 			rank += 1
-#			row = geneDict[entry['names']]
 			row = int(entry['nameIdx'])
 			geneRanks[row, col] = rank
 			geneScores[row,col] = entry['score']
 		#end loop
 
-#		print(geneRanks[row,col])
 
 
 		# 9) 
@@ -359,13 +322,7 @@ for si in dSubDirs :
 				featT5Dict[topPaths[num]] = 1
 				featT5Set.add(topPaths[num])
 		#end loop
-
-
-#		break
 	#end loop
-
-
-#	break
 
 
 
@@ -436,21 +393,11 @@ for si in dSubDirs :
 	#end if
 	featT1Sort[::-1].sort(order=['count', 'pathIdx'])
 
-#	print(featT1Sort)
-#	print(len(featNames))
-#	print(featNames)
-
 	# Save the Top 1 paths to file
 	fname = 'ranked_features_Top1-' + useLabel + '.txt'
 	with open(si + fname, 'w') as fout :
-#		fout.write('intercept:{}{}'.format(textDelim, cfier.intercept_))
 		fout.write('Clusters:{}{}'.format(textDelim, nClus))
 		for row in range(len(featT1Sort)) :
-
-#			print(featT1Sort['pathIdx'][row])
-#			print(featT1Sort[row]['pathIdx'])
-#			print('{},{}'.format(row, featT1Sort['pathIdx'][row]))
-#			print('{},{}'.format(row, featT1Sort['count'][row]))
 			fout.write('\n{}{}{}'.format(featT1Sort['count'][row],
 				textDelim, featNames[featT1Sort['pathIdx'][row]]))
 	#end with
@@ -469,7 +416,6 @@ for si in dSubDirs :
 	# Save the Top 5 paths to file
 	fname = 'ranked_features_Top5-' + useLabel + '.txt'
 	with open(si + fname, 'w') as fout :
-#		fout.write('intercept:{}{}'.format(textDelim, cfier.intercept_))
 		fout.write('Clusters:{}{}'.format(textDelim, nClus))
 		for row in range(len(featT5Sort)) :
 			fout.write('\n{}{}{}'.format(featT5Sort['count'][row],
@@ -510,14 +456,12 @@ for si in dSubDirs :
 			fout.write('fit_intercept:{}{}\n'.format(textDelim, enFitIncept))
 		fout.write('\n')
 
-#		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
 		fout.write('Prediction Results\n')
 		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfier.coef_)[0])))
 		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet, trainLabel)))
 		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet, testLabel)))
 		fout.write('\n')
 	#end with
-
 
 
 	thisRound += 1

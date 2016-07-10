@@ -52,6 +52,8 @@
 #	getMatrixDimensions(path, name)
 #	getGeneAndPathDict(path1, path2)
 #	getFeaturesNeighborhood(path, suffix)
+#	normalizeFeatureColumns(featMatrix)
+#	createTrainTestSets(path, geneDict, features, oneClass)
 #	clusterTrainSets(path, geneDict, features, nMaxClus)
 #	
 # ---------------------------------------------------------
@@ -2269,6 +2271,31 @@ def getFeaturesNeighborhood(path, suffix) :
 
 
 ######## ######## ######## ######## 
+# Function: Normalize each column of the feature matrix
+# Input ----
+#	featMatrix
+#		row: gene feature vector
+#		col: each individual feature
+# Returns ----
+#	featNormed: the normalized copy of the original matrix
+def normalizeFeatureColumns(featMatrix) :
+
+	# Center each column about the mean
+	featMean = np.mean(featMatrix, axis=0)
+	featNormed = np.subtract(featMatrix, featMean)
+
+	# Set the L2 norm = 1
+	featAbsMax = np.minimum(featMean, np.amax(featNormed, axis=0))
+	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
+	featNormed = np.divide(featNormed, featAbsMax)
+
+	return featNormed
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
 # Function: Separate the features into train & test data
 # Input ----
 #	path, str: path to the sample files
@@ -2373,22 +2400,15 @@ def createTrainTestSets(path, geneDict, features, oneClass) :
 #	classLabels: indicating the (pos/neg) class for each gene
 def clusterTrainSets(path, geneDict, features, nMaxClus) :
 
-#	if not verbose :
+	# Python gives deprecation warning; already on newest version of sklearn
+	#	mute the warnings
 	warnings.filterwarnings("ignore", category=DeprecationWarning)
-#	#end if
 
 	# Labels for the pos/neg data
 	pLabel = 1
 	nLabel = 0
 
-	# # Normalize the feature values
-	# # Center each column about the mean
-	# featMean = np.mean(features, axis=0)
-	# features = np.subtract(features, featMean)
-	# # Set the L2 norm = 1
-	# featAbsMax = np.minimum(featMean, np.amax(features, axis=0))
-	# featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
-	# features = np.divide(features, featAbsMax)
+	# Assume normalized feature values (done before this function call)
 
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
 	gKnown = readFileAsList(path+'known.txt')
@@ -2399,59 +2419,36 @@ def clusterTrainSets(path, geneDict, features, nMaxClus) :
 	giTrueNeg = [g for g in giUnknown if g not in giHidden]
 
 
-#	# Extract the vectors for the pos sets (Known & Unknown)
-#	posTrain = features[giKnown,:]
-#	posTest = features[giHidden,:]
-#
-#	posTrainLabel = np.ones( (len(giKnown), 1) ) * pLabel
-#	posTestLabel = np.ones( (len(giHidden), 1) ) * pLabel
-
-
 	# Extract the vectors for the Known & Unknown sets
 	fKnown = features[giKnown,:]
 	lKnown = np.zeros( (len(giKnown), 1) )
 
 	fUnknown = features[giUnknown,:]
-#	lUnknown = np.ones( (len(giUnknown), 1) )
 
 
 	# Cluster the Unknown feature vectors
 	nClusters = int(round( len(giUnknown) / len(giKnown) / 2))
-
-	# Apply the max cluster cutoff to nClusters
-	if (nMaxClus > 0) and (nMaxClus < nClusters) :
-		nClusters = nMaxClus
-	#end if
-
 	if verbose :
 		print("  Clustering the Unknown samples ...")
 		print("  Known: {}, Unknown: {}, clusters: {}".format(
 			len(giKnown), len(giUnknown), nClusters ))
 	#end if
 
+	# Apply the max cluster cutoff to nClusters
+	if (nMaxClus > 0) and (nMaxClus < nClusters) :
+		nClusters = nMaxClus
+	#end if
 
-#NOTE: MiniBatchKMeans supposed to be faster than KMeans
-# when num samples > 10k
-	grouper = skc.MiniBatchKMeans(n_clusters=nClusters, init='k-means++') #,
-	#	verbose=verbose)
-#	grouper = skc.KMeans(n_clusters=nClusters,
-#		init='kmeans++')
+
+	#NOTE: MiniBatchKMeans supposed to be faster than KMeans
+	#	when num samples > 10k
+	grouper = skc.MiniBatchKMeans(n_clusters=nClusters, init='k-means++')
+	# grouper = skc.KMeans(n_clusters=nClusters, init='kmeans++')
 	grouper.fit_predict(fUnknown)
 	lUnknown = grouper.labels_
 	# Increment by +1 such that 0 = Known
 	#	(cluster labels start at '1')
-#	print(np.amin(lUnknown))
 	lUnknown = np.add(lUnknown, 1)
-
-# 	# Prepare the labels to pass back to calling func
-# 	# Increment all labels by +1, such that Known = 0
-# 	lUnknown = grouper.labels_
-# 	lUnknown = np.reshape( (len(giUnknown), 1) )
-# #	lUnknown = np.ravel(lUnknown)
-# 	lUnknown = np.add(lUnknown, 1)	
-
-# 	clusLabels = np.vstack( (lKnown, lUnknown) )
-# 	clusFeatures = np.vstack( (fKnown, fUnknown) )
 
 
 	# Place cluster labels into an array such that they correspond
@@ -2468,4 +2465,3 @@ def clusterTrainSets(path, geneDict, features, nMaxClus) :
 
 	return clusLabels, classLabels
 #end def ######## ######## ######## 
-

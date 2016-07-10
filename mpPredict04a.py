@@ -46,7 +46,11 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
+<<<<<<< HEAD
 	sPath = '../Dropbox/mp/samplesDBGAP69/subset02/'
+=======
+	sPath = '../Dropbox/mp/samples-4subs/subset01'
+>>>>>>> 2e619899ca468a8e6d81dda683d8a8d2b70ae04e
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -94,7 +98,6 @@ geneDict = mp.readGenesFile(ePath, eName)
 
 # 2) Get list of all samples in folder
 sNames = mp.getSampleNamesFromFolder(sPath)
-#print(sNames)
 
 
 
@@ -117,8 +120,6 @@ for s in sNames :
 		count += 1
 		oSubDir = '{}{:03d}-{}-{:02d}/'.format(oPath, p,
 			s, count)
-#		oSubDir = oPath+'{0:03d}'.format(p)+'-'+s+
-#			+'-'+count+'/'
 		oSubDirList.append(oSubDir)
 
 		# Read genes from sample & partition into test/train
@@ -173,6 +174,10 @@ for p in pathList :
 	# load the PathSim matrix
 	simMatrix = mp.getSimMatrix(pathDict[p], ePath,
 		eName, mxSize)
+	# zero out the diagonal
+	# NOTE: want to measure each gene's similarity to the set,
+	#	excluding itself
+	np.fill_diagonal(simMatrix, 0)
 
 	# populate dimension 3 from each sample
 	dim3 = -1
@@ -206,9 +211,6 @@ print("Finished examining matrix similarity matrices.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
-#print("feature matrix dimensions: {}".format(gFeatures.shape))
-#print("# paths: {}".format(len(pathList)))
-
 
 # 6) Save the raw feature vectors to the sample folders
 i = -1
@@ -220,45 +222,6 @@ for sDir in oSubDirList :
 #end loop
 print("Finished writing PathSim feature vector files.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-
-
-
-# # 7) Get the neighborhood of each gene (in terms of path)
-# #	Build the feature vector matrices for each sample
-# gFeatures = np.zeros( (len(geneDict), len(pathDict),
-# 	len(oSampLists)), dtype=np.float32 )
-
-# # populate dimension 2 from each path
-# dim2 = -1
-# for p in pathList :
-# 	dim2 += 1
-
-# 	# load the PathSim matrix
-# 	cMatrix = mp.getPathMatrix(pathDict[p], ePath,
-# 		eName, mxSize)
-
-# 	# populate dimension 3 from each sample
-# 	dim3 = -1
-# 	for giList in oSampLists :
-# 		dim3 += 1
-
-# 		# calculate feature for this sample variant
-# 		simSet = np.sum( simMatrix[:,giList], axis=1 )
-# 		gFeatures[:,dim2,dim3] = simSet[:]
-# 	#end loop
-
-# 	if newVerbose :
-# 		print("  Examined path {}, {}".format(dim2, p))
-# 		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-# 	elif not (dim2 % 25) :
-# 		print("  Examined {} of {} paths...".format(dim2, len(pathList)))
-# 		print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-# #end loop
-# print("Finished examining matrix similarity matrices.")
-# print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-
-
-#TODO: begin output file in root of batch ?
 
 
 
