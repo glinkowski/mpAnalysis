@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-set01'
+sDir = '../Dropbox/mp/output/pred04-dbgap01'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -153,7 +153,8 @@ for si in dSubDirs :
 
 	# 4) Load the PathSim features
 	if useFeatPaths :
-		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
+#		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
+		featPSVals = np.loadtxt(si + fSimilarity)
 		# NOTE: previous version of mpPredict04a had extra zeros at end of vectors;
 		#	discarding those columns
 		featPSVals = featPSVals[:,0:len(pathNames)]
