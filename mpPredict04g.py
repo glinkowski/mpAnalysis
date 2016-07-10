@@ -293,44 +293,46 @@ for si in dSubDirs :
 		# Extract indices corresponding to top 5 weighted features
 		featWeights = cfier.coef_
 		numFeats = len(np.nonzero(featWeights)[0])
-		topFeats = np.ones( (numFeats), dtype=np.int32 ) * (-1)
-		for num in range(numFeats) :
-			featIdx = np.argmax(featWeights)
-			topFeats[num] = featIdx
-			featWeights[featIdx] = 0
-		#end loop
+		if numFeats > 0 :
+			topFeats = np.ones( (numFeats), dtype=np.int32 ) * (-1)
+			for num in range(numFeats) :
+				featIdx = np.argmax(featWeights)
+				topFeats[num] = featIdx
+				featWeights[featIdx] = 0
+			#end loop
 
-		# Increment count for the Top 1 path
-		if topFeats[0] in featT1Set :
-			featT1Dict[topFeats[0]] += 1
-		else :
-			featT1Dict[topFeats[0]] = 1
-			featT1Set.add(topFeats[0])
+			# Increment count for the Top 1 path
+			if topFeats[0] in featT1Set :
+				featT1Dict[topFeats[0]] += 1
+			else :
+				featT1Dict[topFeats[0]] = 1
+				featT1Set.add(topFeats[0])
+			#end if
+
+			# Increment count for the Top 5 paths
+			for num in range(5) :
+				if numFeats <= num :
+					break
+				#end if
+				if topFeats[num] in featT5Set :
+					featT5Dict[topFeats[num]] += 1
+				else :
+					featT5Dict[topFeats[num]] = 1
+					featT5Set.add(topFeats[num])
+			#end loop
+
+			# Increment count for all non-zero paths
+			for num in range(numFeats) :
+				if numFeats <= num :
+					break
+				#end if
+				if topFeats[num] in featTASet :
+					featTADict[topFeats[num]] += 1
+				else :
+					featTADict[topFeats[num]] = 1
+					featTASet.add(topFeats[num])
+			#end loop
 		#end if
-
-		# Increment count for the Top 5 paths
-		for num in range(5) :
-			if numFeats <= num :
-				break
-			#end if
-			if topFeats[num] in featT5Set :
-				featT5Dict[topFeats[num]] += 1
-			else :
-				featT5Dict[topFeats[num]] = 1
-				featT5Set.add(topFeats[num])
-		#end loop
-
-		# Increment count for all non-zero paths
-		for num in range(numFeats) :
-			if numFeats <= num :
-				break
-			#end if
-			if topFeats[num] in featTASet :
-				featTADict[topFeats[num]] += 1
-			else :
-				featTADict[topFeats[num]] = 1
-				featTASet.add(topFeats[num])
-		#end loop
 
 	#end loop (per-cluster loop)
 
