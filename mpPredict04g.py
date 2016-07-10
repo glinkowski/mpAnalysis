@@ -325,11 +325,11 @@ for si in dSubDirs :
 			if numFeats <= num :
 				break
 			#end if
-			if fi in featTASet :
-				featTADict[fi] += 1
+			if topFeats[num] in featTASet :
+				featTADict[topFeats[num]] += 1
 			else :
-				featTADict[fi] = 1
-				featTASet.add(fi)
+				featTADict[topFeats[num]] = 1
+				featTASet.add(topFeats[num])
 		#end loop
 
 	#end loop (per-cluster loop)
