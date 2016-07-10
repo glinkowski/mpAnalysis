@@ -202,10 +202,14 @@ for si in dSubDirs :
 	#	then predict on the rest
 	geneRanks = np.zeros( (len(geneDict), nClus), dtype=np.int32 )
 	geneScores = np.zeros( (len(geneDict), nClus), dtype=np.float32 )
+
+	# Store the number of clusters which use certain features
 	featT1Dict = dict()
 	featT1Set = set()
 	featT5Dict = dict()
 	featT5Set = set()
+	featTADict = dict()
+	featTASet = set()
 
 	col = -1
 	for cv in clusVals :
@@ -280,37 +284,55 @@ for si in dSubDirs :
 
 
 
-		# 9) 
-#TODO: collect feature names & meaningful stats
+		# 9) Collect top features (& other stats?)
+
+		# For each cluster, for each feature,
+		#	increment count if feat in top X for that cluster
+		#	will later output how often feat used across all clusters
 
 		# Extract indices corresponding to top 5 weighted features
 		featWeights = cfier.coef_
-		topPaths = np.ones( (5), dtype=np.int32 ) * (-1)
-		for num in range(5) :
-			if (len(np.nonzero(featWeights)[0]) <= num) :
-				break
+		numFeats = len(np.nonzero(featWeights)[0])
+		topFeats = np.ones( (numFeats), dtype=np.int32 ) * (-1)
+		for num in range(numFeats) :
 			featIdx = np.argmax(featWeights)
-			topPaths[num] = featIdx
+			topFeats[num] = featIdx
 			featWeights[featIdx] = 0
-		#end if
+		#end loop
 
 		# Increment count for the Top 1 path
-		if topPaths[0] in featT1Set :
-			featT1Dict[topPaths[0]] += 1
+		if topFeats[0] in featT1Set :
+			featT1Dict[topFeats[0]] += 1
 		else :
-			featT1Dict[topPaths[0]] = 1
-			featT1Set.add(topPaths[0])
+			featT1Dict[topFeats[0]] = 1
+			featT1Set.add(topFeats[0])
 		#end if
 
 		# Increment count for the Top 5 paths
 		for num in range(5) :
-			if topPaths[num] in featT5Set :
-				featT5Dict[topPaths[num]] += 1
+			if numFeats <= num :
+				break
+			#end if
+			if topFeats[num] in featT5Set :
+				featT5Dict[topFeats[num]] += 1
 			else :
-				featT5Dict[topPaths[num]] = 1
-				featT5Set.add(topPaths[num])
+				featT5Dict[topFeats[num]] = 1
+				featT5Set.add(topFeats[num])
 		#end loop
-	#end loop
+
+		# Increment count for all non-zero paths
+		for num in range(numFeats) :
+			if numFeats <= num :
+				break
+			#end if
+			if fi in featTASet :
+				featTADict[fi] += 1
+			else :
+				featTADict[fi] = 1
+				featTASet.add(fi)
+		#end loop
+
+	#end loop (per-cluster loop)
 
 
 
@@ -376,8 +398,8 @@ for si in dSubDirs :
 	row = -1
 	for item in pathIdxList :
 		row += 1
-		featT1Sort['pathIdx'] = item
-		featT1Sort['count'] = featT1Dict[item]
+		featT1Sort['pathIdx'][row] = item
+		featT1Sort['count'][row] = featT1Dict[item]
 	#end if
 	featT1Sort[::-1].sort(order=['count', 'pathIdx'])
 
@@ -408,6 +430,26 @@ for si in dSubDirs :
 		for row in range(len(featT5Sort)) :
 			fout.write('\n{}{}{}'.format(featT5Sort['count'][row],
 				textDelim, featNames[featT5Sort['pathIdx'][row]]))
+	#end with
+
+	# Sort the Top All Non-Zero paths
+	featTASort = np.recarray( len(featTADict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
+	pathIdxList = list(featTADict.keys())
+	row = -1
+	for item in pathIdxList :
+		row += 1
+		featTASort['pathIdx'][row] = item
+		featTASort['count'][row] = featTADict[item]
+	#end if
+	featTASort[::-1].sort(order=['count', 'pathIdx'])
+
+	# Save the Top All Non-Zero paths to file
+	fname = 'ranked_features_TopNZ-' + useLabel + '.txt'
+	with open(si + fname, 'w') as fout :
+		fout.write('Clusters:{}{}'.format(textDelim, nClus))
+		for row in range(len(featTASort)) :
+			fout.write('\n{}{}{}'.format(featTASort['count'][row],
+				textDelim, featNames[featTASort['pathIdx'][row]]))
 	#end with
 
 
