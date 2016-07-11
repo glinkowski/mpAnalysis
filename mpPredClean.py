@@ -53,9 +53,7 @@ for si in dSubDirs :
 	fileList.sort()
 
 	for fn in fileList :
-		if fn.startswith('AUC-') and fn.endswith('.png') :
-			os.remove(si + fn)
-		elif fn.startswith('parameters-') and fn.endswith('.txt') :
+		if fn.startswith('parameters-') and fn.endswith('.txt') :
 			os.remove(si + fn)
 		elif fn.startswith('ranked_features_Top') and fn.endswith('.txt') :
 			os.remove(si + fn)
@@ -63,6 +61,8 @@ for si in dSubDirs :
 			os.remove(si + fn)
 		elif fn.startswith('ranked_paths-') and fn.endswith('.txt') :
 			os.remove(si + fn)
+#		elif fn.startswith('AUC-') and fn.endswith('.png') :
+#			os.remove(si + fn)
 	#end loop
 #end loop
 
