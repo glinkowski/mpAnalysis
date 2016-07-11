@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-dbgap01'
+sDir = '../Dropbox/mp/output/pred04-test01'
 
 # File name containing feature vectors
 fSimilarity = 'features_PathSim.gz'
