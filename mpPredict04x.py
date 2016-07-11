@@ -36,7 +36,7 @@ import sys
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-test01'
+dDir = 'pred04-set01'
 dRoot = '../Dropbox/mp/output/'
 
 
@@ -133,7 +133,7 @@ for si in dSubDirs :
 	prevSN = sn
 #end loop
 if prevNumFolds != numFolds :
-	print("ERROR: inconsistent number of folders per sample.")
+	print("ERROR: inconsistent number of folds per sample.")
 	sys.exit()
 #end if
 sampList = list(sampSet)
@@ -150,19 +150,23 @@ fileList.sort()
 # ERROR CHECK: ensure ranked_genes & ranked_paths files exist
 rg = 0
 rp = 0
+rf = 0
 for item in fileList :
 	iv = item.split('/')
 	if iv[-1].startswith('ranked_genes') :
 		rg += 1
 	elif iv[-1].startswith('ranked_paths') :
 		rp += 1
+	elif iv[-1].startswith('ranked_features') :
+		rf += 1
 #end loop
 if rg < 1 :
 	print("ERROR: No ranked_genes... files exist in {}".format(dSubDirs[0]))
 	sys.exit
 elif rp < 1 :
-	print("ERROR: No ranked_paths... files exist in {}".format(dSubDirs[0]))
-	sys.exit
+	print("WARNING: No ranked_paths... files exist in {}".format(dSubDirs[0]))
+elif rf < 1 :
+	print("WARNING: No ranked_features... files exist in {}".format(dSubDirs[0]))
 #end if
 
 # Get list of the methods used from the file names
@@ -457,6 +461,7 @@ print("Finding how often each feature is used in each sample ...")
 # Get list of the methods used from the file names
 #	ie: 'ranked_featurs_Top<N>-<method_description>.txt'
 methodTopFList = list()
+checkTopN = [0, 0, 0]
 for item in fileList :
 	iv = item.split('/')
 	fn = iv[-1]
@@ -465,112 +470,119 @@ for item in fileList :
 		fn = fn[0:-4]
 		fv = fn.split('-')
 		methodTopFList.append(fv[1])
+	if fn.startswith('ranked_features_Top5') :
+		checkTopN[1] += 1
+	if fn.startswith('ranked_features_TopNV') :
+		checkTopN[2] += 1
 #end loop
 methodTopFList.sort()
 
-# Store the importance values for each feature, per fold
-# 'folds' holds all scores for all cross-val folds; 'samples' is avg across sample
-fTopFolds = np.zeros( (64, len(dSubDirs)), dtype=np.float64 )
-fTopSamples = np.zeros( (64, len(sampList)), dtype=np.float64 )
-# fTop1Folds = np.zeros( (64, len(dSubDirs)), dtype=np.float64 )
-# fTop1Samples = np.zeros( (64, len(sampList)), dtype=np.float64 )
-# fTop5Folds = np.zeros( (128, len(dSubDirs)), dtype=np.float64 )
-# fTop5Samples = np.zeros( (128, len(sampList)), dtype=np.float64 )
-# fTopNZFolds = np.zeros( (256, len(dSubDirs)), dtype=np.float64 )
-# fTopNZSamples = np.zeros( (256, len(sampList)), dtype=np.float64 )
+# Perform this on the three files: Top1, Top5, TopNV
+whichTopN = ['1', '5', 'NZ']
+for wn in whichTopN :
+	# Store the importance values for each feature, per fold
+	# 'folds' holds scores for each cross-val fold; 'samples' is avg across sample
+	fTopFolds = np.zeros( (64, len(dSubDirs)), dtype=np.float64 )
+	fTopSamples = np.zeros( (64, len(sampList)), dtype=np.float64 )
 
-# dict will point to row indices in the array
-fTopDict = dict()
-fTopList = list()
-fNumEntries = 0
+	# dict will point to row indices in the array
+	fTopDict = dict()
+	fTopList = list()
+	fNumEntries = 0
 
-fcol = -1
-#for si in dSubDirs[0:1] :
-for si in dSubDirs :
-	fcol += 1
+	fcol = -1
+	#for si in dSubDirs[0:1] :
+	for si in dSubDirs :
+		fcol += 1
 
-	fTopEveryM = np.zeros( (len(pathList), len(methodTopFList)) )
+		fTopEveryM = np.zeros( (64, len(methodTopFList)), dtype=np.float64 )
 
-	# Get data relating to each method
-	ecol = -1
-	for m in methodTopFList :
-		ecol += 1
+		# Get data relating to each method
+		ecol = -1
+		for m in methodTopFList :
+			ecol += 1
 
-		fn = 'ranked_features_Top1-' + m + '.txt'
-		# Skip if the file is missing
-		if not os.path.isfile(si + fn) :
-			continue
+			fn = 'ranked_features_Top' + wn + '-' + m + '.txt'
+			# Skip if the file is missing
+			if not os.path.isfile(si + fn) :
+				continue
 
-		# Read in the ranked_features file
-		with open(si + fn, 'r') as fin :
-			# first line tells how many clusters were created
-			firstLine = fin.readline()
-			firstLine = firstLine.rstrip()
-			flv = firstLine.split(textDelim)
-			denom = flv[1]
+			# Read in the ranked_features file
+			with open(si + fn, 'r') as fin :
+				# first line tells how many clusters were created
+				firstLine = fin.readline()
+				firstLine = firstLine.rstrip()
+				flv = firstLine.split(textDelim)
+				denom = flv[1]
 
-			# the rest of the lines give the count for each feature
-			for line in fin :
-				line = line.rstrip()
-				lv = line.split(textDelim)
+				# the rest of the lines give the count for each feature
+				for line in fin :
+					line = line.rstrip()
+					lv = line.split(textDelim)
 
-				# get the row index for that feature (and add to dict)
-				if lv[1] in fTopList :
-					idx = fTopDict[lv[0]]
-				else :
-					fTopList.add(lv[1])
-					idx = fNumEntries
-					fTopDict[lv[1]] = fNumEntries
-					fNumEntries += 1
-				#end if
+					# get the row index for that feature (and add to dict)
+					if lv[1] in fTopList :
+						idx = fTopDict[lv[1]]
+					else :
+						fTopList.append(lv[1])
+						idx = fNumEntries
+						fTopDict[lv[1]] = fNumEntries
+						fNumEntries += 1
+					#end if
 
-				score = lv[0] / float(denom)
-				fTopEveryM[idx,ecol] = score
-		#end with
+					if fNumEntries >= fTopEveryM.shape[0] :
+						fPadEveryM = np.zeros( fTopEveryM.shape, dtype=np.float64)
+						fTopEveryM = np.concatenate( (fTopEveryM, fPadEveryM),
+							axis=0 )
 
-		# Grow the matrix length (dim 0) if necessary
-		if fNumEntries >= fTopFolds.shape[0] :
-			fPadFolds = np.zeros( fTopFolds.shape, dtype=np.float64 )
-			fTopFolds = np.concatenate( (fTopFolds, fPadFolds), axis=0 )
-			fPadSamples = np.zeros( fTopSamples.shape, dtype=np.float64 )
-			fTopSamples = np.concatenate( (fTopSamples, fPadSamples), axis=0 )
-		#end if
+					score = int(lv[0]) / float(denom)
+					fTopEveryM[idx,ecol] = score
+			#end with
 
-		# place average into larger folds table
-		fTopFolds[:,fcol] = np.mean(fTopEveryM, axis=1)
-#end loop
+			# Grow the matrix length (dim 0) if necessary
+			while fNumEntries >= fTopFolds.shape[0] :
+				fPadFolds = np.zeros( fTopFolds.shape, dtype=np.float64 )
+				fTopFolds = np.concatenate( (fTopFolds, fPadFolds), axis=0 )
+				fPadSamples = np.zeros( fTopSamples.shape, dtype=np.float64 )
+				fTopSamples = np.concatenate( (fTopSamples, fPadSamples), axis=0 )
+			#end loop
 
-
-# Get average path scores for each sample, across all folds
-for i in range(len(sampList)) :
-	left = i * numFolds
-	right = left + numFolds
-
-	fTopSamples[:,i] = np.mean(fTopFolds[:,left:right], axis=1)
-#end loop
+			# place average into larger folds table
+			fTopFolds[:,fcol] = np.mean(fTopEveryM, axis=1)
+	#end loop
 
 
+	# Get average path scores for each sample, across all folds
+	for i in range(len(sampList)) :
+		left = i * numFolds
+		right = left + numFolds
 
-# 9) Output to file(s)
-print("Writing the Top N features files ...")
+		fTopSamples[:,i] = np.mean(fTopFolds[:,left:right], axis=1)
+	#end loop
 
-fMinScores = np.amin(fTopSamples, axis=0)
-with open(dPath + 'results-FeaturesTop1.txt', 'w') as fout :
-	fout.write('Feature Importance for each sample, averaged across folds')
-	fout.write('\nnetwork:{}{}'.format(textDelim, eName))
-	fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
-	fout.write('\n\n')
 
-	for j in range(len(sampList)) :
-		fout.write('{}{}'.format( sampList[j], textDelim ))
-	#fout.write('\n')
 
-	for i in range(fNumEntries) :
-		fout.write('\n')
+	# 9) Output to file(s)
+	print("Writing the Top {} features files ...".format(wn))
+
+	fMinScores = np.amin(fTopSamples, axis=0)
+	with open(dPath + 'results-FeaturesTop' + wn + '.txt', 'w') as fout :
+		fout.write('Feature Importance for each sample, averaged across folds')
+		fout.write('\nnetwork:{}{}'.format(textDelim, eName))
+		fout.write('\nfolds:{}{}'.format(textDelim, numFolds))
+		fout.write('\n\n')
+
 		for j in range(len(sampList)) :
-			fout.write('{}{}'.format( fTopSamples[i,j], textDelim ))
-		fout.write('{}'.format(fTopList[i]))
-#end with
+			fout.write('{}{}'.format( sampList[j], textDelim ))
+		#fout.write('\n')
+
+		for i in range(fNumEntries) :
+			fout.write('\n')
+			for j in range(len(sampList)) :
+				fout.write('{}{}'.format( fTopSamples[i,j], textDelim ))
+			fout.write('{}{}{}'.format( fTopList[i], textDelim,
+				(fTopList[i].count('-') + 1) ))
+	#end with
 
 
 
