@@ -36,7 +36,7 @@ import sys
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-set01'
+dDir = 'pred04-msig202'
 dRoot = '../Dropbox/mp/output/'
 
 
@@ -530,10 +530,11 @@ for wn in whichTopN :
 						fNumEntries += 1
 					#end if
 
-					if fNumEntries >= fTopEveryM.shape[0] :
+					while fNumEntries >= fTopEveryM.shape[0] :
 						fPadEveryM = np.zeros( fTopEveryM.shape, dtype=np.float64)
 						fTopEveryM = np.concatenate( (fTopEveryM, fPadEveryM),
 							axis=0 )
+					#end loop
 
 					score = int(lv[0]) / float(denom)
 					fTopEveryM[idx,ecol] = score
