@@ -28,6 +28,7 @@ import numpy as np
 import gzip
 from sklearn import linear_model as lm
 import random
+import numpy as np
 
 
 
@@ -35,10 +36,12 @@ import random
 # PARAMETERS
 
 # number of rounds over which to vote
-numVotes = 100
+numVotes = 17
+# how many times larger than pos should neg sample be?
+negMultiplier = 3
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set03'
+dDir = 'pred04-dbgap02'
 
 # Input names & locations
 useNtwk = 1		# network & samples to use (0 means fake)
@@ -145,7 +148,8 @@ for si in dSubDirs :
 	print("  ... creating train & test data ...")
 
 	# Read in the feature vectors
-	features = mp.readFileAsMatrix(si, fSimilarity)
+#	features = mp.readFileAsMatrix(si, fSimilarity)
+	features = np.loadtxt(si + fSimilarity)
 
 	# NOTE: previous version of mpPredict04a had extra zeros at end of vectors
 	#	discarding those columns
@@ -168,7 +172,7 @@ for si in dSubDirs :
 	# Extract the vectors for neg & Test sets
 	# as one-class: train with rand samp from Unknown
 	#		test with all Unknown (TrueNeg + Hidden)
-	nExamples = min( 2 * len(giKnown), (len(geneDict) - len(giKnown)) )
+	nExamples = min( negMultiplier * len(giKnown), (len(geneDict) - len(giKnown)) )
 	giTrainNeg = random.sample(giUnknown, nExamples)
 
 	negTrain = features[giTrainNeg]
@@ -331,7 +335,7 @@ for si in dSubDirs :
 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
 	# write the file
-	fname = 'ranked_paths-Lasso_Voting1C_{}.txt'.format(numVotes)
+	fname = 'ranked_paths-Lasso_Voting1C_{}_x{}.txt'.format(numVotes, negMultiplier)
 	print("Saving data for the Voting (One-Class) approach ...")
 	if newVerbose :
 		print("  Saving top paths to file {}".format(fname))
@@ -355,7 +359,7 @@ for si in dSubDirs :
 	cfGenes.sort(order=['rank','gene'])
 
 	# write the file
-	fname = 'ranked_genes-Lasso_Voting1C_{}.txt'.format(numVotes)
+	fname = 'ranked_genes-Lasso_Voting1C_{}_x{}.txt'.format(numVotes, negMultiplier)
 	if newVerbose :
 		print("  Saving ranked genes to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
@@ -370,7 +374,7 @@ for si in dSubDirs :
 
 
 	# Save the parameters & results
-	fname = 'parameters-Lasso_Voting1C_{}.txt'.format(numVotes)
+	fname = 'parameters-Lasso_Voting1C_{}_x{}.txt'.format(numVotes, negMultiplier)
 	if newVerbose :
 		print("  Saving parameters to file {}".format(fname))
 	with open(si+fname, 'w') as fout :
