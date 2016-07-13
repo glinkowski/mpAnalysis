@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-dDir = 'pred04-set04'
+dDir = 'pred04-test01'
 dRoot = '../Dropbox/mp/output/'
 
 # File name containing feature vectors
@@ -48,7 +48,9 @@ lgCs = 11
 #lgCs = 10
 lgPenalty = 'l2'
 lgDual = False
-lgMaxIter = 500
+lgMaxIter = 1000
+lgSolver = 'sag'
+
 
 # Elastic Net params
 enRatios = [0.3, 0.5, 0.75, 0.9, 0.95]
@@ -201,7 +203,8 @@ for si in dSubDirs :
 	print("  ... performing regression ...")
 
 	# Train Log Regression
-	cfLog = lm.LogisticRegressionCV(Cs=lgCs, penalty=lgPenalty, dual=lgDual, max_iter=lgMaxIter)
+	cfLog = lm.LogisticRegressionCV(Cs=lgCs, penalty=lgPenalty, dual=lgDual,
+		max_iter=lgMaxIter, solver=lgSolver)
 	cfLog.fit(trainSet, trainLabel)
 
 	# The meaning of this score is questionable,
@@ -211,10 +214,11 @@ for si in dSubDirs :
 	print("  using {} coefficients, C = {} = e^{}".format(
 		len(np.nonzero(cfLog.coef_)[0]), cfLog.C_,  np.log(cfLog.C_) ))
 
-	cfPredLabel = cfLog.predict(testSet)
+#	cfPredLabel = cfLog.predict(testSet)
+	cfProbability = cfLog.predict_proba(testSet)
 #	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
+	cfPredLabel = cfProbability[:,1]
 	cfPredLabel = np.ravel(cfPredLabel)
-
 
 
 	# 5) Output results to file, Logarithmic
@@ -294,209 +298,209 @@ for si in dSubDirs :
 
 
 
-	# ####### ####### ####### #######
-	# 4) Perform the regression analysis, Elastic Net (non-Pos)
-	print("Elastic Net ...")
-	print("  ... performing regression ...")
+# 	# ####### ####### ####### #######
+# 	# 4) Perform the regression analysis, Elastic Net (non-Pos)
+# 	print("Elastic Net ...")
+# 	print("  ... performing regression ...")
 
-	# Train Log Regression
-	cfENet = lm.ElasticNetCV(l1_ratio=enRatios, positive=False, fit_intercept=enFitIncept,
-		n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
-	cfENet.fit(trainSet, trainLabel)
+# 	# Train Log Regression
+# 	cfENet = lm.ElasticNetCV(l1_ratio=enRatios, positive=False, fit_intercept=enFitIncept,
+# 		n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
+# 	cfENet.fit(trainSet, trainLabel)
 
-	# The meaning of this score is questionable,
-	#	mostly keeping it for curiosity
-	cfScore = cfENet.score(trainSet, trainLabel)
-	print("Elastic Net stuff:".format(cfScore))
-	print("  # coefficients: {}".format( len(np.nonzero(cfENet.coef_)[0]) ))
-	print("  l1 ratio: {}".format(cfENet.l1_ratio_))
-	print("  alpha: {}".format(cfENet.alpha_))
-	print("  iterations: {}".format(cfENet.n_iter_))
-#	print("  all alphas: {}".format(cfENet.alphas_))
+# 	# The meaning of this score is questionable,
+# 	#	mostly keeping it for curiosity
+# 	cfScore = cfENet.score(trainSet, trainLabel)
+# 	print("Elastic Net stuff:".format(cfScore))
+# 	print("  # coefficients: {}".format( len(np.nonzero(cfENet.coef_)[0]) ))
+# 	print("  l1 ratio: {}".format(cfENet.l1_ratio_))
+# 	print("  alpha: {}".format(cfENet.alpha_))
+# 	print("  iterations: {}".format(cfENet.n_iter_))
+# #	print("  all alphas: {}".format(cfENet.alphas_))
 
-	cfPredLabel = cfENet.predict(testSet)
-#	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
-	cfPredLabel = np.ravel(cfPredLabel)
-
-
-
-	# 5) Output results to file, Elastic Net (non-Pos)
-
-	# Save the selected paths & scores/weights
-	# 	feature coefficients are the metapath weights
-	cfCoefs = cfENet.coef_
-#	print(cfENet.coef_)
-#	print(cfCoefs)
-	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
-	for row in range(len(cfCoefs)) :
-		cfPaths[row] = (row, cfCoefs[row])
-	# row = 0
-	# for c in cfCoefs :
-	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
-	# 	row += 1
-	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
-
-	# write the file
-	fname = 'ranked_paths-ElasticNet.txt'
-	print("Saving data for the Elastic Net approach ...")
-	print("  Saving top paths to file {}".format(fname))
-	with open(si+fname, 'w') as fout :
-		fout.write('intercept:{}{}'.format(textDelim, cfENet.intercept_))
-		for row in range(len(cfPaths)) :
-			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
-				textDelim, pathNames[cfPaths['path'][row]]))
-	#end with
-
-#	# Save the genes from the test set to a file
-#	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
-#		giHidden, retCutoffs)
-
-	#Sort the genes by (inverse) rank
-	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
-	cfGenes['gene'] = giTest
-	cfGenes['rank'] = np.ravel(cfPredLabel)
-	cfGenes[::-1].sort(order=['rank','gene'])
-
-	# write the file
-	fname = 'ranked_genes-ElasticNet.txt'
-	print("  Saving ranked genes to file {}".format(fname))
-	with open(si+fname, 'w') as fout :
-		firstRow = True
-		for row in range(len(cfGenes)) :
-			if not firstRow :
-				fout.write('\n')
-			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
-				textDelim, geneList[cfGenes['gene'][row]]))
-			firstRow = False
-	#end with
-
-	# Save the parameters & results
-	fname = 'parameters-ElasticNet.txt'
-	with open(si+fname, 'w') as fout :
-		fout.write('\n')
-		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as One-Class\n')
-		fout.write('\n')
-
-		fout.write('Log Regression Parameters\n')
-		fout.write('method:{}ElasticNet CV\n'.format(textDelim))
-		fout.write('ratio range:{}{}\n'.format(textDelim, lgCs))
-		fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
-		fout.write('alpha chosen:{}{}\n'.format(textDelim, cfENet.alpha_))
-		fout.write('n_iter:{}{}\n'.format(textDelim, cfENet.n_iter_))
-		fout.write('intercept:{}{}\n'.format(textDelim, cfENet.intercept_))
-		fout.write('\n')
-
-		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
-		fout.write('Prediction Results\n')
-		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfENet.coef_)[0])))
-		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfENet.score(trainSet, trainLabel)))
-		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfENet.score(testSet, testLabel)))
-		fout.write('\n')
-	#end with
+# 	cfPredLabel = cfENet.predict(testSet)
+# #	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
+# 	cfPredLabel = np.ravel(cfPredLabel)
 
 
 
-	# ####### ####### ####### #######
-	# 4) Perform the regression analysis, Elastic Net (Pos Coeffs only)
-	print("Elastic Net w/ only Positive coefficients ...")
-	print("  ... performing regression ...")
+# 	# 5) Output results to file, Elastic Net (non-Pos)
 
-	# Train Log Regression
-	cfENet = lm.ElasticNetCV(l1_ratio=enRatios, positive=True, fit_intercept=enFitIncept,
-		n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
-	cfENet.fit(trainSet, trainLabel)
+# 	# Save the selected paths & scores/weights
+# 	# 	feature coefficients are the metapath weights
+# 	cfCoefs = cfENet.coef_
+# #	print(cfENet.coef_)
+# #	print(cfCoefs)
+# 	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
+# 	for row in range(len(cfCoefs)) :
+# 		cfPaths[row] = (row, cfCoefs[row])
+# 	# row = 0
+# 	# for c in cfCoefs :
+# 	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
+# 	# 	row += 1
+# 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
-	# The meaning of this score is questionable,
-	#	mostly keeping it for curiosity
-	cfScore = cfENet.score(trainSet, trainLabel)
-	print("Elastic Net stuff:".format(cfScore))
-	print("  # coefficients: {}".format( len(np.nonzero(cfENet.coef_)[0]) ))
-	print("  l1 ratio: {}".format(cfENet.l1_ratio_))
-	print("  alpha: {}".format(cfENet.alpha_))
-	print("  iterations: {}".format(cfENet.n_iter_))
-#	print("  all alphas: {}".format(cfENet.alphas_))
+# 	# write the file
+# 	fname = 'ranked_paths-ElasticNet.txt'
+# 	print("Saving data for the Elastic Net approach ...")
+# 	print("  Saving top paths to file {}".format(fname))
+# 	with open(si+fname, 'w') as fout :
+# 		fout.write('intercept:{}{}'.format(textDelim, cfENet.intercept_))
+# 		for row in range(len(cfPaths)) :
+# 			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
+# 				textDelim, pathNames[cfPaths['path'][row]]))
+# 	#end with
 
-	cfPredLabel = cfENet.predict(testSet)
-#	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
-	cfPredLabel = np.ravel(cfPredLabel)
+# #	# Save the genes from the test set to a file
+# #	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
+# #		giHidden, retCutoffs)
+
+# 	#Sort the genes by (inverse) rank
+# 	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
+# 	cfGenes['gene'] = giTest
+# 	cfGenes['rank'] = np.ravel(cfPredLabel)
+# 	cfGenes[::-1].sort(order=['rank','gene'])
+
+# 	# write the file
+# 	fname = 'ranked_genes-ElasticNet.txt'
+# 	print("  Saving ranked genes to file {}".format(fname))
+# 	with open(si+fname, 'w') as fout :
+# 		firstRow = True
+# 		for row in range(len(cfGenes)) :
+# 			if not firstRow :
+# 				fout.write('\n')
+# 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
+# 				textDelim, geneList[cfGenes['gene'][row]]))
+# 			firstRow = False
+# 	#end with
+
+# 	# Save the parameters & results
+# 	fname = 'parameters-ElasticNet.txt'
+# 	with open(si+fname, 'w') as fout :
+# 		fout.write('\n')
+# 		fout.write('Sampling Method for Neg examples\n')
+# 		fout.write('  as One-Class\n')
+# 		fout.write('\n')
+
+# 		fout.write('Log Regression Parameters\n')
+# 		fout.write('method:{}ElasticNet CV\n'.format(textDelim))
+# 		fout.write('ratio range:{}{}\n'.format(textDelim, lgCs))
+# 		fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
+# 		fout.write('alpha chosen:{}{}\n'.format(textDelim, cfENet.alpha_))
+# 		fout.write('n_iter:{}{}\n'.format(textDelim, cfENet.n_iter_))
+# 		fout.write('intercept:{}{}\n'.format(textDelim, cfENet.intercept_))
+# 		fout.write('\n')
+
+# 		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
+# 		fout.write('Prediction Results\n')
+# 		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfENet.coef_)[0])))
+# 		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfENet.score(trainSet, trainLabel)))
+# 		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfENet.score(testSet, testLabel)))
+# 		fout.write('\n')
+# 	#end with
 
 
 
-	# 5) Output results to file, Elastic Net (Pos Coeffs only)
+# 	# ####### ####### ####### #######
+# 	# 4) Perform the regression analysis, Elastic Net (Pos Coeffs only)
+# 	print("Elastic Net w/ only Positive coefficients ...")
+# 	print("  ... performing regression ...")
 
-	# Save the selected paths & scores/weights
-	# 	feature coefficients are the metapath weights
-	cfCoefs = cfENet.coef_
-#	print(cfENet.coef_)
-#	print(cfCoefs)
-	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
-	for row in range(len(cfCoefs)) :
-		cfPaths[row] = (row, cfCoefs[row])
-	# row = 0
-	# for c in cfCoefs :
-	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
-	# 	row += 1
-	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
+# 	# Train Log Regression
+# 	cfENet = lm.ElasticNetCV(l1_ratio=enRatios, positive=True, fit_intercept=enFitIncept,
+# 		n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
+# 	cfENet.fit(trainSet, trainLabel)
 
-	# write the file
-	fname = 'ranked_paths-ElasticNet_Pos.txt'
-	print("Saving data for the Elastic Net approach ...")
-	print("  Saving top paths to file {}".format(fname))
-	with open(si+fname, 'w') as fout :
-		fout.write('intercept:{}{}'.format(textDelim, cfENet.intercept_))
-		for row in range(len(cfPaths)) :
-			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
-				textDelim, pathNames[cfPaths['path'][row]]))
-	#end with
+# 	# The meaning of this score is questionable,
+# 	#	mostly keeping it for curiosity
+# 	cfScore = cfENet.score(trainSet, trainLabel)
+# 	print("Elastic Net stuff:".format(cfScore))
+# 	print("  # coefficients: {}".format( len(np.nonzero(cfENet.coef_)[0]) ))
+# 	print("  l1 ratio: {}".format(cfENet.l1_ratio_))
+# 	print("  alpha: {}".format(cfENet.alpha_))
+# 	print("  iterations: {}".format(cfENet.n_iter_))
+# #	print("  all alphas: {}".format(cfENet.alphas_))
 
-#	# Save the genes from the test set to a file
-#	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
-#		giHidden, retCutoffs)
+# 	cfPredLabel = cfENet.predict(testSet)
+# #	cfPredLabel = cfPredLabel.reshape( (len(cfPredLabel), 1) )
+# 	cfPredLabel = np.ravel(cfPredLabel)
 
-	#Sort the genes by (inverse) rank
-	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
-	cfGenes['gene'] = giTest
-	cfGenes['rank'] = np.ravel(cfPredLabel)
-	cfGenes[::-1].sort(order=['rank','gene'])
 
-	# write the file
-	fname = 'ranked_genes-ElasticNet_Pos.txt'
-	print("  Saving ranked genes to file {}".format(fname))
-	with open(si+fname, 'w') as fout :
-		firstRow = True
-		for row in range(len(cfGenes)) :
-			if not firstRow :
-				fout.write('\n')
-			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
-				textDelim, geneList[cfGenes['gene'][row]]))
-			firstRow = False
-	#end with
 
-	# Save the parameters & results
-	fname = 'parameters-ElasticNet_Pos.txt'
-	with open(si+fname, 'w') as fout :
-		fout.write('\n')
-		fout.write('Sampling Method for Neg examples\n')
-		fout.write('  as One-Class\n')
-		fout.write('\n')
+# 	# 5) Output results to file, Elastic Net (Pos Coeffs only)
 
-		fout.write('Log Regression Parameters\n')
-		fout.write('method:{}ElasticNet CV\n'.format(textDelim))
-		fout.write('ratio range:{}{}\n'.format(textDelim, lgCs))
-		fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
-		fout.write('alpha chosen:{}{}\n'.format(textDelim, cfENet.alpha_))
-		fout.write('n_iter:{}{}\n'.format(textDelim, cfENet.n_iter_))
-		fout.write('intercept:{}{}\n'.format(textDelim, cfENet.intercept_))
-		fout.write('\n')
+# 	# Save the selected paths & scores/weights
+# 	# 	feature coefficients are the metapath weights
+# 	cfCoefs = cfENet.coef_
+# #	print(cfENet.coef_)
+# #	print(cfCoefs)
+# 	cfPaths = np.recarray( len(cfCoefs), dtype=[('path', 'i4'), ('weight', 'f4')] )
+# 	for row in range(len(cfCoefs)) :
+# 		cfPaths[row] = (row, cfCoefs[row])
+# 	# row = 0
+# 	# for c in cfCoefs :
+# 	# 	cfPaths[row] = (c, cfLasso01.coef_[c])
+# 	# 	row += 1
+# 	cfPaths[::-1].sort(order=['weight', 'path'])	# sort by descending wieght
 
-		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
-		fout.write('Prediction Results\n')
-		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfENet.coef_)[0])))
-		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfENet.score(trainSet, trainLabel)))
-		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfENet.score(testSet, testLabel)))
-		fout.write('\n')
-	#end with
+# 	# write the file
+# 	fname = 'ranked_paths-ElasticNet_Pos.txt'
+# 	print("Saving data for the Elastic Net approach ...")
+# 	print("  Saving top paths to file {}".format(fname))
+# 	with open(si+fname, 'w') as fout :
+# 		fout.write('intercept:{}{}'.format(textDelim, cfENet.intercept_))
+# 		for row in range(len(cfPaths)) :
+# 			fout.write('\n{}{}{}'.format(cfPaths['weight'][row],
+# 				textDelim, pathNames[cfPaths['path'][row]]))
+# 	#end with
+
+# #	# Save the genes from the test set to a file
+# #	mp.writeRankedGenes02(si, 'LogRegression', cfPredLabel, geneDict, giKnown,
+# #		giHidden, retCutoffs)
+
+# 	#Sort the genes by (inverse) rank
+# 	cfGenes = np.recarray( len(cfPredLabel), dtype=[('gene', 'i4'), ('rank', 'f4')] )
+# 	cfGenes['gene'] = giTest
+# 	cfGenes['rank'] = np.ravel(cfPredLabel)
+# 	cfGenes[::-1].sort(order=['rank','gene'])
+
+# 	# write the file
+# 	fname = 'ranked_genes-ElasticNet_Pos.txt'
+# 	print("  Saving ranked genes to file {}".format(fname))
+# 	with open(si+fname, 'w') as fout :
+# 		firstRow = True
+# 		for row in range(len(cfGenes)) :
+# 			if not firstRow :
+# 				fout.write('\n')
+# 			fout.write('{:3.3f}{}{}'.format(cfGenes['rank'][row],
+# 				textDelim, geneList[cfGenes['gene'][row]]))
+# 			firstRow = False
+# 	#end with
+
+# 	# Save the parameters & results
+# 	fname = 'parameters-ElasticNet_Pos.txt'
+# 	with open(si+fname, 'w') as fout :
+# 		fout.write('\n')
+# 		fout.write('Sampling Method for Neg examples\n')
+# 		fout.write('  as One-Class\n')
+# 		fout.write('\n')
+
+# 		fout.write('Log Regression Parameters\n')
+# 		fout.write('method:{}ElasticNet CV\n'.format(textDelim))
+# 		fout.write('ratio range:{}{}\n'.format(textDelim, lgCs))
+# 		fout.write('ratio chosen:{}{}\n'.format(textDelim, cfENet.l1_ratio_))
+# 		fout.write('alpha chosen:{}{}\n'.format(textDelim, cfENet.alpha_))
+# 		fout.write('n_iter:{}{}\n'.format(textDelim, cfENet.n_iter_))
+# 		fout.write('intercept:{}{}\n'.format(textDelim, cfENet.intercept_))
+# 		fout.write('\n')
+
+# 		fout.write('Similarity Metric:{}PathSim sum over set\n'.format(textDelim))
+# 		fout.write('Prediction Results\n')
+# 		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfENet.coef_)[0])))
+# 		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfENet.score(trainSet, trainLabel)))
+# 		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfENet.score(testSet, testLabel)))
+# 		fout.write('\n')
+# 	#end with
 
 
 
