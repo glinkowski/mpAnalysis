@@ -2438,6 +2438,8 @@ def clusterTrainSets(path, geneDict, features, nMaxClus) :
 	if (nMaxClus > 0) and (nMaxClus < nClusters) :
 		nClusters = nMaxClus
 	#end if
+	
+#TODO: case when nMaxClus == -1
 
 
 	#NOTE: MiniBatchKMeans supposed to be faster than KMeans
