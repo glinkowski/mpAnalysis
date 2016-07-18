@@ -38,10 +38,13 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-test01'
+sDir = '../Dropbox/mp/output/pred04-msig200'
 
-# File name containing feature vectors
+# File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
+# select only meta-paths of specific length(s)
+limitMPLen = [1]
+	# an empty list results in using all mp
 
 
 # verbose feedback ?
@@ -72,7 +75,7 @@ lFitIcpt = True
 # Elastic Net params
 enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
 enNAlphas = 11
-enMaxIter = 900
+enMaxIter = 400
 enFitIncept = True
 enNorm = True
 enCopy = True
@@ -115,10 +118,15 @@ if usePos :
 useLabel = useLabel + '_f'
 if useFeatPaths :
 	useLabel = useLabel + 'P'
+	if limitMPLen :
+		for item in limitMPLen :
+			useLabel = useLabel + '{}'.format(item)
+#end if
 if useFeatNeighbor :
 	useLabel = useLabel + 'N'
 #end if
 
+print(useLabel)
 
 
 # 1) Load the gene-index dictionary & path names
@@ -127,6 +135,22 @@ geneNames = list(geneDict.keys())
 geneNames.sort()
 pathNames = mp.removeInvertedPaths(pathDict)
 del pathDict
+
+# limit the metapaths by length
+#	part 1: get the desired indices
+idx = -1
+featPSIdx = list()
+for name in pathNames :
+	idx += 1
+	pLen = name.count('-') + 1
+	if pLen in limitMPLen :
+		featPSIdx.append( int(idx) )
+#end loop
+print("Limiting metapaths to {}, of length(s) {}".format(
+	len(featPSIdx), limitMPLen))
+if newVerbose :
+	print(featPSIdx)
+#end if
 
 
 
@@ -159,6 +183,16 @@ for si in dSubDirs :
 		#	discarding those columns
 		featPSVals = featPSVals[:,0:len(pathNames)]
 		featPSNames = pathNames
+	#end if
+
+	# limit the metapaths by length
+	#	part 2: keep only the desired columns
+	if limitMPLen :
+		featPSVals = featPSVals[:,featPSIdx]
+		newFeatPSNames = list()
+		for idx in featPSIdx :
+			newFeatPSNames.append(featPSNames[idx])
+		featPSNames = newFeatPSNames
 	#end if
 
 
