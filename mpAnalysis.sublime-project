@@ -6,10 +6,6 @@
 			"folder_exclude_patterns": ["output*"]
 		},
 		{
-			"path": "/C/Users/Greg/metapath",
-			"folder_exclude_patterns": ["output*"]
-		},
-		{
 			"path": "E:/metapath",
 			"folder_exclude_patterns": ["output*"]
 		},
