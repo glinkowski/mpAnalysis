@@ -38,12 +38,12 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-msig200'
+sDir = '../Dropbox/mp/output/pred04-dbgap100'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
 # select only meta-paths of specific length(s)
-limitMPLen = [1]
+limitMPLen = [1, 2, 3]
 	# an empty list results in using all mp
 
 
@@ -58,7 +58,7 @@ usePos = True
 	# True/False: limit to only Positive coefficient values
 useFeatPaths = True
 	# True/False: use the pathsim sum features
-useFeatNeighbor = False
+useFeatNeighbor = True
 	# True/False: use the neighborhood features
 useGivenRange = np.linspace(0.00005, 0.002, num=17)
 	# array of vals; 'None' means to auto-search for alphas
@@ -68,7 +68,7 @@ maxClusters = 11
 
 
 # LASSO params
-lMaxIter = 1000
+lMaxIter = 800
 lNorm = True
 lFitIcpt = True
 
