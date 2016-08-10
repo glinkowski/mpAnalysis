@@ -22,6 +22,7 @@
 
 import preProcFuncs as pp
 import time
+from shutil import copyfile
 
 import numpy as np
 
@@ -125,6 +126,9 @@ pp.writeModEdgeFilePlus(epath, outname,
 # Save the node-binning stats for the network
 pp.saveSelectGeneDegrees(epath, outname, edgeArray, geneList, geneHuman)
 
+# Copy the .keep file to new network folder
+copyfile(epath + kfile, epath + outname + '/keep.txt')
+
 
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
@@ -157,6 +161,10 @@ print("    ... and saving to: {}".format(mpPath))
 pp.createMetaPaths(matrixList, geneList, mpDepth, mpPath)
 
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
+
+
+
+#TODO: Copy the .keep file into the network folder
 
 
 
