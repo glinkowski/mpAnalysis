@@ -81,20 +81,6 @@ def concatenatePaths(path01, path02) :
 # Returns ----
 def createFeatureTerms(eList, indirect, gList) :
 
-	#1 From the keep file, get the gene regex
-	#	alt: get the indirect types
-	#2 read in the edge file, skip direct edges
-	#  read in the gene index dict
-
-	#3 collect unique term names
-	#  create gene-term matrix
-	#4 For each line in the edge list
-	#	track total genes in term
-	#	place weights into matrix
-	#5 output term list w/ total counts
-	#  output matrix to file
-
-
 	# Collect unique gene names & make dict
 	gList.sort()
 	gDict = pp.createGeneMapping(gList)
@@ -155,6 +141,7 @@ nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
 #TODO: delete what I don't need
 
 # Main Function call
+print("Calling function createFeatureTerms() ...")
 createFeatureTerms(edgeArray, indirEdges, geneList)
 
 
