@@ -126,7 +126,7 @@ pp.writeModEdgeFilePlus(epath, outname,
 # Save the node-binning stats for the network
 pp.saveSelectGeneDegrees(epath, outname, edgeArray, geneList, geneHuman)
 
-# Copy the .keep file to new network folder
+# Copy the .keep file to the new network folder
 copyfile(epath + kfile, epath + outname + '/keep.txt')
 
 
@@ -161,10 +161,6 @@ print("    ... and saving to: {}".format(mpPath))
 pp.createMetaPaths(matrixList, geneList, mpDepth, mpPath)
 
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
-
-
-
-#TODO: Copy the .keep file into the network folder
 
 
 
