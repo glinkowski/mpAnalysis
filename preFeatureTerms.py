@@ -15,7 +15,7 @@
 # ---------------------------------------------------------
 
 import preProcFuncs as pp
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import gzip
 import time
@@ -28,14 +28,17 @@ import mpLibrary as mp
 # PARAMETERS
 
 # The network to use and directory path
-useFakeData = True
+useFakeData = False
 if useFakeData :
-	eName = 'fakeNtwk00_g2e3t10'
+	eName = 'fakeNtwk01_g3e4t1'
 	ePath = 'networks/'
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
 #end if
+
+# Wheather to save uncompressed text copy of matrix
+saveAsText = False
 
 # The data type to use for the feature matrix
 featDType = np.float32
@@ -86,8 +89,14 @@ def createFeatureTerms(eList, indirect, gList) :
 	gDict = pp.createGeneMapping(gList)
 
 	# Collect unique term names & make dict
-	eModList = eList[i for i in eList if eList[i,2] in indirect]
-	tList = np.unique(eModList[:,2])
+#	eModList = eList[i for i in range(len(eList)) if elist[i,2] in indirect]
+	eIdx = list()
+	for i in range(len(eList)) :
+		if eList[i,3] in indirect :
+			eIdx.append(i)
+	#end if
+	eModList = eList[eIdx,:]
+	tList = np.unique(eModList[:,0])
 	tDict = pp.createGeneMapping(tList)
 
 	# Allocate the gene-term matrix
@@ -99,11 +108,7 @@ def createFeatureTerms(eList, indirect, gList) :
 	tCount = np.zeros(numT, dtype=np.int32)
 
 	# Place the weights into the matrix
-	for edge in eList :
-		# Skip if edge type is direct gene-gene
-		if edge[3] not in indirect :
-			continue
-
+	for edge in eModList :
 		r = gDict[edge[1]]
 		c = tDict[edge[0]]
 		featMatrix[r,c] = edge[2]
@@ -112,7 +117,8 @@ def createFeatureTerms(eList, indirect, gList) :
 	#end loop
 
 	# Save the feature matrix to a file
-	saveMatrixNumpy(featMatrix, 'featTerm_Orig', eDir, False)
+#	pp.setParamSaveTextCopy(True)
+	pp.saveMatrixNumpy(featMatrix, 'featTerm_Orig', eDir, False)
 
 	# Save the term names & counts to a file
 	with open(eDir + 'featNeighbor_Names.txt', 'w') as fout :
@@ -120,6 +126,15 @@ def createFeatureTerms(eList, indirect, gList) :
 		for i in range(1, len(tList)) :
 			fout.write('\n{}\t{}'.format( tList[i], tCount[i]))
 	#end with
+
+	# Draw the term count distribution
+	plt.hist(tCount, log=True, bins=200)
+	plt.title('Distribution of Term Sizes')
+	plt.xlabel('size of Term (# of Genes)')
+	plt.ylabel('number of Terms')
+	plt.savefig(eDir + 'featTerm_Dist.png')
+#	plt.show()
+	plt.close()
 
 #end def ############### 
 
@@ -136,9 +151,12 @@ eDir = concatenatePaths(ePath, eName)
 
 # GIVEN VARIABLES, if called from within preProcessing
 geneHuman, keepGenes, loseGenes, keepEdges, indirEdges, thresh = pp.readKeepFile(eDir + 'keep.txt')
+del geneHuman, loseGenes, keepEdges, thresh
 edgeArray, nodeDict = pp.readEdgeFile(eDir + 'network.txt')
 nodeDict, geneList = pp.createNodeLists(edgeArray, keepGenes)
-#TODO: delete what I don't need
+del nodeDict
+
+pp.setParamSaveTextCopy(saveAsText)
 
 # Main Function call
 print("Calling function createFeatureTerms() ...")
