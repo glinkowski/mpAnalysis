@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-dbgap200'
+sDir = '../Dropbox/mp/output/pred04-dbgap100'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -153,9 +153,9 @@ for name in pathNames :
 #end loop
 print("Limiting metapaths to {}, of length(s) {}".format(
 	len(featPSIdx), limitMPLen))
-if newVerbose :
-	print(featPSIdx)
-#end if
+# if newVerbose :
+# 	print(featPSIdx)
+# #end if
 
 
 
@@ -300,17 +300,26 @@ for si in dSubDirs :
 # TODO: If the classifier has 0 coefficients, re-run? discount?
 
 		# 7) Train the classifier
-		if useCfier == 1 :	# 1 = Lasso
-			cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
-				max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
-		elif useCfier == 2 :	# 2 = ElasticNet
-			cfier = lm.ElasticNetCV(l1_ratio=enRatios, positive=usePos, fit_intercept=enFitIncept,
-				n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
-		else :
-			print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
-		#end if
+		numCoefs = 0
+		loopCount = 0
+		while numCoefs == 0:
+			if useCfier == 1 :	# 1 = Lasso
+				cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
+					max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
+			elif useCfier == 2 :	# 2 = ElasticNet
+				cfier = lm.ElasticNetCV(l1_ratio=enRatios, positive=usePos, fit_intercept=enFitIncept,
+					n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
+			else :
+				print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
+			#end if
 
-		cfier.fit(trainSet, trainLabel)
+			cfier.fit(trainSet, trainLabel)
+			numCoefs = len(np.nonzero(cfier.coef_)[0])
+			loopCount += 1
+
+			if loopCount >= 11 :
+				break
+		#end loop
 
 		if newVerbose :
 			# view quick statistics from this training session
@@ -319,6 +328,8 @@ for si in dSubDirs :
 			print("  iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
 			if useCfier == 2 :	# 2 = ElasticNet
 				print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
+			if loopCount > 1 :
+				print("    attempts: {}".format(loopCount))
 		#end if
 
 
@@ -338,13 +349,17 @@ for si in dSubDirs :
 
 		ranker.sort(order=['inverse', 'nameIdx'])
 
-		rank = 0
-		for entry in ranker :
-			rank += 1
-			row = int(entry['nameIdx'])
-			geneRanks[row, col] = rank
-			geneScores[row,col] = entry['score']
-		#end loop
+		# If no coeffs were chosen, rank will be random; leave col as all zeros
+		if numCoefs > 0 :
+			# Place genes' rank & score into appropriate matrices
+			rank = 0
+			for entry in ranker :
+				rank += 1
+				row = int(entry['nameIdx'])
+				geneRanks[row, col] = rank
+				geneScores[row,col] = entry['score']
+			#end loop
+		#end if
 
 
 
