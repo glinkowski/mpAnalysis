@@ -121,7 +121,7 @@ def createFeatureTerms(eList, indirect, gList) :
 	pp.saveMatrixNumpy(featMatrix, 'featTerm_Orig', eDir, False)
 
 	# Save the term names & counts to a file
-	with open(eDir + 'featNeighbor_Names.txt', 'w') as fout :
+	with open(eDir + 'featTerm_Names.txt', 'w') as fout :
 		fout.write('{}\t{}'.format( tList[0], tCount[0] ))
 		for i in range(1, len(tList)) :
 			fout.write('\n{}\t{}'.format( tList[i], tCount[i]))
