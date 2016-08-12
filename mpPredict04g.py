@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-dbgap100'
+sDir = '../Dropbox/mp/output/pred04-dbgap200'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -58,7 +58,9 @@ usePos = True
 	# True/False: limit to only Positive coefficient values
 useFeatPaths = True
 	# True/False: use the pathsim sum features
-useFeatNeighbor = True
+useFeatTermWeights = True
+	# True/False: use the indirect term features
+useFeatNeighbor = False
 	# True/False: use the neighborhood features
 useGivenRange = np.linspace(0.00005, 0.002, num=17)
 	# array of vals; 'None' means to auto-search for alphas
@@ -122,6 +124,9 @@ if useFeatPaths :
 		for item in limitMPLen :
 			useLabel = useLabel + '{}'.format(item)
 #end if
+if useFeatTermWeights :
+	useLabel = useLabel + 'T'
+#end if
 if useFeatNeighbor :
 	useLabel = useLabel + 'N'
 #end if
@@ -154,12 +159,16 @@ if newVerbose :
 
 
 
-# 2) Load the neighborhood features
+# 2) Load the network general features
 if useFeatNeighbor :
 	featNbVals, featNbNames = mp.getFeaturesNeighborhood(sDir, 'LogScale')
 	featNbNames = np.ravel(featNbNames)
 #end if
 
+if useFeatTermWeights :
+	featTWVals, featTWNames = mp.getFeaturesTerms(sDir, 'Orig')
+	featTWNames = np.ravel(featTWNames)
+#end if
 
 
 # 3) Loop over all the subdirectories
@@ -209,6 +218,10 @@ for si in dSubDirs :
 		print("    ... including neighborhood features")
 		features = np.hstack( (features, featNbVals) )
 		featNames.extend(np.ravel(featNbNames))
+	if useFeatTermWeights :
+		print("    ... including term membership features")
+		features = np.hstack( (features, featTWVals) )
+		featNames.extend(np.ravel(featTWNames))
 	# verify some features have been loaded
 	if features.shape[1] == 0 :
 		print("ERROR: No features were specified for classification.")
@@ -500,6 +513,7 @@ for si in dSubDirs :
 		fout.write('Features Used\n')
 		fout.write('PathSim sum:{}{}\n'.format(textDelim, useFeatPaths))
 		fout.write('Neighborhood:{}{}\n'.format(textDelim, useFeatNeighbor))
+		fout.write('Term Weights:{}{}\n'.format(textDelim, useFeatTermWeights))
 		fout.write('\n')
 
 #TODO: collect some stats (ie: common alphas, l1 ratios, etc)
