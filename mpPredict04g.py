@@ -282,6 +282,8 @@ for si in dSubDirs :
 
 
 
+# TODO: If the classifier has 0 coefficients, re-run? discount?
+
 		# 7) Train the classifier
 		if useCfier == 1 :	# 1 = Lasso
 			cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
