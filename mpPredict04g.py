@@ -160,14 +160,18 @@ if newVerbose :
 
 
 # 2) Load the network general features
+numFN = 0
 if useFeatNeighbor :
 	featNbVals, featNbNames = mp.getFeaturesNeighborhood(sDir, 'LogScale')
 	featNbNames = np.ravel(featNbNames)
+	numFN = len(featNbNames)
 #end if
 
+numTW = 0
 if useFeatTermWeights :
 	featTWVals, featTWNames = mp.getFeaturesTerms(sDir, 'Orig')
 	featTWNames = np.ravel(featTWNames)
+	numTW = len(featTWNames)
 #end if
 
 
@@ -185,6 +189,7 @@ for si in dSubDirs :
 
 
 	# 4) Load the PathSim features
+	numFP = 0
 	if useFeatPaths :
 #		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
 		featPSVals = np.loadtxt(si + fSimilarity)
@@ -192,6 +197,7 @@ for si in dSubDirs :
 		#	discarding those columns
 		featPSVals = featPSVals[:,0:len(pathNames)]
 		featPSNames = pathNames
+		numFP = len(featPSNames)
 	#end if
 
 	# limit the metapaths by length
@@ -202,6 +208,7 @@ for si in dSubDirs :
 		for idx in featPSIdx :
 			newFeatPSNames.append(featPSNames[idx])
 		featPSNames = newFeatPSNames
+		numFP = len(featPSNames)
 	#end if
 
 
@@ -219,9 +226,17 @@ for si in dSubDirs :
 		features = np.hstack( (features, featNbVals) )
 		featNames.extend(np.ravel(featNbNames))
 	if useFeatTermWeights :
+		# Remove terms with no connection to gene set
+		gKnown = mp.readFileAsList(si + 'known.txt')
+		giKnown = mp.convertToIndices(gKnown, geneDict)
+		sumFTV = np.sum(featTWVals[giKnown,:], axis=0)
+		keepIdx = np.nonzero(sumFTV)
+#		print("\n {} \n".format(keepIdx[0]))
+		numTW = len(keepIdx[0])
+
 		print("    ... including term membership features")
-		features = np.hstack( (features, featTWVals) )
-		featNames.extend(np.ravel(featTWNames))
+		features = np.hstack( (features, featTWVals[:,keepIdx[0]]) )
+		featNames.extend(np.ravel(featTWNames[keepIdx]))
 	# verify some features have been loaded
 	if features.shape[1] == 0 :
 		print("ERROR: No features were specified for classification.")
