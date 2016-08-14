@@ -38,7 +38,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-dbgap100'
+sDir = '../Dropbox/mp/output/pred04-msig200'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -70,7 +70,7 @@ maxClusters = 11
 
 
 # LASSO params
-lMaxIter = 800
+lMaxIter = 500
 lNorm = True
 lFitIcpt = True
 
@@ -317,7 +317,7 @@ for si in dSubDirs :
 			numCoefs = len(np.nonzero(cfier.coef_)[0])
 			loopCount += 1
 
-			if loopCount >= 11 :
+			if loopCount >= 3 :
 				break
 		#end loop
 
