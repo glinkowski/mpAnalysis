@@ -46,7 +46,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samples-4subs/subset02/'
+	sPath = '../Dropbox/mp/samplesAchilles1st/subset02/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -103,11 +103,15 @@ oSubDirList = list()
 
 if not newVerbose :
 	print("Collecting & partitioning samples ...")
+	print("  there are {} samples".format(len(sNames)))
 
 index = 0
+sCount = 1
 for s in sNames :
 	if newVerbose :
-		print("Collecting sample: {}".format(s))
+		print("Collecting sample: {}, {}".format(sCount, s))
+	sCount += 1
+
 
 	count = -1
 	for p in percHide :
