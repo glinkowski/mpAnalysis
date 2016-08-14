@@ -24,8 +24,8 @@ import preProcFuncs as pp
 # PARAMETERS
 
 # Name & location of file containing the samples
-sFile = '_rawSets_enrichr.txt'
-sDir = '../Dropbox/mp/samplesEnrichr'
+sFile = '_rawSets_achilles.txt'
+sDir = '../Dropbox/mp/samplesAchilles'
 
 ####### ####### ####### ####### 
 
