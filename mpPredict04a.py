@@ -46,7 +46,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesAchilles1st/subset02/'
+	sPath = '../Dropbox/mp/samplesAchilles1st/subset03/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -169,7 +169,10 @@ gFeatures = np.zeros( (len(geneDict), len(pathList),
 # populate dimension 2 from each path
 dim2 = -1
 for p in pathList :
+#for p in [pathList[219], pathList[220]] :
 	dim2 += 1
+
+#	print("{}: {}".format(pathDict[p], p))
 
 	# load the PathSim matrix
 	simMatrix = mp.getSimMatrix(pathDict[p], ePath,
