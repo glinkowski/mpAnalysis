@@ -46,7 +46,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesAchilles1st/subset02/'
+	sPath = '../Dropbox/mp/samplesAchilles1st/subset01b/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -56,7 +56,7 @@ oDirPrefix = 'pred04-batch'
 
 
 # verbose feedback ?
-newVerbose = False
+newVerbose = True
 
 ####### ####### ####### ####### 
 
@@ -157,6 +157,7 @@ with gzip.open(fname, 'rb') as fin :
 	for line in fin :
 		mxSize += 1
 #end with
+print("  mxSize = {}".format(mxSize))
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
@@ -168,8 +169,15 @@ gFeatures = np.zeros( (len(geneDict), len(pathList),
 
 # populate dimension 2 from each path
 dim2 = -1
-for p in pathList :
+#for p in pathList :
+for p in ['PPI_physical_association-STRING_coexpression-STRING_coexpression',
+	'STRING_coexpression-gene_ontology-PPI_genetic_interaction',
+	'PPI_physical_association-pfam_domain-STRING_coexpression'] :
+
 	dim2 += 1
+
+	print("{}: {}".format(pathDict[p], p))
+#	print("dim2 = {}".format(dim2))
 
 	# load the PathSim matrix
 	simMatrix = mp.getSimMatrix(pathDict[p], ePath,
