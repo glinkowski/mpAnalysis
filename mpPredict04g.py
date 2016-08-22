@@ -67,10 +67,12 @@ useGivenRange = np.linspace(0.00005, 0.002, num=17)
 maxClusters = 11
 	# maximum number of clusters to use
 	#	-1 = no maximum value is set
+limitMinScore = 0.09
+	# minimum score on train set to keep results
 
 
 # LASSO params
-lMaxIter = 500
+lMaxIter = 700
 lNorm = True
 lFitIcpt = True
 
@@ -130,6 +132,10 @@ if useFeatTermWeights :
 if useFeatNeighbor :
 	useLabel = useLabel + 'N'
 #end if
+
+labelLimitMinScore = int(limitMinScore * 100)
+useLabel = useLabel + '_L{}'.format( 
+	str(labelLimitMinScore).zfill(2) )
 
 print(useLabel)
 
@@ -198,17 +204,17 @@ for si in dSubDirs :
 		featPSVals = featPSVals[:,0:len(pathNames)]
 		featPSNames = pathNames
 		numFP = len(featPSNames)
-	#end if
 
-	# limit the metapaths by length
-	#	part 2: keep only the desired columns
-	if limitMPLen :
-		featPSVals = featPSVals[:,featPSIdx]
-		newFeatPSNames = list()
-		for idx in featPSIdx :
-			newFeatPSNames.append(featPSNames[idx])
-		featPSNames = newFeatPSNames
-		numFP = len(featPSNames)
+		# limit the metapaths by length
+		#	part 2: keep only the desired columns
+		if limitMPLen :
+			featPSVals = featPSVals[:,featPSIdx]
+			newFeatPSNames = list()
+			for idx in featPSIdx :
+				newFeatPSNames.append(featPSNames[idx])
+			featPSNames = newFeatPSNames
+			numFP = len(featPSNames)
+		#end if
 	#end if
 
 
@@ -350,7 +356,8 @@ for si in dSubDirs :
 		ranker.sort(order=['inverse', 'nameIdx'])
 
 		# If no coeffs were chosen, rank will be random; leave col as all zeros
-		if numCoefs > 0 :
+#		if numCoefs > 0 :
+		if cfier.score(trainSet, trainLabel) >= limitMinScore :
 			# Place genes' rank & score into appropriate matrices
 			rank = 0
 			for entry in ranker :
