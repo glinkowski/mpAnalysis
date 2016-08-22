@@ -879,12 +879,14 @@ def getSimMatrix(mpTuple, path, name, sizeOf) :
 #	matrix = np.loadtxt(fname)
 
 	if sizeOf == -1 :
+		if verbose :
+			print("...getting expected matrix size...")
 		# Get expected matrix size
 	#TODO: pack this into a function
-		fname = (path + name + "_MetaPaths/" +
+		tempFname = (path + name + "_MetaPaths/" +
 			"{}.gz".format(str(0).zfill(fnMatrixZPad)) )
 		sizeOf = 0
-		with gzip.open(fname, 'rb') as fin :
+		with gzip.open(tempFname, 'rb') as fin :
 			for line in fin :
 				sizeOf += 1
 		#end with
