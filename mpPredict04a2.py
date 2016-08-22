@@ -4,8 +4,13 @@
 #		for the KnowEnG big data center at UIUC
 #		funded by the NIH
 # 
-# Approach 2: learn top paths from PathSim sum, find genes
+# Approach 2: learn top paths from z-score of the path
+#	counts, find genes
 #	Version 2, Step 1 
+#
+# NOTE: Previously, PathSim was used as the gene-gene
+#	similarity metric. This script instead uses z-scores
+#	of the raw path counts between genes.
 #
 # The first approach tries to first find the most
 #	important metapaths, then rank genes by similarity
@@ -46,7 +51,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samplesAchilles1st/subset03/'
+	sPath = '../Dropbox/mp/samplesMSIG/subset01/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if
@@ -56,7 +61,7 @@ oDirPrefix = 'pred04-batch'
 
 
 # verbose feedback ?
-newVerbose = True
+newVerbose = False
 
 ####### ####### ####### ####### 
 
@@ -157,7 +162,6 @@ with gzip.open(fname, 'rb') as fin :
 	for line in fin :
 		mxSize += 1
 #end with
-print("  mxSize = {}".format(mxSize))
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
@@ -175,12 +179,19 @@ for p in pathList :
 
 #	print("{}: {}".format(pathDict[p], p))
 
-	# load the PathSim matrix
-	simMatrix = mp.getSimMatrix(pathDict[p], ePath,
-		eName, mxSize)
-	# zero out the diagonal
-	# NOTE: want to measure each gene's similarity to the set,
-	#	excluding itself
+	# load the path count matrix
+	countMatrix = mp.getPathMatrix(pathDict[p], ePath, eName, mxSize)
+	countAvg = np.mean(countMatrix, axis=1)
+	countAvg = countAvg.reshape( (len(countAvg), 1) )
+	countStD = np.std(countMatrix, axis=1)
+	countStD = countStD.reshape( (len(countStD), 1) )
+	countStD = np.add(countStD, 0.0001)
+
+	# convert to z-scores on a row-by-row basis
+	simMatrix = np.subtract(countMatrix, countAvg)
+	simMatrix = np.divide(countMatrix, countStD)
+
+	# ?? zero out the diagonal ??
 	np.fill_diagonal(simMatrix, 0)
 
 	# populate dimension 3 from each sample
@@ -188,19 +199,8 @@ for p in pathList :
 	for giList in oSampLists :
 		dim3 += 1
 
-#TODO: Explore this thought...
-#	Why are length-2 paths so dominant?
-#	Should I remove the diagonal from the PathSim sum?
-#	Does the diagonal over-weight b/c of similarity to self?
-#		# get the diagonal, the similarity of each gene to self
-#		simDiag = np.diag(simMatrix)
-#
 		# calculate feature for this sample variant
 		simSet = np.sum( simMatrix[:,giList], axis=1 )
-#
-#		# remove the similarity of the gene to itself,
-#		#	sum of similiarity over the set, minus similarity to self
-#
 		gFeatures[:,dim2,dim3] = simSet[:]
 	#end loop
 
@@ -221,10 +221,10 @@ i = -1
 for sDir in oSubDirList :
 	i += 1
 
-	mp.saveMatrixNumpy(gFeatures[:,:,i], 'features_PathSim',
+	mp.saveMatrixNumpy(gFeatures[:,:,i], 'features_ZScoreSim',
 		sDir, False)
 #end loop
-print("Finished writing PathSim feature vector files.")
+print("Finished writing Z-Score Similarity feature vector files.")
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
