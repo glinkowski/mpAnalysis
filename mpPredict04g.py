@@ -45,6 +45,8 @@ fSimilarity = 'features_PathSim.gz'
 # select only meta-paths of specific length(s)
 limitMPLen = [1, 2, 3]
 	# an empty list results in using all mp
+# File name containing path z-score vectors
+fZScoreSim = 'features_ZScoreSim.gz'
 
 
 # verbose feedback ?
@@ -56,9 +58,11 @@ useCfier = 1
 	# 1 = Lasso, 2 = ElasticNet, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
-useFeatPaths = True
+useFeatPathSim = False
 	# True/False: use the pathsim sum features
-useFeatTermWeights = True
+useFeatPathZScore = True
+	# True/False: use the pathsim sum features
+useFeatTermWeights = False
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
@@ -118,15 +122,15 @@ else :
 if usePos :
 	useLabel = useLabel + 'Pos'
 useLabel = useLabel + '_f'
-if useFeatPaths :
+if useFeatPathSim :
 	useLabel = useLabel + 'P'
 	if limitMPLen :
 		for item in limitMPLen :
 			useLabel = useLabel + '{}'.format(item)
-#end if
+if useFeatPathZScore :
+	useLabel = useLabel + 'Z'
 if useFeatTermWeights :
 	useLabel = useLabel + 'T'
-#end if
 if useFeatNeighbor :
 	useLabel = useLabel + 'N'
 #end if
@@ -190,7 +194,7 @@ for si in dSubDirs :
 
 	# 4) Load the PathSim features
 	numFP = 0
-	if useFeatPaths :
+	if useFeatPathSim :
 #		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
 		featPSVals = np.loadtxt(si + fSimilarity)
 		# NOTE: previous version of mpPredict04a had extra zeros at end of vectors;
@@ -198,17 +202,27 @@ for si in dSubDirs :
 		featPSVals = featPSVals[:,0:len(pathNames)]
 		featPSNames = pathNames
 		numFP = len(featPSNames)
+
+		# limit the metapaths by length
+		#	part 2: keep only the desired columns
+		if limitMPLen :
+			featPSVals = featPSVals[:,featPSIdx]
+			newFeatPSNames = list()
+			for idx in featPSIdx :
+				newFeatPSNames.append(featPSNames[idx])
+			featPSNames = newFeatPSNames
+			numFP = len(featPSNames)
 	#end if
 
-	# limit the metapaths by length
-	#	part 2: keep only the desired columns
-	if limitMPLen :
-		featPSVals = featPSVals[:,featPSIdx]
-		newFeatPSNames = list()
-		for idx in featPSIdx :
-			newFeatPSNames.append(featPSNames[idx])
-		featPSNames = newFeatPSNames
-		numFP = len(featPSNames)
+	# Load the ZScore features
+	if useFeatPathZScore :
+#		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
+		featZSVals = np.loadtxt(si + fZScoreSim)
+		# NOTE: previous version of mpPredict04a had extra zeros at end of vectors;
+		#	discarding those columns
+		featZSVals = featZSVals[:,0:len(pathNames)]
+		featZSNames = pathNames
+		numFP = len(featZSNames)
 	#end if
 
 
@@ -217,10 +231,14 @@ for si in dSubDirs :
 	features = np.zeros( (len(geneDict), 0), dtype=np.float32)
 	featNames = list()
 
-	if useFeatPaths :
+	if useFeatPathSim :
 		print("    ... including PathSim sum features")
 		features = np.hstack( (features, featPSVals) )
 		featNames.extend(featPSNames)
+	if useFeatPathZScore :
+		print("    ... including path z-score features")
+		features = np.hstack( (features, featZSVals) )
+		featNames.extend(featZSNames)
 	if useFeatNeighbor :
 		print("    ... including neighborhood features")
 		features = np.hstack( (features, featNbVals) )
@@ -290,6 +308,10 @@ for si in dSubDirs :
 		# Extract the test set & labels
 		testIdx = [idx for idx in range(len(clusLabel)) if idx not in trainIdx]
 		testIdx = np.asarray(testIdx)
+		# error hack when testing code with small samples :
+		if len(testIdx) == 0 :
+			testIdx = [0]
+		#end if
 		testSet = features[testIdx,:]
 		testLabel = featLabel[testIdx]
 		testLabel = np.ravel(testLabel)
@@ -543,7 +565,8 @@ for si in dSubDirs :
 		fout.write('  as One-Class w/ clustering on the Unknown set\n')
 		fout.write('\n')
 		fout.write('Features Used\n')
-		fout.write('PathSim sum:{}{}\n'.format(textDelim, useFeatPaths))
+		fout.write('PathSim sum:{}{}\n'.format(textDelim, useFeatPathSim))
+		fout.write('path Z-Score:{}{}\n'.format(textDelim, useFeatPathZScore))
 		fout.write('Neighborhood:{}{}\n'.format(textDelim, useFeatNeighbor))
 		fout.write('Term Weights:{}{}\n'.format(textDelim, useFeatTermWeights))
 		fout.write('\n')
