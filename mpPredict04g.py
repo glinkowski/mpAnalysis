@@ -30,6 +30,7 @@ import time
 import numpy as np
 import gzip
 from sklearn import linear_model as lm
+from sklearn import svm as svm
 import random
 
 
@@ -38,7 +39,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-msig200'
+sDir = '../Dropbox/mp/output/pred04-test01'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -54,13 +55,13 @@ newVerbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 1
-	# 1 = Lasso, 2 = ElasticNet, ...
+useCfier = 4
+	# 1 = Lasso, 2 = ElasticNet, 3 = SVM, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
-useFeatPathSim = False
+useFeatPathSim = True
 	# True/False: use the pathsim sum features
-useFeatPathZScore = True
+useFeatPathZScore = False
 	# True/False: use the pathsim sum features
 useFeatTermWeights = False
 	# True/False: use the indirect term features
@@ -86,6 +87,10 @@ enFitIncept = True
 enNorm = True
 enCopy = True
 
+# SVM params
+svmMaxIter = 700
+svmKernel = 'rbf' # linear, poly, rbf, sigmoid
+
 
 # text delimiter in output files
 textDelim = '\t'
@@ -108,19 +113,25 @@ mp.setParamVerbose(newVerbose)
 # string: label for the output files
 # ie: ClusVote_c<Las/Enet/Log><P for Pos>_f<P for pathsim><N for neighborhood>
 if maxClusters > 0 :
-	useLabel = 'Clus{}Vote_c'.format(maxClusters)
+	useLabel = 'Clus{}Vote'.format(maxClusters)
 else :
-	useLabel = 'ClusVote_c'
+	useLabel = 'ClusVote'
 #end if
+useLabel = useLabel + '_c'
 if useCfier == 1 :
 	useLabel = useLabel + 'Las'
 elif useCfier == 2 :
 	useLabel = useLabel + 'Enet'
+elif useCfier == 3 :
+	useLabel = useLabel + 'SVM'
+elif useCfier == 4 :
+	useLabel = useLabel + 'LinSVM'
 else :
 	print("ERROR: useCfier value is unrecognized: {}".format(useCfier))
 #end if
-if usePos :
+if usePos and (useCfier < 3) :
 	useLabel = useLabel + 'Pos'
+#end if
 useLabel = useLabel + '_f'
 if useFeatPathSim :
 	useLabel = useLabel + 'P'
@@ -171,11 +182,11 @@ if useFeatNeighbor :
 	numFN = len(featNbNames)
 #end if
 
-numTW = 0
+numFT = 0
 if useFeatTermWeights :
 	featTWVals, featTWNames = mp.getFeaturesTerms(sDir, 'Orig')
 	featTWNames = np.ravel(featTWNames)
-	numTW = len(featTWNames)
+	numFT = len(featTWNames)
 #end if
 
 
@@ -215,6 +226,7 @@ for si in dSubDirs :
 	#end if
 
 	# Load the ZScore features
+	numFZ = 0
 	if useFeatPathZScore :
 #		featPSVals = mp.readFileAsMatrix(si, fSimilarity)
 		featZSVals = np.loadtxt(si + fZScoreSim)
@@ -222,7 +234,7 @@ for si in dSubDirs :
 		#	discarding those columns
 		featZSVals = featZSVals[:,0:len(pathNames)]
 		featZSNames = pathNames
-		numFP = len(featZSNames)
+		numFZ = len(featZSNames)
 	#end if
 
 
@@ -250,7 +262,7 @@ for si in dSubDirs :
 		sumFTV = np.sum(featTWVals[giKnown,:], axis=0)
 		keepIdx = np.nonzero(sumFTV)
 #		print("\n {} \n".format(keepIdx[0]))
-		numTW = len(keepIdx[0])
+		numFT = len(keepIdx[0])
 
 		print("    ... including term membership features")
 		features = np.hstack( (features, featTWVals[:,keepIdx[0]]) )
@@ -260,6 +272,8 @@ for si in dSubDirs :
 		print("ERROR: No features were specified for classification.")
 		sys.exit 
 	#end if
+	numFAll = numFP + numFZ + numFN + numFT
+
 
 	# Normalize the feature values
 	features = mp.normalizeFeatureColumns(features)
@@ -331,25 +345,45 @@ for si in dSubDirs :
 			elif useCfier == 2 :	# 2 = ElasticNet
 				cfier = lm.ElasticNetCV(l1_ratio=enRatios, positive=usePos, fit_intercept=enFitIncept,
 					n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
+			elif useCfier == 3 :	#3 = SVM
+				cfier = svm.SVC(probability=True, max_iter=svmMaxIter, decision_function_shape='ovr')
+			elif useCfier == 4 :	#3 = LinearSVM
+				cfier = svm.LinearSVC(penalty='l1', max_iter=svmMaxIter, dual=False)
 			else :
 				print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
 			#end if
 
 			cfier.fit(trainSet, trainLabel)
-			numCoefs = len(np.nonzero(cfier.coef_)[0])
-			loopCount += 1
+			if useCfier == 3 :
+#				print(cfier.support_vectors_)
+#				print(cfier.n_support_)
+				numCoefs = numFAll
+			else :
+				numCoefs = len(np.nonzero(cfier.coef_)[0])
+			#end if
 
+			loopCount += 1
 			if loopCount >= 3 :
 				break
 		#end loop
 
 		if newVerbose :
 			# view quick statistics from this training session
-			print("Clus {}; cfier {}; pos={}; score: {:.3f}; coeffs: {}".format(cv, useCfier,
-				usePos, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
-			print("  iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
-			if useCfier == 2 :	# 2 = ElasticNet
-				print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
+			if useCfier < 3 :
+				print("Clus {}; cfier {}; pos={}; score: {:.3f}; coeffs: {}".format(int(cv), useCfier,
+					usePos, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
+				print("  iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
+				if useCfier == 2 :	# 2 = ElasticNet
+					print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
+			elif useCfier == 3 :
+#TODO: this
+				print("Clus {}; cfier {}; score: {:.3f}; coeffs: {}".format(int(cv), useCfier,
+					cfier.score(trainSet, trainLabel), numFAll))
+#				print("  iterations: {}".format(cfier.n_iter_))
+			elif useCfier == 4 :
+					print("Clus {}; cfier {}; score: {:.3f}; coeffs: {}".format(int(cv), useCfier,
+					cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
+			#end if
 			if loopCount > 1 :
 				print("    attempts: {}".format(loopCount))
 		#end if
@@ -361,8 +395,13 @@ for si in dSubDirs :
 		ranker = np.recarray(testSet.shape[0],
 			dtype=[('inverse', 'f4'), ('score', 'f4'), ('nameIdx', 'a20')])
 
-
-		cfPredLabel = cfier.predict(testSet)
+		if useCfier < 3 :
+			cfPredLabel = cfier.predict(testSet)
+		elif useCfier == 3 :
+#			cfPredLabel = cfier.predict(testSet)
+			cfPredLabel = cfier.decision_function(testSet)
+		elif useCfier == 4 :
+			cfPredLabel = cfier.decision_function(testSet)
 		cfPredLabel = np.ravel(cfPredLabel)
 
 		ranker['score'] = cfPredLabel
@@ -392,47 +431,55 @@ for si in dSubDirs :
 		#	will later output how often feat used across all clusters
 
 		# Extract indices corresponding to top 5 weighted features
-		featWeights = cfier.coef_
-		numFeats = len(np.nonzero(featWeights)[0])
-		if numFeats > 0 :
-			topFeats = np.ones( (numFeats), dtype=np.int32 ) * (-1)
-			for num in range(numFeats) :
-				featIdx = np.argmax(featWeights)
-				topFeats[num] = featIdx
-				featWeights[featIdx] = 0
-			#end loop
+		if useCfier != 3 :
 
-			# Increment count for the Top 1 path
-			if topFeats[0] in featT1Set :
-				featT1Dict[topFeats[0]] += 1
+			if useCfier == 4 :
+				featWeights = cfier.coef_[0]
 			else :
-				featT1Dict[topFeats[0]] = 1
-				featT1Set.add(topFeats[0])
+				featWeights = cfier.coef_
+#			print(cfier.coef_)
+#			print(np.nonzero(featWeights))
+			numFeats = len(np.nonzero(featWeights)[0])
+			if numFeats > 0 :
+				topFeats = np.ones( (numFeats), dtype=np.int32 ) * (-1)
+				for num in range(numFeats) :
+					featIdx = np.argmax(featWeights)
+					topFeats[num] = featIdx
+					featWeights[featIdx] = 0
+				#end loop
+
+				# Increment count for the Top 1 path
+				if topFeats[0] in featT1Set :
+					featT1Dict[topFeats[0]] += 1
+				else :
+					featT1Dict[topFeats[0]] = 1
+					featT1Set.add(topFeats[0])
+				#end if
+
+				# Increment count for the Top 5 paths
+				for num in range(5) :
+					if numFeats <= num :
+						break
+					#end if
+					if topFeats[num] in featT5Set :
+						featT5Dict[topFeats[num]] += 1
+					else :
+						featT5Dict[topFeats[num]] = 1
+						featT5Set.add(topFeats[num])
+				#end loop
+
+				# Increment count for all non-zero paths
+				for num in range(numFeats) :
+					if numFeats <= num :
+						break
+					#end if
+					if topFeats[num] in featTASet :
+						featTADict[topFeats[num]] += 1
+					else :
+						featTADict[topFeats[num]] = 1
+						featTASet.add(topFeats[num])
+				#end loop
 			#end if
-
-			# Increment count for the Top 5 paths
-			for num in range(5) :
-				if numFeats <= num :
-					break
-				#end if
-				if topFeats[num] in featT5Set :
-					featT5Dict[topFeats[num]] += 1
-				else :
-					featT5Dict[topFeats[num]] = 1
-					featT5Set.add(topFeats[num])
-			#end loop
-
-			# Increment count for all non-zero paths
-			for num in range(numFeats) :
-				if numFeats <= num :
-					break
-				#end if
-				if topFeats[num] in featTASet :
-					featTADict[topFeats[num]] += 1
-				else :
-					featTADict[topFeats[num]] = 1
-					featTASet.add(topFeats[num])
-			#end loop
 		#end if
 
 	#end loop (per-cluster loop)
@@ -493,68 +540,68 @@ for si in dSubDirs :
 
 
 	# 11) Output the selected feature info to file
-#TODO: this!
+	if useCfier != 3 :
 
-	# Sort the Top 1 paths
-	featT1Sort = np.recarray( len(featT1Dict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
-	pathIdxList = list(featT1Dict.keys())
-	row = -1
-	for item in pathIdxList :
-		row += 1
-		featT1Sort['pathIdx'][row] = item
-		featT1Sort['count'][row] = featT1Dict[item]
+		# Sort the Top 1 paths
+		featT1Sort = np.recarray( len(featT1Dict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
+		pathIdxList = list(featT1Dict.keys())
+		row = -1
+		for item in pathIdxList :
+			row += 1
+			featT1Sort['pathIdx'][row] = item
+			featT1Sort['count'][row] = featT1Dict[item]
+		#end if
+		featT1Sort[::-1].sort(order=['count', 'pathIdx'])
+
+		# Save the Top 1 paths to file
+		fname = 'ranked_features_Top1-' + useLabel + '.txt'
+		with open(si + fname, 'w') as fout :
+			fout.write('Clusters:{}{}'.format(textDelim, nClus))
+			for row in range(len(featT1Sort)) :
+				fout.write('\n{}{}{}'.format(featT1Sort['count'][row],
+					textDelim, featNames[featT1Sort['pathIdx'][row]]))
+		#end with
+
+		# Sort the Top 5 paths
+		featT5Sort = np.recarray( len(featT5Dict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
+		pathIdxList = list(featT5Dict.keys())
+		row = -1
+		for item in pathIdxList :
+			row += 1
+			featT5Sort['pathIdx'][row] = item
+			featT5Sort['count'][row] = featT5Dict[item]
+		#end if
+		featT5Sort[::-1].sort(order=['count', 'pathIdx'])
+
+		# Save the Top 5 paths to file
+		fname = 'ranked_features_Top5-' + useLabel + '.txt'
+		with open(si + fname, 'w') as fout :
+			fout.write('Clusters:{}{}'.format(textDelim, nClus))
+			for row in range(len(featT5Sort)) :
+				fout.write('\n{}{}{}'.format(featT5Sort['count'][row],
+					textDelim, featNames[featT5Sort['pathIdx'][row]]))
+		#end with
+
+		# Sort the Top All Non-Zero paths
+		featTASort = np.recarray( len(featTADict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
+		pathIdxList = list(featTADict.keys())
+		row = -1
+		for item in pathIdxList :
+			row += 1
+			featTASort['pathIdx'][row] = item
+			featTASort['count'][row] = featTADict[item]
+		#end if
+		featTASort[::-1].sort(order=['count', 'pathIdx'])
+
+		# Save the Top All Non-Zero paths to file
+		fname = 'ranked_features_TopNZ-' + useLabel + '.txt'
+		with open(si + fname, 'w') as fout :
+			fout.write('Clusters:{}{}'.format(textDelim, nClus))
+			for row in range(len(featTASort)) :
+				fout.write('\n{}{}{}'.format(featTASort['count'][row],
+					textDelim, featNames[featTASort['pathIdx'][row]]))
+		#end with
 	#end if
-	featT1Sort[::-1].sort(order=['count', 'pathIdx'])
-
-	# Save the Top 1 paths to file
-	fname = 'ranked_features_Top1-' + useLabel + '.txt'
-	with open(si + fname, 'w') as fout :
-		fout.write('Clusters:{}{}'.format(textDelim, nClus))
-		for row in range(len(featT1Sort)) :
-			fout.write('\n{}{}{}'.format(featT1Sort['count'][row],
-				textDelim, featNames[featT1Sort['pathIdx'][row]]))
-	#end with
-
-	# Sort the Top 5 paths
-	featT5Sort = np.recarray( len(featT5Dict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
-	pathIdxList = list(featT5Dict.keys())
-	row = -1
-	for item in pathIdxList :
-		row += 1
-		featT5Sort['pathIdx'][row] = item
-		featT5Sort['count'][row] = featT5Dict[item]
-	#end if
-	featT5Sort[::-1].sort(order=['count', 'pathIdx'])
-
-	# Save the Top 5 paths to file
-	fname = 'ranked_features_Top5-' + useLabel + '.txt'
-	with open(si + fname, 'w') as fout :
-		fout.write('Clusters:{}{}'.format(textDelim, nClus))
-		for row in range(len(featT5Sort)) :
-			fout.write('\n{}{}{}'.format(featT5Sort['count'][row],
-				textDelim, featNames[featT5Sort['pathIdx'][row]]))
-	#end with
-
-	# Sort the Top All Non-Zero paths
-	featTASort = np.recarray( len(featTADict), dtype=[('pathIdx', 'i4'), ('count', 'i4')])
-	pathIdxList = list(featTADict.keys())
-	row = -1
-	for item in pathIdxList :
-		row += 1
-		featTASort['pathIdx'][row] = item
-		featTASort['count'][row] = featTADict[item]
-	#end if
-	featTASort[::-1].sort(order=['count', 'pathIdx'])
-
-	# Save the Top All Non-Zero paths to file
-	fname = 'ranked_features_TopNZ-' + useLabel + '.txt'
-	with open(si + fname, 'w') as fout :
-		fout.write('Clusters:{}{}'.format(textDelim, nClus))
-		for row in range(len(featTASort)) :
-			fout.write('\n{}{}{}'.format(featTASort['count'][row],
-				textDelim, featNames[featTASort['pathIdx'][row]]))
-	#end with
-
 
 
 	# 12) Output the parameters to file
@@ -589,10 +636,15 @@ for si in dSubDirs :
 			fout.write('max_iter:{}{}\n'.format(textDelim, enMaxIter))
 			fout.write('normalize:{}{}\n'.format(textDelim, enNorm))
 			fout.write('fit_intercept:{}{}\n'.format(textDelim, enFitIncept))
+		elif useCfier == 3 :
+			fout.write('method:{}SVM\n'.format(textDelim))
+			fout.write('kernel:{}{}\n'.format(textDelim, svmKernel))
+			fout.write('max_iter:{}{}\n'.format(textDelim, svmMaxIter))
 		fout.write('\n')
 
 		fout.write('Prediction Results\n')
-		fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfier.coef_)[0])))
+		if useCfier != 3 :
+			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfier.coef_)[0])))
 		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet, trainLabel)))
 		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet, testLabel)))
 		fout.write('\n')
