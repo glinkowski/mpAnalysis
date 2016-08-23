@@ -415,9 +415,10 @@ for si in dSubDirs :
 		elif useCfier == 4 :
 			cfPredLabel = cfier.decision_function(testSet)
 		elif useCfier == 5 :
-			cfier = svm.LinearSVC(penalty='l2', max_iter=svmMaxIter, dual=False)
-			cfier.fit(trainSet[:,useFeatIdx], trainLabel)
-			cfPredLabel = cfier.decision_function(testSet[:,useFeatIdx])
+			if numCoefs > 0 :
+				cfier = svm.LinearSVC(penalty='l2', max_iter=svmMaxIter, dual=False)
+				cfier.fit(trainSet[:,useFeatIdx], trainLabel)
+				cfPredLabel = cfier.decision_function(testSet[:,useFeatIdx])
 		#end if
 		cfPredLabel = np.ravel(cfPredLabel)
 
