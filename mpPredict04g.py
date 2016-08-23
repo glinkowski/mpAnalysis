@@ -55,7 +55,7 @@ newVerbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 4
+useCfier = 5
 	# 1 = Lasso, 2 = ElasticNet, 3 = SVM, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
@@ -126,6 +126,8 @@ elif useCfier == 3 :
 	useLabel = useLabel + 'SVM'
 elif useCfier == 4 :
 	useLabel = useLabel + 'LinSVM'
+elif useCfier == 5 :
+	useLabel = useLabel + 'LasSVM'
 else :
 	print("ERROR: useCfier value is unrecognized: {}".format(useCfier))
 #end if
@@ -347,8 +349,12 @@ for si in dSubDirs :
 					n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
 			elif useCfier == 3 :	#3 = SVM
 				cfier = svm.SVC(probability=True, max_iter=svmMaxIter, decision_function_shape='ovr')
-			elif useCfier == 4 :	#3 = LinearSVM
+			elif useCfier == 4 :	#4 = LinearSVM
 				cfier = svm.LinearSVC(penalty='l1', max_iter=svmMaxIter, dual=False)
+			elif useCfier == 5 :	# 5 = Lasso + SVM
+				# part 1: get coefficients
+				cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
+					max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
 			else :
 				print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
 			#end if
@@ -383,6 +389,12 @@ for si in dSubDirs :
 			elif useCfier == 4 :
 					print("Clus {}; cfier {}; score: {:.3f}; coeffs: {}".format(int(cv), useCfier,
 					cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
+			elif useCfier == 5 :
+				useFeatIdx = np.nonzero(cfier.coef_)[0]
+				print("Clus {}; cfier {}; pos={}; score: {:.3f}; coeffs: {}".format(int(cv), useCfier,
+					usePos, cfier.score(trainSet, trainLabel), len(useFeatIdx)))
+				print("  iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
+
 			#end if
 			if loopCount > 1 :
 				print("    attempts: {}".format(loopCount))
@@ -402,6 +414,11 @@ for si in dSubDirs :
 			cfPredLabel = cfier.decision_function(testSet)
 		elif useCfier == 4 :
 			cfPredLabel = cfier.decision_function(testSet)
+		elif useCfier == 5 :
+			cfier = svm.LinearSVC(penalty='l2', max_iter=svmMaxIter, dual=False)
+			cfier.fit(trainSet[:,useFeatIdx], trainLabel)
+			cfPredLabel = cfier.decision_function(testSet[:,useFeatIdx])
+		#end if
 		cfPredLabel = np.ravel(cfPredLabel)
 
 		ranker['score'] = cfPredLabel
@@ -433,7 +450,7 @@ for si in dSubDirs :
 		# Extract indices corresponding to top 5 weighted features
 		if useCfier != 3 :
 
-			if useCfier == 4 :
+			if useCfier > 3 :
 				featWeights = cfier.coef_[0]
 			else :
 				featWeights = cfier.coef_
@@ -641,12 +658,19 @@ for si in dSubDirs :
 			fout.write('kernel:{}{}\n'.format(textDelim, svmKernel))
 			fout.write('max_iter:{}{}\n'.format(textDelim, svmMaxIter))
 		fout.write('\n')
-
+#TODO: output for cfiers 4 & 5
 		fout.write('Prediction Results\n')
-		if useCfier != 3 :
+		if useCfier == 3 :
+			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet, trainLabel)))
+			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet, testLabel)))
+		elif useCfier == 5 :
+			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(useFeatIdx)))
+			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet[:,useFeatIdx], trainLabel)))
+			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet[:,useFeatIdx], testLabel)))
+		else :
 			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfier.coef_)[0])))
-		fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet, trainLabel)))
-		fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet, testLabel)))
+			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet, trainLabel)))
+			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet, testLabel)))
 		fout.write('\n')
 	#end with
 
