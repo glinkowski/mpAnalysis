@@ -39,7 +39,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-test01'
+sDir = '../Dropbox/mp/output/pred04-msig300'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -55,13 +55,13 @@ newVerbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 5
-	# 1 = Lasso, 2 = ElasticNet, 3 = SVM, ...
+useCfier = 1
+	# 1 = Lasso, 2 = ElasticNet, 3 = SVM, 4 = LinearSVM, 5 = Lasso + SVM, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
-useFeatPathSim = True
+useFeatPathSim = False
 	# True/False: use the pathsim sum features
-useFeatPathZScore = False
+useFeatPathZScore = True
 	# True/False: use the pathsim sum features
 useFeatTermWeights = False
 	# True/False: use the indirect term features
@@ -331,7 +331,6 @@ for si in dSubDirs :
 		testSet = features[testIdx,:]
 		testLabel = featLabel[testIdx]
 		testLabel = np.ravel(testLabel)
-	#end loop
 
 
 
@@ -419,6 +418,8 @@ for si in dSubDirs :
 				cfier = svm.LinearSVC(penalty='l2', max_iter=svmMaxIter, dual=False)
 				cfier.fit(trainSet[:,useFeatIdx], trainLabel)
 				cfPredLabel = cfier.decision_function(testSet[:,useFeatIdx])
+			else :
+				cfPredLabel = cfier.predict(testSet)
 		#end if
 		cfPredLabel = np.ravel(cfPredLabel)
 
@@ -666,8 +667,8 @@ for si in dSubDirs :
 			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet, testLabel)))
 		elif useCfier == 5 :
 			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(useFeatIdx)))
-			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet[:,useFeatIdx], trainLabel)))
-			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet[:,useFeatIdx], testLabel)))
+#			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet[:,useFeatIdx], trainLabel)))
+#			fout.write('Testing score:{}{:3.3f}\n'.format(textDelim, cfier.score(testSet[:,useFeatIdx], testLabel)))
 		else :
 			fout.write('nonzero coefficients:{}{}\n'.format(textDelim, len(np.nonzero(cfier.coef_)[0])))
 			fout.write('Training score:{}{:3.3f}\n'.format(textDelim, cfier.score(trainSet, trainLabel)))
