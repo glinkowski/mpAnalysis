@@ -56,7 +56,7 @@ oDirPrefix = 'pred04-batch'
 
 
 # verbose feedback ?
-newVerbose = False
+newVerbose = True
 
 ####### ####### ####### ####### 
 
@@ -157,6 +157,7 @@ with gzip.open(fname, 'rb') as fin :
 	for line in fin :
 		mxSize += 1
 #end with
+print("  mxSize = {}".format(mxSize))
 print("    --elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 

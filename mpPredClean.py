@@ -25,7 +25,7 @@ import os
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-test01'
+dDir = 'pred04-achilles200'
 dRoot = '../Dropbox/mp/output/'
 
 ####### ####### ####### ####### 
