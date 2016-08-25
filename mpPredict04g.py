@@ -63,7 +63,7 @@ useFeatPathSim = False
 	# True/False: use the pathsim sum features
 useFeatPathZScore = True
 	# True/False: use the pathsim sum features
-useFeatTermWeights = False
+useFeatTermWeights = True
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
@@ -77,7 +77,7 @@ limitMinScore = 0.09
 
 
 # LASSO params
-lMaxIter = 700
+lMaxIter = 600
 lNorm = True
 lFitIcpt = True
 
@@ -90,7 +90,7 @@ enNorm = True
 enCopy = True
 
 # SVM params
-svmMaxIter = 700
+svmMaxIter = 500
 svmKernel = 'rbf' # linear, poly, rbf, sigmoid
 
 
