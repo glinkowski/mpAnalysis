@@ -437,10 +437,11 @@ for si in dSubDirs :
 
 		# If no coeffs were chosen, rank will be random; leave col as all zeros
 #		if numCoefs > 0 :
-		if useCfier < 5 :
-			trainScore = cfier.score(trainSet, trainLabel)
-		else :
+		if (useCfier == 5) and (numCoefs > 0) :
 			trainScore = cfier.score(trainSet[:,useFeatIdx], trainLabel)
+		else :
+			trainScore = cfier.score(trainSet, trainLabel)
+		#end if
 		if trainScore >= limitMinScore :
 			# Place genes' rank & score into appropriate matrices
 			rank = 0
