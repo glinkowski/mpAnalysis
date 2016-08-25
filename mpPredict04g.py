@@ -55,7 +55,7 @@ newVerbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 1
+useCfier = 5
 	# 1 = Lasso, 2 = ElasticNet, 3 = SVM, 4 = LinearSVM, 5 = Lasso + SVM, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
@@ -437,7 +437,11 @@ for si in dSubDirs :
 
 		# If no coeffs were chosen, rank will be random; leave col as all zeros
 #		if numCoefs > 0 :
-		if cfier.score(trainSet, trainLabel) >= limitMinScore :
+		if useCfier < 5 :
+			trainScore = cfier.score(trainSet, trainLabel)
+		else :
+			trainScore = cfier.score(trainSet[:,useFeatIdx], trainLabel)
+		if trainScore >= limitMinScore :
 			# Place genes' rank & score into appropriate matrices
 			rank = 0
 			for entry in ranker :
