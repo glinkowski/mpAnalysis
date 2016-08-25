@@ -181,10 +181,12 @@ for p in pathList :
 
 	# load the path count matrix
 	countMatrix = mp.getPathMatrix(pathDict[p], ePath, eName, mxSize)
-	countAvg = np.mean(countMatrix, axis=1)
-	countAvg = countAvg.reshape( (len(countAvg), 1) )
-	countStD = np.std(countMatrix, axis=1)
-	countStD = countStD.reshape( (len(countStD), 1) )
+
+	# Calculate z-score over the columns
+	countAvg = np.mean(countMatrix, axis=0)
+	countAvg = countAvg.reshape( (1, len(countAvg)) )
+	countStD = np.std(countMatrix, axis=0)
+	countStD = countStD.reshape( (1, len(countStD)) )
 	countStD = np.add(countStD, 0.0001)
 
 	# convert to z-scores on a row-by-row basis
