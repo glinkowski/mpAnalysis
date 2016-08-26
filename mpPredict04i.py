@@ -36,12 +36,16 @@ import random
 sDir = '../Dropbox/mp/output/pred04-test01'
 
 # Control the iterations & error
-numIterations = 4
+numIterations = 13
 	# how many iterations to perform
 numVotes = 5
 	# how many random samples for comparison
 # numWrong = 3
 	# how many False Negatives before next iteration
+numExitKnown = 29
+	# minimum number of Known genes before iterations stop
+numExitUnknown = 399
+	# min number of Unknonw genes before iterations halt
 
 
 # verbose feedback ?
@@ -409,9 +413,10 @@ def predictIterative(printFlag) :
 
 			# find the cutoff value for scores to keep
 #			idxKeep = len(iterAll) - int(len(iterAll) / float(numIterations))
-			idxKeep = iterNumGenes - int(iterNumGenes / float(numIterations))
+			cutoffIdx = iterNumGenes - int(iterNumGenes / float(numIterations))
 			absScore = np.absolute(voteAvgScore)
-			cutoffVal = absScore[idxKeep]
+			absScore.sort()
+			cutoffVal = absScore[cutoffIdx]
 
 			# get the upper & lower indices to extract for next round
 			# x = 0
@@ -442,7 +447,7 @@ def predictIterative(printFlag) :
 
 			numKnown = len(iterKnown)
 			numUnknown = len(iterUnknown)
-			if (numKnown <= 0) or (numUnknown <= 0) :
+			if (numKnown <= numExitKnown) or (numUnknown <= numExitUnknown) :
 				if printFlag :
 					print("known: {}, unknown: {}; exiting loop".format(numKnown, numUnknown))
 				break
@@ -508,6 +513,30 @@ def predictIterative(printFlag) :
 				firstRow = False
 		#end with
 
+		# 10-c) Rank the genes across the iterations
+#TODO: should I average these, or just take the last column ?
+#	test that option later
+		useScore = geneScores[giUnknown,0]
+		ranker = np.recarray(len(giUnknown),
+			dtype=[('inverse', 'f4'), ('score', 'f4'), ('geneIdx', 'i4')])
+		ranker['score'] = useScore
+		ranker['inverse'] = np.multiply(useScore, -1)
+		ranker['geneIdx'] = giUnknown
+		ranker.sort(order=['inverse', 'geneIdx'])
+			# 11-b) Output the ranked genes to file
+		# write the file
+		fname = 'ranked_genes-' + useLabel + '_First.txt'
+		if printFlag :
+			print("  Saving ranked genes to file {}".format(fname))
+		with open(si+fname, 'w') as fout :
+			firstRow = True
+			for row in range(len(ranker)) :
+				if not firstRow :
+					fout.write('\n')
+				fout.write('{:3.3f}{}{}'.format(ranker['score'][row],
+					textDelim, geneNames[ranker['geneIdx'][row]]))
+				firstRow = False
+		#end with
 
 
 		# 12) Output the selected feature info to file
