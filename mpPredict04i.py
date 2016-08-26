@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-msig300'
+sDir = '../Dropbox/mp/output/pred04-test01'
 
 # Control the iterations & error
 numIterations = 4
@@ -71,7 +71,7 @@ useFeatTermWeights = False
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00005, 0.002, num=17)
+useGivenRange = np.linspace(0.00005, 0.02, num=17)
 	# array of vals; 'None' means to auto-search for alphas
 maxClusters = 11
 	# maximum number of clusters to use
@@ -302,16 +302,19 @@ def predictIterative(printFlag) :
 		iterAll.sort()
 
 		for itr in range(numIterations) :
-			if printFlag :
-				print("  iteration {} of {}; {} votes".format(itr,
-					numIterations, numVotes))
-			#end if
 
 			# store the results for each random sample
 #			iterNumGenes = len(iterKnown) + len(iterUnknown)
 			iterNumGenes = len(iterAll)
 			voteScores = np.zeros( (iterNumGenes, numVotes), dtype=np.float32)
 #			voteScores = np.zeros( (len(geneDict), numVotes), dtype=np.float32)
+
+			if printFlag :
+				print("  iteration {} of {}; {} votes; cfier {}".format(itr,
+					numIterations, numVotes, useCfier))
+				print("  known: {}, total: {}, trainSet: {}".format( len(iterKnown),
+					iterNumGenes, (len(iterKnown) * (1 + negMultiplier)) ))
+			#end if
 
 
 			# 6) Prepare the test/train vectors & labels
@@ -340,31 +343,33 @@ def predictIterative(printFlag) :
 				# Some versions want the labels reshaped
 				trainLabel = np.reshape(trainLabel, [trainLabel.shape[0],])
 
-				if printFlag :
-					print("  posTrain: {}, trainSet: {}, testSet:{}".format(len(iterKnown),
-						trainSet.shape, testSet.shape))
-				#end if
-
 
 				# 7) Train classifier, predict on test, collect scores
 
 #TODO: add other classifier options ??
 				if useCfier == 1 :	# 1 = Lasso
-					cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
-						max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
+					if vote == 0 :
+						cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
+							max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
+						cfier.fit(trainSet, trainLabel)
+						foundAlpha = cfier.alpha_
+					else :
+						cfier = lm.Lasso(alpha=foundAlpha, max_iter=lMaxIter, normalize=lNorm,
+							positive=usePos, fit_intercept=lFitIcpt)
+						cfier.fit(trainSet, trainLabel)
+					#end if
 				else :
 					print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
 				#end if
-				cfier.fit(trainSet, trainLabel)
+
 
 #TODO: Decide on verbose vs printFlag
 				if verbose :
 					# view quick statistics from this training session
 					if useCfier < 3 :
 						if printFlag :
-							print("    Iter-Vote {}-{}; cfier {}; pos={}; score: {:.3f}; coeffs: {}".format(iter, vote,
-								useCfier, usePos, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
-							print("      iterations: {}; chosen alpha: {:.6f}".format(cfier.n_iter_, cfier.alpha_))
+							print("    Vote {}-{}; iters {:3d}, alpha {:.5f}, score {:.3f}; coeffs {}".format(itr, vote,
+								cfier.n_iter_, foundAlpha, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
 							if useCfier == 2 :	# 2 = ElasticNet
 								print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
 				#end if
@@ -435,9 +440,13 @@ def predictIterative(printFlag) :
 			iterAll.extend(iterUnknown)
 			iterAll.sort()
 
-			if (len(iterKnown) <= 0) or (len(iterUnknown) <= 0) :
+			numKnown = len(iterKnown)
+			numUnknown = len(iterUnknown)
+			if (numKnown <= 0) or (numUnknown <= 0) :
+				if printFlag :
+					print("known: {}, unknown: {}; exiting loop".format(numKnown, numUnknown))
 				break
-		#end loop (iter)
+		#end loop (itr)
 
 		# 10) Rank the genes across the iterations
 #TODO: should I average these, or just take the last column ?
