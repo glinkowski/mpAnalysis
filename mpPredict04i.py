@@ -36,9 +36,9 @@ import random
 sDir = '../Dropbox/mp/output/pred04-test01'
 
 # Control the iterations & error
-numIterations = 13
+numIterations = 1
 	# how many iterations to perform
-numVotes = 5
+numVotes = 11
 	# how many random samples for comparison
 # numWrong = 3
 	# how many False Negatives before next iteration
@@ -71,7 +71,7 @@ useFeatPathZScore = False
 	# True/False: use the pathsim sum features
 fZScoreSim = 'features_ZScoreSim.gz'
 	# File name containing path z-score vectors
-useFeatTermWeights = False
+useFeatTermWeights = True
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
@@ -314,7 +314,7 @@ def predictIterative(printFlag) :
 #			voteScores = np.zeros( (len(geneDict), numVotes), dtype=np.float32)
 
 			if printFlag :
-				print("  iteration {} of {}; {} votes; cfier {}".format(itr,
+				print("  iteration {} of {}; {} votes; cfier {}".format( (itr + 1),
 					numIterations, numVotes, useCfier))
 				print("  known: {}, total: {}, trainSet: {}".format( len(iterKnown),
 					iterNumGenes, (len(iterKnown) * (1 + negMultiplier)) ))
@@ -372,7 +372,7 @@ def predictIterative(printFlag) :
 					# view quick statistics from this training session
 					if useCfier < 3 :
 						if printFlag :
-							print("    Vote {}-{}; iters {:3d}, alpha {:.5f}, score {:.3f}; coeffs {}".format(itr, vote,
+							print("    Vote {}-{}; iters {:3d}, alpha {:.5f}, score {:.3f}; coeffs {}".format((itr + 1), (vote + 1),
 								cfier.n_iter_, foundAlpha, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
 							if useCfier == 2 :	# 2 = ElasticNet
 								print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
