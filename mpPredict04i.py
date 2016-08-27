@@ -33,15 +33,15 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-test01'
+sDir = '../Dropbox/mp/output/pred04-msig300'
 
 # Control the iterations & error
-numIterations = 13
+numIterations = 1
 	# how many iterations to perform
-numVotes = 5
+numVotes = 11
 	# how many random samples for comparison
 # numWrong = 3
-	# how many False Negatives before next iteration
+# 	# how many False Negatives before next iteration
 numExitKnown = 29
 	# minimum number of Known genes before iterations stop
 numExitUnknown = 399
@@ -71,15 +71,15 @@ useFeatPathZScore = False
 	# True/False: use the pathsim sum features
 fZScoreSim = 'features_ZScoreSim.gz'
 	# File name containing path z-score vectors
-useFeatTermWeights = False
+useFeatTermWeights = True
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00005, 0.02, num=17)
+useGivenRange = np.linspace(0.00001, 0.02, num=19)
 	# array of vals; 'None' means to auto-search for alphas
-maxClusters = 11
-	# maximum number of clusters to use
-	#	-1 = no maximum value is set
+# maxClusters = 11
+# 	# maximum number of clusters to use
+# 	#	-1 = no maximum value is set
 
 # Label for pos & neg labels
 pLabel = 1
@@ -87,7 +87,7 @@ nLabel = 0
 negMultiplier = 4
 
 # LASSO params
-lMaxIter = 600
+lMaxIter = 800
 lNorm = True
 lFitIcpt = True
 
@@ -160,6 +160,7 @@ def predictIterative(printFlag) :
 	if useFeatNeighbor :
 		useLabel = useLabel + 'N'
 	#end if
+	useLabel = useLabel + '_m{}'.format(negMultiplier)
 
 	if printFlag :
 		print("Using label: {}".format(useLabel))
