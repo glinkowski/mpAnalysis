@@ -36,9 +36,9 @@ import random
 sDir = '../Dropbox/mp/output/pred04-msig300'
 
 # Control the iterations & error
-numIterations = 31
+numIterations = 1
 	# how many iterations to perform
-numVotes = 5
+numVotes = 11
 	# how many random samples for comparison
 # numWrong = 3
 # 	# how many False Negatives before next iteration
@@ -71,7 +71,7 @@ useFeatPathZScore = True
 	# True/False: use the pathsim sum features
 fZScoreSim = 'features_ZScoreSim.gz'
 	# File name containing path z-score vectors
-useFeatTermWeights = True
+useFeatTermWeights = False
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
@@ -84,7 +84,7 @@ useGivenRange = np.linspace(0.00001, 0.02, num=19)
 # Label for pos & neg labels
 pLabel = 1
 nLabel = 0
-negMultiplier = 2
+negMultiplier = 1
 
 # LASSO params
 lMaxIter = 800
@@ -460,7 +460,7 @@ def predictIterative(printFlag) :
 		# 10) Rank the genes across the iterations
 #TODO: should I average these, or just take the last column ?
 #	test that option later
-		useScore = np.mean(geneScores[giUnknown,0:itr], axis=1)
+		useScore = np.mean(geneScores[giUnknown,0:(itr+1)], axis=1)
 
 		ranker = np.recarray(len(giUnknown),
 			dtype=[('inverse', 'f4'), ('score', 'f4'), ('geneIdx', 'i4')])
