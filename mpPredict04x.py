@@ -36,9 +36,11 @@ import sys
 # PARAMETERS
 
 # folder containing the samples & results
-dDir = 'pred04-dbgap200'
+dDir = 'pred04-msig300'
 dRoot = '../Dropbox/mp/output/'
 
+# whether to draw the AUC images (can take a long time)
+drawAUCs = False
 
 #retCutoffs = [50, 100, 200, 500, 1000, 2000]
 # TODO: Incorporate the return cutoffs into the AUC data
@@ -139,6 +141,8 @@ if prevNumFolds != numFolds :
 sampList = list(sampSet)
 sampList.sort()
 
+if newVerbose :
+	print("There are {} subdirectories ...".format(len(dSubDirs)))
 
 
 # 3) Create the matrices to hold the results
@@ -181,6 +185,10 @@ for item in fileList :
 #end loop
 methodList.sort()
 
+if newVerbose :
+	print("  each containing {} different experiments.".format(len(methodList)))
+
+
 resultsROC = np.zeros( (len(methodList), len(dSubDirs)), dtype=np.float64)
 resultsPR = np.zeros( (len(methodList), len(dSubDirs)), dtype=np.float64)
 resultsAvgROC = np.zeros( (len(methodList), len(sampList)), dtype=np.float64)
@@ -200,6 +208,9 @@ col = -1
 #for si in dSubDirs[0:1] :
 for si in dSubDirs :
 	col += 1
+
+	if (col % 20) and newVerbose :
+		print(  "beginning subdirectory {}".format(col))
 
 	# Get data relating to each method
 	row = -1
@@ -226,37 +237,39 @@ for si in dSubDirs :
 		resultsPR[row,col] = areaPR
 
 
-#TODO: this should be a func
-		# Save the AUC figure(s)
-		outName = si + 'AUC-' + m + '.png'
-		fig = plt.figure()
+		if drawAUCs :
+	#TODO: this should be a func
+			# Save the AUC figure(s)
+			outName = si + 'AUC-' + m + '.png'
+			fig = plt.figure()
 
-		# Plot the ROC curve
-		plt.subplot(1, 2, 1)
-		plt.plot(FPR, recall)
-		plt.plot([0,1], [0,1], 'lightgrey')
-		plt.xlabel('False Positive Rate')
-		plt.ylabel('True Positive Rate')
-		plt.axis([0, 1, 0, 1])
+			# Plot the ROC curve
+			plt.subplot(1, 2, 1)
+			plt.plot(FPR, recall)
+			plt.plot([0,1], [0,1], 'lightgrey')
+			plt.xlabel('False Positive Rate')
+			plt.ylabel('True Positive Rate')
+			plt.axis([0, 1, 0, 1])
 
-		# Plot the Precision-Recall curve
-		plt.subplot(1, 2, 2)
-		plt.plot(recall, precision)
-		plt.xlabel('Recall')
-		plt.ylabel('Precision')
-		plt.axis([0, 1, 0, 1])
+			# Plot the Precision-Recall curve
+			plt.subplot(1, 2, 2)
+			plt.plot(recall, precision)
+			plt.xlabel('Recall')
+			plt.ylabel('Precision')
+			plt.axis([0, 1, 0, 1])
 
-		# Final touches
-		sv = si.split('/')
-		sdir = sv[-2]
-		sdv = sdir.split('-')
-		plt.suptitle(sdv[1]+'\n{}, concealed = {}'.format(m, numHid)+
-			', ROC area = {:.3}'.format( float(areaROC) ))
-		plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=.4, hspace=None)
+			# Final touches
+			sv = si.split('/')
+			sdir = sv[-2]
+			sdv = sdir.split('-')
+			plt.suptitle(sdv[1]+'\n{}, concealed = {}'.format(m, numHid)+
+				', ROC area = {:.3}'.format( float(areaROC) ))
+			plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=.4, hspace=None)
 
-		# Save the figure
-		plt.savefig(outName)
-		plt.close()
+			# Save the figure
+			plt.savefig(outName)
+			plt.close()
+		#end if
 #end loop
 
 
@@ -305,7 +318,8 @@ for i in range(len(sampList)) :
 # 	#end loop
 # #end with
 
-print("Writing the AUC tables (ROC & PR) ...")
+if newVerbose :
+	print("Writing the AUC tables (ROC & PR) ...")
 
 # Write the AUC tables to file(s) for the per-sample results
 fileNames = (['results-AUC_ROC_Avg.txt', 'results-AUC_ROC_Max.txt',
@@ -359,7 +373,8 @@ for f in range(2) :
 
 
 # 6) Create the path score tables
-print("Finding path scores for each sample ...")
+if newVerbose :
+	print("Finding path scores for each sample ...")
 
 pScoreFolds = np.zeros( (len(pathList), len(dSubDirs)) )
 pScoreSamples = np.zeros( (len(pathList), len(sampList)) )
@@ -414,8 +429,8 @@ for i in range(len(sampList)) :
 
 # 7) Output to file(s)
 
-
-print("Writing the path score files ...")
+if newVerbose :
+	print("Writing the path score files ...")
 
 with open(dPath + 'results-PathScores_Avg.txt', 'w') as fout :
 	fout.write('Path Scores for each sample, averaged across folds')
@@ -456,7 +471,8 @@ with open(dPath + 'results-PathScores_All.txt', 'w') as fout :
 
 
 # 8) Create the Top N feature tables
-print("Finding how often each feature is used in each sample ...")
+if newVerbose :
+	print("Finding how often each feature is used in each sample ...")
 
 # Get list of the methods used from the file names
 #	ie: 'ranked_featurs_Top<N>-<method_description>.txt'
