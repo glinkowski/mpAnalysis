@@ -186,7 +186,7 @@ for item in fileList :
 methodList.sort()
 
 if newVerbose :
-	print("  each containing {} different experiments.".format(len(methodList)))
+	print("  ... each containing {} different experiments.".format(len(methodList)))
 
 
 resultsROC = np.zeros( (len(methodList), len(dSubDirs)), dtype=np.float64)
@@ -209,7 +209,7 @@ col = -1
 for si in dSubDirs :
 	col += 1
 
-	if (col % 20) and newVerbose :
+	if not (col % 20) and newVerbose :
 		print(  "beginning subdirectory {}".format(col))
 
 	# Get data relating to each method
@@ -272,6 +272,8 @@ for si in dSubDirs :
 		#end if
 #end loop
 
+if newVerbose :
+	print("Finished collecting results.")
 
 #print(numFolds)
 #print("{}, {}".format( resultsROC.shape, resultsAvgROC.shape ))
