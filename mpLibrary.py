@@ -2458,6 +2458,7 @@ def clusterTrainSets(path, geneDict, features, nMaxClus) :
 	# Labels for the pos/neg data
 	pLabel = 1
 	nLabel = 0
+	negMultiplier = 1
 
 	# Assume normalized feature values (done before this function call)
 
@@ -2478,7 +2479,7 @@ def clusterTrainSets(path, geneDict, features, nMaxClus) :
 
 
 	# Cluster the Unknown feature vectors
-	nClusters = int(round( len(giUnknown) / len(giKnown) / 2))
+	nClusters = int(round( len(giUnknown) / len(giKnown) / negMultiplier))
 	if verbose :
 		print("  Clustering the Unknown samples ...")
 		print("  Known: {}, Unknown: {}, clusters: {}".format(
