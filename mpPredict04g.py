@@ -39,7 +39,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-msig300'
+sDir = '../Dropbox/mp/output/pred04-dbgap300'
 
 # File name containing pathsim feature vectors
 fSimilarity = 'features_PathSim.gz'
@@ -55,7 +55,7 @@ newVerbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 5
+useCfier = 1
 	# 1 = Lasso, 2 = ElasticNet, 3 = SVM, 4 = LinearSVM, 5 = Lasso + SVM, ...
 usePos = True
 	# True/False: limit to only Positive coefficient values
@@ -67,17 +67,17 @@ useFeatTermWeights = True
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00005, 0.002, num=17)
+useGivenRange = np.linspace(0.00001, 0.02, num=23)
 	# array of vals; 'None' means to auto-search for alphas
 maxClusters = 11
 	# maximum number of clusters to use
 	#	-1 = no maximum value is set
-limitMinScore = 0.09
+limitMinScore = 0.001
 	# minimum score on train set to keep results
 
 
 # LASSO params
-lMaxIter = 600
+lMaxIter = 800
 lNorm = True
 lFitIcpt = True
 
@@ -150,9 +150,9 @@ if useFeatNeighbor :
 	useLabel = useLabel + 'N'
 #end if
 
-labelLimitMinScore = int(limitMinScore * 100)
+labelLimitMinScore = int(limitMinScore * 1000)
 useLabel = useLabel + '_L{}'.format( 
-	str(labelLimitMinScore).zfill(2) )
+	str(labelLimitMinScore).zfill(3) )
 
 print(useLabel)
 
