@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-msig300'
+sDir = '../Dropbox/mp/output/pred04-dbgap300'
 
 # Control the iterations & error
 numIterations = 1
@@ -46,6 +46,9 @@ numExitKnown = 29
 	# minimum number of Known genes before iterations stop
 numExitUnknown = 399
 	# min number of Unknonw genes before iterations halt
+
+retryOnZeroCoeffs = True
+	# whether to allow coeffs = 0 in results
 
 
 # verbose feedback ?
@@ -71,11 +74,11 @@ useFeatPathZScore = True
 	# True/False: use the pathsim sum features
 fZScoreSim = 'features_ZScoreSim.gz'
 	# File name containing path z-score vectors
-useFeatTermWeights = False
+useFeatTermWeights = True
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00001, 0.02, num=19)
+useGivenRange = np.linspace(0.00001, 0.05, num=27)
 	# array of vals; 'None' means to auto-search for alphas
 # maxClusters = 11
 # 	# maximum number of clusters to use
@@ -97,7 +100,9 @@ textDelim = '\t'
 
 ####### ####### ####### ####### 
 
-
+#TODO: If score == 0,
+# find a new alpha (findAlpha flag)
+# select new random set
 
 
 ####### ####### ####### ####### 
@@ -161,6 +166,9 @@ def predictIterative(printFlag) :
 		useLabel = useLabel + 'N'
 	#end if
 	useLabel = useLabel + '_m{}'.format(negMultiplier)
+	if retryOnZeroCoeffs :
+		useLabel = useLabel + '_wRS' # indicating resample on 0 score
+	#end if
 
 	if printFlag :
 		print("Using label: {}".format(useLabel))
@@ -327,6 +335,8 @@ def predictIterative(printFlag) :
 			posTrain = features[iterKnown,:]
 			posTrainLabel = np.ones( (len(iterKnown), 1) ) * pLabel
 
+			findNewAlpha = True
+			retries = 0
 			for vote in range(numVotes) :
 
 				# Extract the vectors for neg sets
@@ -353,11 +363,12 @@ def predictIterative(printFlag) :
 
 #TODO: add other classifier options ??
 				if useCfier == 1 :	# 1 = Lasso
-					if vote == 0 :
+					if findNewAlpha :
 						cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
 							max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
 						cfier.fit(trainSet, trainLabel)
 						foundAlpha = cfier.alpha_
+						findNewAlpha = False
 					else :
 						cfier = lm.Lasso(alpha=foundAlpha, max_iter=lMaxIter, normalize=lNorm,
 							positive=usePos, fit_intercept=lFitIcpt)
@@ -385,9 +396,19 @@ def predictIterative(printFlag) :
 				#end if
 				cfPredLabel = np.ravel(cfPredLabel)
 
+				# If no coeffs (train score == 0) try again
+				if retryOnZeroCoeffs :
+					if len(np.nonzero(cfier.coef_)[0]) <= 0 :
+						if retries < (numVotes * 3) :
+							findNewAlpha = True
+							vote -= 1
+							retries += 1
+				#end if
+
 				voteScores[:,vote] = cfPredLabel
 			#end loop (vote)
 
+			# In case an iteration is no longer useful (all scores == 0)
 			if (vote > 0) and (cfier.score(trainSet, trainLabel) <= 0) :
 				break
 
