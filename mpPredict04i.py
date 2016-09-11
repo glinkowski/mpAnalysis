@@ -60,7 +60,7 @@ verbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 1
+useCfier = 2
 	# 1 = Lasso, 2 = ElasticNet, ...
 limitMPLen = [1, 2, 3]
 	# select only meta-paths of specific length(s)
@@ -93,6 +93,14 @@ negMultiplier = 1
 lMaxIter = 800
 lNorm = True
 lFitIcpt = True
+
+# Elastic Net params
+enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
+enNAlphas = 11
+enMaxIter = 400
+enFitIncept = True
+enNorm = True
+enCopy = True
 
 
 # text delimiter in output files
@@ -374,6 +382,11 @@ def predictIterative(printFlag) :
 							positive=usePos, fit_intercept=lFitIcpt)
 						cfier.fit(trainSet, trainLabel)
 					#end if
+				elif useCfier == 2 :	# 2 = ElasticNet
+					cfier = lm.ElasticNetCV(l1_ratio=enRatios, positive=usePos, fit_intercept=enFitIncept,
+						n_alphas=enNAlphas, normalize=enNorm, copy_X=enCopy, max_iter=enMaxIter)
+					cfier.fit(trainSet, trainLabel)
+					foundAlpha = cfier.alpha_
 				else :
 					print("ERROR: specified classifier unrecognized: useCfier = {}".format(useCfier))
 				#end if
@@ -587,12 +600,14 @@ def predictIterative(printFlag) :
 			fout.write('Classifier Parameters\n')
 			if useCfier == 1 :
 				fout.write('method:{}Lasso\n'.format(textDelim))
-				fout.write('positive:{}{}\n'.format(textDelim, usePos))
-				# fout.write('alpha range:{}{}\n'.format(textDelim, useGivenRange))
-				# fout.write('alpha chosen:{}{}\n'.format(textDelim, cfier.alpha_))
-				fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
-				fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
-				fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
+			elif useCfier == 2: 
+				fout.write('method:{}ElasticNet\n'.format(textDelim))
+			fout.write('positive:{}{}\n'.format(textDelim, usePos))
+			# fout.write('alpha range:{}{}\n'.format(textDelim, useGivenRange))
+			# fout.write('alpha chosen:{}{}\n'.format(textDelim, cfier.alpha_))
+			fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
+			fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
+			fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
 			fout.write('\n')
 		#end with
 
