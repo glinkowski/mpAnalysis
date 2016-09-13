@@ -49,7 +49,10 @@ numExitUnknown = 399
 
 retryOnZeroCoeffs = True
 	# whether to allow coeffs = 0 in results
-
+retrySubPortion = 0.75
+	# how many of Known to keep in new sub-sample
+retryMinValid = 9
+	# minimum Known genes to use for PosTrain
 
 # verbose feedback ?
 verbose = True
@@ -74,7 +77,7 @@ useFeatPathZScore = True
 	# True/False: use the pathsim sum features
 fZScoreSim = 'features_ZScoreSim.gz'
 	# File name containing path z-score vectors
-useFeatTermWeights = True
+useFeatTermWeights = False
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
@@ -167,7 +170,7 @@ def predictIterative(printFlag) :
 	#end if
 	useLabel = useLabel + '_m{}'.format(negMultiplier)
 	if retryOnZeroCoeffs :
-		useLabel = useLabel + '_wRS' # indicating resample on 0 score
+		useLabel = useLabel + '_wRS2' # indicating resample on 0 score
 	#end if
 
 	if printFlag :
@@ -332,17 +335,44 @@ def predictIterative(printFlag) :
 
 			# 6) Prepare the test/train vectors & labels
 			# Extract the vectors for the pos sets
-			posTrain = features[iterKnown,:]
-			posTrainLabel = np.ones( (len(iterKnown), 1) ) * pLabel
+#			posTrain = features[iterKnown,:]
+#			posTrainLabel = np.ones( (len(iterKnown), 1) ) * pLabel
 
-			findNewAlpha = True
+			retryNewAlpha = True
+			retrySubSample = False
 			retries = 0
-			for vote in range(numVotes) :
+#			numSubSample = len(iterKnown)
+			vote = 0
+			while vote < numVotes :
+#			for vote in range(numVotes) :
+#				print("--  vote: {}, retry: {} ...  --".format(vote+1, retrySubSample))
+
+				if retrySubSample :
+					#print("--  Creating new sub-sample ...  --")
+					retrySubSample = False
+
+					numSubSample = int(numSubSample * retrySubPortion) + 1
+					retryIterKnown = random.sample(iterKnown, numSubSample)
+					if len(retryIterKnown) < retryMinValid :
+						retryIterKnown = random.sample(iterKnown, retryMinValid)
+	
+					posTrain = features[retryIterKnown,:]
+					posTrainLabel = np.ones( (len(retryIterKnown), 1) ) * pLabel
+	
+					nExamples = min( negMultiplier * len(retryIterKnown), (iterNumGenes - len(retryIterKnown)))
+				else :
+					numSubSample = len(iterKnown)
+		
+					posTrain = features[iterKnown,:]
+					posTrainLabel = np.ones( (len(iterKnown), 1) ) * pLabel
+
+					#print("--  Using full sample ...  --")
+					nExamples = min( negMultiplier * len(iterKnown), (iterNumGenes - len(iterKnown)) )
+				#end if
 
 				# Extract the vectors for neg sets
 				# as one-class: train with rand samp from Unknown
 				#		test with all Unknown (TrueNeg + Hidden/TruePos)
-				nExamples = min( negMultiplier * len(iterKnown), (iterNumGenes - len(iterKnown)) )
 				giTrainNeg = random.sample(iterUnknown, nExamples)
 				negTrain = features[giTrainNeg,:]
 				negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * nLabel
@@ -363,12 +393,12 @@ def predictIterative(printFlag) :
 
 #TODO: add other classifier options ??
 				if useCfier == 1 :	# 1 = Lasso
-					if findNewAlpha :
+					if retryNewAlpha :
 						cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
 							max_iter=lMaxIter, normalize=lNorm, fit_intercept=lFitIcpt)
 						cfier.fit(trainSet, trainLabel)
 						foundAlpha = cfier.alpha_
-						findNewAlpha = False
+						retryNewAlpha = False
 					else :
 						cfier = lm.Lasso(alpha=foundAlpha, max_iter=lMaxIter, normalize=lNorm,
 							positive=usePos, fit_intercept=lFitIcpt)
@@ -384,8 +414,9 @@ def predictIterative(printFlag) :
 					# view quick statistics from this training session
 					if useCfier < 3 :
 						if printFlag :
-							print("    Vote {}-{}; iters {:3d}, alpha {:.5f}, score {:.3f}; coeffs {}".format((itr + 1), (vote + 1),
-								cfier.n_iter_, foundAlpha, cfier.score(trainSet, trainLabel), len(np.nonzero(cfier.coef_)[0])))
+							print("    Vote {}-{}; iters {:3d}, alpha {:.5f}, score {:.3f}; coeffs {}; sample {}".format(
+								(itr + 1), (vote + 1), cfier.n_iter_, foundAlpha, cfier.score(trainSet, trainLabel),
+								len(np.nonzero(cfier.coef_)[0]), len(posTrainLabel) ))
 							if useCfier == 2 :	# 2 = ElasticNet
 								print("    l1 ratio: {}".format( cfier.l1_ratio_ ))
 				#end if
@@ -398,19 +429,31 @@ def predictIterative(printFlag) :
 
 				# If no coeffs (train score == 0) try again
 				if retryOnZeroCoeffs :
+#					print("--  coeffs: {}".format(len(np.nonzero(cfier.coef_)[0])))
 					if len(np.nonzero(cfier.coef_)[0]) <= 0 :
 						if retries < (numVotes * 3) :
-							findNewAlpha = True
-							vote -= 1
+#							if printFlag :
+#								print("--  No coefficients, re-sampling  --")
+							retryNewAlpha = True
+							retrySubSample = True
+							vote = vote - 1
 							retries += 1
+#						else :
+#							if printFlag :
+#								print("--  Used all {} retries".format(retries))
+					else :
+						numSubSample = len(iterKnown)
 				#end if
 
 				voteScores[:,vote] = cfPredLabel
+
+				vote += 1
 			#end loop (vote)
 
-			# In case an iteration is no longer useful (all scores == 0)
-			if (vote > 0) and (cfier.score(trainSet, trainLabel) <= 0) :
-				break
+#TODO: think about this...
+			# # In case an iteration is no longer useful (all scores == 0)
+			# if (vote > 0) and (cfier.score(trainSet, trainLabel) <= 0) :
+			# 	break
 
 
 			# 8) Place the scores into the array and store across iterations
