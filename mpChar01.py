@@ -16,14 +16,14 @@
 #	gene's similarity to each member of the Known Pos set.
 # ---------------------------------------------------------
 
-import charLibrary as cl
+import mpCharLib as cl
 import time
 import numpy as np
 import gzip
 
 
 
-####### ####### ####### ####### 
+######## ######## ######## ######## 
 # PARAMETERS
 
 # Input names & locations
@@ -44,27 +44,16 @@ else :
 
 
 # verbose feedback ?
-verboseOutput = False
+verboseOutput = True
 
-####### ####### ####### ####### 
-
-
-
-
-####### ####### ####### ####### 
-# ANCILLARY FUNCTIONS
-
-#end def ####### ####### ####### 
-
-####### ####### ####### ####### 
+######## ######## ######## ######## 
 
 
 
 
-####### ####### ####### ####### 
+######## ######## ######## ######## 
 # PRIMARY FUNCTION
 
-def createFeatureZScore(eDir, sDir, oDir, printFlag) :
 # Partition the samples and create z-score features
 # Input ----
 #	eDir, str: directory containing edge list
@@ -77,25 +66,35 @@ def createFeatureZScore(eDir, sDir, oDir, printFlag) :
 #	directory in oDir containing folder for each sample
 #	(whole + 4 folds), containing gene partitions, and
 #	a matrix of z-score feature vectors for that sample
+def createFeatureZScore(eDir, sDir, oDir, printFlag) :
+
+	#1) Read in the samples
+	#	for each, create 4 folds
+	#2) define an appropriate output directory
+	#3) Save samples & folds to oDir
+	#4) Read in network info (gene names, etc)
+	#5) for each mp & set, create z-score feature
+	#6) save the feature matrix to each set
+
+
+#end def ######## ######## ######## 
 
 
 
-#end def ####### ####### ####### 
 
-
-
-
-####### ####### ####### ####### 
+######## ######## ######## ######## 
 # FUNCTION CALL
 
 tstart = time.time()
-# print("\nPredicting gene ranks for {}".format(sDir))
 
-# # Main Function call
-# print("Calling function predictIterative() ...")
-# predictIterative(True)
+print("\nCreating z-score features for samples in {}".format(sPath))
 
-# print("--elapsed time: {:.3} (s)".format(time.time()-tstart))
+# Main Function call
+print("Calling function createFeatureZScore() ...")
+eDir = cl.concatenatePaths(ePath, eName)
+createFeatureZScore(eDir, sPath, oRoot, verboseOutput)
+
+print("--elapsed time: {:.3} (s)".format(time.time()-tstart))
 
 
 
