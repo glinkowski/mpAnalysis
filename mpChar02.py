@@ -5,15 +5,10 @@
 #		funded by the NIH
 # 
 # Characterization: define unique types of connections in set
-#	Step 1:
-#		create z-score features
+#	Step 2:
+#		find useful features & rank genes
 #
-# For each sample, perform once on the whole set and then
-#	once on each of 4 folds. Partition set into Known Pos
-#	and Hidden Pos.
-# Then, create the metapath z-score feature, a per-gene
-#	feature vector where each entry is the sum of that
-#	gene's similarity to each member of the Known Pos set.
+# TODO: description
 # ---------------------------------------------------------
 
 import mpCharLib as cl

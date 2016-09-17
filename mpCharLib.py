@@ -636,3 +636,203 @@ def saveMatrixNumpy(matrix, mname, mpath, integer) :
 
 	return
 #end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+#TODO: description
+def getGeneIndexLists(path, gDict) :
+
+	# Create index lists for Known, Hidden, Unknown, TrueNeg
+	gKnown = mp.readFileAsList(path + 'known.txt')
+	giKnown = mp.convertToIndices(gKnown, gDict)
+	gHidden = mp.readFileAsList(path + 'concealed.txt')
+	giHidden = mp.convertToIndices(gHidden, gDict)
+	giUnknown = [g for g in gDict.values() if g not in giKnown]
+	giTrueNeg = [g for g in giUnknown if g not in giHidden]
+
+	return giKnown, giUnknown, giHidden, giTrueNeg
+#end def ####### ####### ####### 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Get the specified geneDict & pathDict from parameters.txt
+# Input ----
+#	path, str: path to the samples' parameter.txt file
+#		(parameters.txt tells where the network is stored/named)
+# Returns ----
+#	geneDict
+#	pathDict
+def getGeneAndPathDict(path) :
+
+	# get the network path & name from the parameters.txt file
+	if not path.endswith('/') :
+		path = path + '/'
+	with open(path + 'parameters.txt', 'r') as fin :
+		line = fin.readline()
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		eName = lv[1]
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		ePath = lv[1]
+	#end with
+
+#TODO: remove
+#	if verbose :
+#		print("Reading gene and path dictionaries for {}".format(eName))
+	geneDict = readGenesFile(ePath, eName)
+	pathDict = readKeyFile(ePath, eName)
+
+	return geneDict, pathDict
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Get the neighborhood features from parameters.txt
+# Input ----
+#	path, str: path to the samples' parameter.txt file
+#		(parameters.txt tells where the network is stored/named)
+#	suffix, str: filename suffix (which version of feature to load)
+# Returns ----
+#	featVals
+#	featNames
+def getFeaturesNeighborhood(path, suffix) :
+
+	# get the network path & name from the parameters.txt file
+	if not path.endswith('/') :
+		path = path + '/'
+	with open(path + 'parameters.txt', 'r') as fin :
+		line = fin.readline()
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		eName = lv[1]
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		ePath = lv[1]
+	#end with
+
+	if verbose :
+		print("Reading neighborhood features file for {}".format(eName))
+	
+	if not ePath.endswith('/') :
+		ePath = ePath + '/'
+	if not eName.endswith('/') :
+		eName = eName + '/'
+
+#	featVals = readFileAsMatrix(ePath + eName, 'featNeighbor_' + suffix + '.gz' )
+	featVals = np.loadtxt(ePath + eName + 'featNeighbor_' + suffix + '.gz')
+	featNames = readFileAsList(ePath + eName + 'featNeighbor_Names.txt')
+	featNames = np.reshape(featNames, (1, len(featNames)))
+
+	return featVals, featNames
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Get the term weight features from parameters.txt
+# Input ----
+#	path, str: path to the samples' parameter.txt file
+#		(parameters.txt tells where the network is stored/named)
+#	suffix, str: filename suffix (which version of feature to load)
+# Returns ----
+#	featVals
+#	featNames
+def getFeaturesTerms(path, suffix) :
+
+#TODO: combine this and previous func
+
+	# get the network path & name from the parameters.txt file
+	if not path.endswith('/') :
+		path = path + '/'
+	with open(path + 'parameters.txt', 'r') as fin :
+		line = fin.readline()
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		eName = lv[1]
+
+		line = fin.readline()
+		line = line.rstrip()
+		lv = line.split(textDelim)
+		ePath = lv[1]
+	#end with
+
+	if verbose :
+		print("Reading term membership features file for {}".format(eName))
+	
+	if not ePath.endswith('/') :
+		ePath = ePath + '/'
+	if not eName.endswith('/') :
+		eName = eName + '/'
+
+#	featVals = readFileAsMatrix(ePath + eName, 'featNeighbor_' + suffix + '.gz' )
+	featVals = np.loadtxt(ePath + eName + 'featTerm_' + suffix + '.gz')
+	featNames = readFileAsList(ePath + eName + 'featTerm_Names.txt')
+	featNames = np.reshape(featNames, (1, len(featNames)))
+
+	return featVals, featNames
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Return list of paths to folders in the 
+#	given root directory
+# Input ----
+#	root, str: path where the folders reside
+# Returns ----
+#	subDirs, str list: sorted list of subdirectories
+#		contains full path: root+subdir
+def getSubDirectoryList(root) :
+
+	verifyDirectory(root, False, False)
+
+	if not root.endswith('/') :
+		root = root+'/'
+	subDirs = [(root+d+'/') for d in os.listdir(root) if os.path.isdir(root+d)]
+	subDirs.sort()
+
+	return subDirs
+#end def ######## ######## ######## 
+
+
+
+
+######## ######## ######## ######## 
+# Function: Normalize each column of the feature matrix
+# Input ----
+#	featMatrix
+#		row: gene feature vector
+#		col: each individual feature
+# Returns ----
+#	featNormed: the normalized copy of the original matrix
+def normalizeFeatureColumns(featMatrix) :
+
+	# Center each column about the mean
+	featMean = np.mean(featMatrix, axis=0)
+	featNormed = np.subtract(featMatrix, featMean)
+
+	# Set the L2 norm = 1
+	featAbsMax = np.minimum(featMean, np.amax(featNormed, axis=0))
+	featAbsMax = np.add(featAbsMax, 1)	# hack so as not to / by 0
+	featNormed = np.divide(featNormed, featAbsMax)
+
+	return featNormed
+#end def ######## ######## ######## 
