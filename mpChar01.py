@@ -158,13 +158,14 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 			gHidden = gAllValid[start:stop]
 			gHidden.sort()
 			gKnown = gAllValid[0:start]
-			gKnown.extend( gAllValid[stop:0])
+			gKnown.extend( gAllValid[stop:len(gAllValid)] )
 			gKnown.sort()
 
 			# Append this fold to the lists
 			giKnown = [geneDict[g] for g in gKnown]
 			oSampLists.append(giKnown)
-			oSubDirList.append( '{}part-{}-{:02d}/'.format(oDir, s, i) )
+			oSubDir = '{}part-{}-{:02d}/'.format(oDir, s, i)
+			oSubDirList.append( oSubDir )
 
 			# Write the genes to file
 			cl.saveListToText(oSubDir, 'known.txt', gKnown)
