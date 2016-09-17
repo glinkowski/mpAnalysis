@@ -239,7 +239,6 @@ print("\nCreating z-score features for samples in {}".format(sPath))
 
 # Main Function call
 print("Calling function createFeatureZScore() ...")
-#eDir = cl.concatenatePaths(ePath, eName)
 createFeatureZScore(eName, ePath, sPath, oRoot, verboseOutput)
 
 print("--elapsed time: {:.3} (s)".format(time.time()-tstart))
