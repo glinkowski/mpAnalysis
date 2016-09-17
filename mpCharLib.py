@@ -13,11 +13,11 @@
 # ---------------------------------------------------------
 
 import os.path
-#from os import listdir
-#import sys
-#import numpy as np
+from os import listdir
+import sys
+import numpy as np
+import gzip
 #import random
-#import gzip
 #from sklearn import cluster as skc
 #import warnings
 
@@ -46,7 +46,7 @@ def verifyDirectory(path, create, quiet) :
 	if not os.path.isdir(path) :
 		if create :
 			os.makedirs(path)
-			if verbose :
+			if not quiet :
 				print("Creating path: {}".format(path))
 		elif quiet :
 			exists = False
@@ -71,19 +71,23 @@ def verifyFile(path, name, quiet) :
 	exists = True
 
 	# First check the directory
-	if not (path == '') :
+	if path != '' :
 		exists = verifyDirectory(path, False, quiet)
+		# Then concatenate path & name
+		if not path.endswith('/') :
+			path = path + '/'
+		fname = path + name
+	else :
+		fname = name
+	#end if
 
 	# Then look for the file
-	if not path.endswith('/') :
-		path = path+'/'
-	#end if
-	if not os.path.isfile(path+name) :
+	if not os.path.isfile(fname) :
 		if quiet:
 			exists = False
 		else :
 			print ( "ERROR: Specified file doesn't exist:" +
-				" {}".format(path) )
+				" {}".format(fname) )
 			sys.exit()
 	#end if
 
@@ -125,7 +129,7 @@ def nameOutputPath(path, dirPre) :
 	# ERROR CHECK: verify directory exists
 	verifyDirectory(path, False, False)
 
-	zpad = fnOutputZPad
+	zpad = 3
 
 	# Set of all sub-folders in the path
 	dirSet = [name for name in os.listdir(path)
@@ -169,7 +173,7 @@ def writeGenericLists(path, fname, columnList) :
 		fout.write("{}".format(columnList[0][i]))
 
 		for j in range(1, len(columnList)) :
-			fout.write("{}{}".format(textDelim, columnList[j][i]))
+			fout.write("{}{}".format('\t', columnList[j][i]))
 		#end loop
 
 		fout.write("\n")
@@ -225,7 +229,8 @@ def readFileAsIndexDict(fname) :
 #       value, int: row/col index for that gene
 def getGeneDictionary(path, name) :
 
-	fname = path + name + "_MetaPaths/genes.txt"
+	fname = concatenatePaths(path, name)
+	fname = fname + "genes.txt"
 
 	# The item to return
 	gDict = readFileAsIndexDict(fname)
@@ -305,7 +310,13 @@ def getPathMatrix(mpTuple, path, name, sizeOf) :
 
 #TODO: change name(s) from "get..." to "load..."
 
+	speedVsMemory = False	# True favors speed, disables dtype
+	matrixDT = np.float32	#TODO: any considerations here?
+	fnMatrixZPad = 5
+
+
 	zpad = fnMatrixZPad
+
 #   fname = (path + name + "_MetaPaths/" +
 #       "{}.npy".format(str(mpTuple[0]).zfill(zpad)) )
 
@@ -384,6 +395,37 @@ def removeInvertedPaths(mpDict) :
 
 
 
+
+######## ######## ######## ######## 
+# Count number of rows in a metapath matrix
+#	(num rows = num cols)
+# Input ----
+#   ePath, str: path to network
+#	eName, str: folder containing processed network files
+# Returns ----
+#	mxSize, int: number of rows/columns in path matrix
+def getPathMatrixSize(ePath, eName) :
+
+	# number of figures in the zero-padded matrix file name
+	fnMatrixZPad = 5
+
+	# the item to return
+	mxSize = 0
+
+	# open and read through the file
+	fname = (ePath+eName+"_MetaPaths/" +
+		"{}.gz".format(str(0).zfill(fnMatrixZPad)) )
+	with gzip.open(fname, 'rb') as fin :
+		for line in fin :
+			mxSize += 1
+	#end with
+
+	return mxSize
+#end def ######## ######## ######## 
+
+
+
+
 ######## ######## ######## ######## 
 # Function: Create a list of samples contained in folder
 # Input ----
@@ -396,8 +438,6 @@ def getSampleNamesFromFolder(path) :
 
 	# Get list of all text files in folder
 	fNames = [f for f in listdir(path) if f.endswith('.txt')]
-	if verbose :
-		print (fNames)
 
 	# Identify & create list of sample names in folder
 	sNames = list()
@@ -412,6 +452,33 @@ def getSampleNamesFromFolder(path) :
 
 	sNames = np.unique(sNames)	# also sorts list
 	return sNames
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ######## 
+# Function: Read in a file as a line-by-line list of items
+# Input ----
+#   fname, str: path + name of the the sample files
+# Returns ----
+#   fItems, str list: ordered list of items from file
+def readFileAsList(fname) :
+
+	# ERROR CHECK: verify file exists
+	verifyFile('', fname, False)
+
+	# The list of items to return
+	fItems = list()
+
+	# Read in from the file
+	fn = open(fname, "r")
+	for line in fn :
+		fItems.append( line.rstrip() )
+	#end loop
+	fn.close()
+
+	fItems.sort()
+	return fItems
 #end def ######## ######## ######## 
 
 
@@ -525,6 +592,47 @@ def saveListToText(path, name, theList) :
 		theFile.write("{}".format(item))
 	#end if
 	theFile.close()
+
+	return
+#end def ######## ######## ######## 
+
+
+
+######## ######## ######## ########
+# Function: save the given matrix as a .npy file
+# Input ----
+#	matrix, (NxN) list: the values to save
+#	mname, str: name of the file to save
+#	mpath, str: path to the folder to save the file
+#	integer, bool: True means save values as int()
+# Returns ----
+#	nothing
+def saveMatrixNumpy(matrix, mname, mpath, integer) :
+
+	# Whether to save matrices as .txt or compressed .gz
+	matrixExt = '.gz'
+
+	# If folder doesn't exist, create it
+	if not os.path.exists(mpath) :
+		os.makedirs(mpath)
+	#end if
+
+	# Write to the file
+#TODO: check if the fmt option is appropriate, or pointless
+#	np.save(mpath + mname, matrix)
+	if integer :
+		np.savetxt(mpath + mname + matrixExt, matrix, fmt='%u')
+	else :
+		np.savetxt(mpath + mname + matrixExt, matrix, fmt='%f')
+	#end if
+
+#NOTE: In this case, the text file from savetxt() is much
+#	smaller than the binary file from save()
+
+#	# VERIFICATION: save as a text-readable file
+#	if saveTextCopy :
+#		saveMatrixText(matrix, "t"+mname, mpath, integer)
+#	#end if
 
 	return
 #end def ######## ######## ######## 

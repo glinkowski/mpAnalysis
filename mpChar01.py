@@ -20,6 +20,7 @@ import mpCharLib as cl
 import time
 import numpy as np
 import gzip
+import random
 
 
 
@@ -110,19 +111,10 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 	pathDict = cl.getPathDictionary(ePath, eName)
 	pathList = cl.removeInvertedPaths(pathDict)
 
-
-#TODO: this should be a function
-	# Get expected matrix size
-	print("Finding the matrix dimensions ...")
-	fnMatrixZPad = 5
-	#TODO: pack this into a function
-	fname = (ePath+eName+"_MetaPaths/" +
-		"{}.gz".format(str(0).zfill(fnMatrixZPad)) )
-	mxSize = 0
-	with gzip.open(fname, 'rb') as fin :
-		for line in fin :
-			mxSize += 1
-	#end with
+	# 2c) Get expected matrix size
+	if printFlag :
+		print("Finding the matrix dimensions ...")
+	mxRows = cl.getPathMatrixSize(ePath, eName)
 
 
 
@@ -153,14 +145,14 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 		oSubDirList.append( oSubDir )
 
 		# Write the genes to file
-		saveListToText(oSubDir, 'known.txt', gAllValid)
-		saveListToText(oSubDir, 'hidden.txt', list() )
-		saveListToText(oSubDir, 'ignored.txt', gIgnored)
+		cl.saveListToText(oSubDir, 'known.txt', gAllValid)
+		cl.saveListToText(oSubDir, 'hidden.txt', list() )
+		cl.saveListToText(oSubDir, 'ignored.txt', gIgnored)
 
 		# Create the 4 folds
 		random.shuffle(giAll)
-		numFold = int(len(giAll) / 4)
-		for i in range(4) :
+		numFold = int(len(giAll) * percHide)
+		for i in range( int(1 / percHide) ) :
 			start = i * numFold
 			stop = (i * numFold) + numFold
 			gHidden = gAllValid[start:stop]
@@ -172,19 +164,18 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 			# Append this fold to the lists
 			giKnown = [geneDict[g] for g in gKnown]
 			oSampLists.append(giKnown)
-			oSubDirList.append( '{}part-{}-{02d}/'.format(sDir, s, i) )
+			oSubDirList.append( '{}part-{}-{:02d}/'.format(oDir, s, i) )
 
 			# Write the genes to file
-			saveListToText(oSubDir, 'known.txt', gKnown)
-			saveListToText(oSubDir, 'hidden.txt', gHidden)
-			saveListToText(oSubDir, 'ignored.txt', list() )
+			cl.saveListToText(oSubDir, 'known.txt', gKnown)
+			cl.saveListToText(oSubDir, 'hidden.txt', gHidden)
+			cl.saveListToText(oSubDir, 'ignored.txt', list() )
 		#end loop range(4)
 	#end loop sNames
 
 
 
 	# 4) Create the z-score features
-
 
 	#	Build the feature vector matrices for each sample
 	gFeatures = np.zeros( (len(geneDict), len(pathList),
@@ -198,7 +189,7 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 		tpath = time.time()
 
 		# load the path count matrix
-		countMatrix = cl.getPathMatrix(pathDict[p], ePath, eName, mxSize)
+		countMatrix = cl.getPathMatrix(pathDict[p], ePath, eName, mxRows)
 
 		# Calculate z-score over the columns
 		countAvg = np.mean(countMatrix, axis=0)
@@ -234,23 +225,17 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 
 
 #TODO: clean this
-	# 5) ...
-	Save the raw feature vectors to the sample folders
+	# 5) Save the feature matrix for each sub-directory
 	i = -1
 	twrite = time.time()
-	for sDir in oSubDirList :
-		i += 1
-
-		mp.saveMatrixNumpy(gFeatures[:,:,i], 'features_ZScoreSim',
-			sDir, False)
+	for i in range(len(oSubDirList)) :
+		cl.saveMatrixNumpy(gFeatures[:,:,i], 'features_ZScoreSim',
+			oSubDirList[i], False)
 	#end loop
-	print("Finished writing Z-Score Similarity feature vector files.")
-	print("    --elapsed time: {:.3} (s)".format(time.time()-twrite))
-
-
-
-
-
+	if printFlag :
+		print("Finished writing Z-Score Similarity feature vector files.")
+		print("    --time to write: {:.3} (s)".format(time.time()-twrite))
+#TODO: show a time per matrix ?
 
 #end def ######## ######## ######## 
 
