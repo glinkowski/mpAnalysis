@@ -639,15 +639,39 @@ def saveMatrixNumpy(matrix, mname, mpath, integer) :
 
 
 
+######## ######## ######## ######## 
+# Function: Given a list of names and appropriate dict,
+#   convert to corresponding index values
+# Input ----
+#   names, str list: names of items to convert
+#   iDict, dict
+#       key, str: names of items
+#       value, int: corresponding index values
+# Returns ----
+#   indices, int list: index values of the input items
+def convertToIndices(names, iDict) :
+
+	# The item to return
+	indices = list()
+
+	for name in names :
+		indices.append(iDict[name])
+	#end loop
+
+	return indices
+#end def ######## ######## ######## 
+
+
+
 ######## ######## ######## ########
 #TODO: description
 def getGeneIndexLists(path, gDict) :
 
 	# Create index lists for Known, Hidden, Unknown, TrueNeg
-	gKnown = mp.readFileAsList(path + 'known.txt')
-	giKnown = mp.convertToIndices(gKnown, gDict)
-	gHidden = mp.readFileAsList(path + 'concealed.txt')
-	giHidden = mp.convertToIndices(gHidden, gDict)
+	gKnown = readFileAsList(path + 'known.txt')
+	giKnown = convertToIndices(gKnown, gDict)
+	gHidden = readFileAsList(path + 'hidden.txt')
+	giHidden = convertToIndices(gHidden, gDict)
 	giUnknown = [g for g in gDict.values() if g not in giKnown]
 	giTrueNeg = [g for g in giUnknown if g not in giHidden]
 
@@ -675,20 +699,20 @@ def getGeneAndPathDict(path) :
 
 		line = fin.readline()
 		line = line.rstrip()
-		lv = line.split(textDelim)
+		lv = line.split('\t')
 		eName = lv[1]
 
 		line = fin.readline()
 		line = line.rstrip()
-		lv = line.split(textDelim)
+		lv = line.split('\t')
 		ePath = lv[1]
 	#end with
 
 #TODO: remove
 #	if verbose :
 #		print("Reading gene and path dictionaries for {}".format(eName))
-	geneDict = readGenesFile(ePath, eName)
-	pathDict = readKeyFile(ePath, eName)
+	geneDict = getGeneDictionary(ePath, eName)
+	pathDict = getPathDictionary(ePath, eName)
 
 	return geneDict, pathDict
 #end def ######## ######## ######## 
@@ -715,12 +739,12 @@ def getFeaturesNeighborhood(path, suffix) :
 
 		line = fin.readline()
 		line = line.rstrip()
-		lv = line.split(textDelim)
+		lv = line.split('\t')
 		eName = lv[1]
 
 		line = fin.readline()
 		line = line.rstrip()
-		lv = line.split(textDelim)
+		lv = line.split('\t')
 		ePath = lv[1]
 	#end with
 
@@ -764,12 +788,12 @@ def getFeaturesTerms(path, suffix) :
 
 		line = fin.readline()
 		line = line.rstrip()
-		lv = line.split(textDelim)
+		lv = line.split('\t')
 		eName = lv[1]
 
 		line = fin.readline()
 		line = line.rstrip()
-		lv = line.split(textDelim)
+		lv = line.split('\t')
 		ePath = lv[1]
 	#end with
 

@@ -25,78 +25,7 @@ import random
 
 # folder containing the pre-processed samples
 sDir = '../Dropbox/mp/output/pred04-dbgap300'
-
-# Control the iterations & error
-numIterations = 1
-	# how many iterations to perform
-numVotes = 11
-	# how many random samples for comparison
-# numWrong = 3
-# 	# how many False Negatives before next iteration
-numExitKnown = 29
-	# minimum number of Known genes before iterations stop
-numExitUnknown = 399
-	# min number of Unknonw genes before iterations halt
-
-retryOnZeroCoeffs = True
-	# whether to allow coeffs = 0 in results
-retrySubPortion = 0.75
-	# how many of Known to keep in new sub-sample
-retryMinValid = 9
-	# minimum Known genes to use for PosTrain
-
-# verbose feedback ?
-verbose = True
-
-
-
-#TODO: remove / hardcode the following parameters
-
-
-# Adjustible classifier parameters
-useCfier = 2
-	# 1 = Lasso, 2 = ElasticNet, ...
-limitMPLen = [1, 2, 3]
-	# select only meta-paths of specific length(s)
-usePos = True
-	# True/False: limit to only Positive coefficient values
-useFeatPathSim = False
-	# True/False: use the pathsim sum features
-fSimilarity = 'features_PathSim.gz'
-	# File name containing pathsim feature vectors
-useFeatPathZScore = True
-	# True/False: use the pathsim sum features
-fZScoreSim = 'features_ZScoreSim.gz'
-	# File name containing path z-score vectors
-useFeatTermWeights = False
-	# True/False: use the indirect term features
-useFeatNeighbor = False
-	# True/False: use the neighborhood features
-useGivenRange = np.linspace(0.00001, 0.05, num=27)
-	# array of vals; 'None' means to auto-search for alphas
-# maxClusters = 11
-# 	# maximum number of clusters to use
-# 	#	-1 = no maximum value is set
-
-# Label for pos & neg labels
-pLabel = 1
-nLabel = 0
-negMultiplier = 1
-
-# LASSO params
-lMaxIter = 800
-lNorm = True
-lFitIcpt = True
-
-# Elastic Net params
-enRatios = [0.2, 0.4, 0.6, 0.75, 0.85, 0.9, 0.95]
-enNAlphas = 11
-enMaxIter = 400
-enFitIncept = True
-enNorm = True
-enCopy = True
-
-
+sDir = 'outputFake/char01-batch-027'
 
 # verbose feedback ?
 verboseOutput = True
@@ -111,10 +40,39 @@ verboseOutput = True
 #TODO: add description
 def predictIterative(printFlag) :
 
+#TODO: remove / hardcode the following parameters
+#	remove any superfluous ...
+
 	# Parameters
 	numVotes = 11
-	usePos = True
+	usePos = True	# True/False: limit to only Positive coefficient values
+	# Label for pos & neg labels
+	pLabel = 1
+	nLabel = 0
 	negMultiplier = 1
+	# LASSO params
+	lMaxIter = 800
+	lNorm = True
+	lFitIcpt = True
+
+	useFeatPathZScore = True
+		# True/False: use the pathsim sum features
+	fZScoreSim = 'features_ZScoreSim.gz'
+		# File name containing path z-score vectors
+	useFeatTermWeights = False
+		# True/False: use the indirect term features
+	useFeatNeighbor = False
+		# True/False: use the neighborhood features
+	useGivenRange = np.linspace(0.00001, 0.05, num=27)
+		# array of vals; 'None' means to auto-search for alphas
+
+	# Control the iterations & error
+	numVotes = 11
+		# how many random samples for comparison
+	retrySubPortion = 0.75
+		# how many of Known to keep in new sub-sample
+	retryMinValid = 9
+		# minimum Known genes to use for PosTrain
 
 
 	if printFlag :
@@ -240,13 +198,12 @@ def predictIterative(printFlag) :
 #TODO: How to save feature rankings ??
 
 
-		voteScores = np.zeros( (iterNumGenes, numVotes), dtype=np.float32)
+		voteScores = np.zeros( (len(giAll), numVotes), dtype=np.float32)
 #			voteScores = np.zeros( (len(geneDict), numVotes), dtype=np.float32)
 
 		if printFlag :
-			print("{} votes; cfier {}".format(numVotes, useCfier))
-			print("  known: {}, total: {}, trainSet: {}".format( len(giKnown),
-				iterNumGenes, (len(giKnown) * (1 + negMultiplier)) ))
+			print("{} votes; known: {}, total: {}, trainSet: {}".format( 
+				numVotes, len(giKnown), len(giAll), (len(giKnown) * (1 + negMultiplier)) ))
 		#end if
 
 
@@ -259,31 +216,35 @@ def predictIterative(printFlag) :
 		vote = 0
 		while vote < numVotes :
 
+			if len(giKnown) < retryMinValid :
+				retrySubSample = False
+
 			if retrySubSample :
 				retrySubSample = False
 
 				numSubSample = int(numSubSample * retrySubPortion) + 1
-				retryIterKnown = random.sample(iterKnown, numSubSample)
+				retryIterKnown = random.sample(giKnown, numSubSample)
 				if len(retryIterKnown) < retryMinValid :
-					retryIterKnown = random.sample(iterKnown, retryMinValid)
+					retryIterKnown = random.sample(giKnown, retryMinValid)
 
 				posTrain = features[retryIterKnown,:]
 				posTrainLabel = np.ones( (len(retryIterKnown), 1) ) * pLabel
 
-				nExamples = min( negMultiplier * len(retryIterKnown), (iterNumGenes - len(retryIterKnown)))
+				nExamples = min( negMultiplier * len(retryIterKnown), (len(giAll) - len(retryIterKnown)))
 			else :
-				numSubSample = len(iterKnown)
+				giKnown = giKnown
+				numSubSample = len(giKnown)
 	
-				posTrain = features[iterKnown,:]
-				posTrainLabel = np.ones( (len(iterKnown), 1) ) * pLabel
+				posTrain = features[giKnown,:]
+				posTrainLabel = np.ones( (len(giKnown), 1) ) * pLabel
 
-				nExamples = min( negMultiplier * len(iterKnown), (iterNumGenes - len(iterKnown)) )
+				nExamples = min( negMultiplier * len(giKnown), (len(giAll) - len(giKnown)) )
 			#end if
 
 			# Extract the vectors for neg sets
 			# as one-class: train with rand samp from Unknown
 			#		test with all Unknown (TrueNeg + Hidden/TruePos)
-			giTrainNeg = random.sample(iterUnknown, nExamples)
+			giTrainNeg = random.sample(giUnknown, nExamples)
 			negTrain = features[giTrainNeg,:]
 			negTrainLabel = np.ones( (len(giTrainNeg), 1) ) * nLabel
 
@@ -324,7 +285,7 @@ def predictIterative(printFlag) :
 					if printFlag :
 						print("WARNING: used all retries.")
 			else :
-				numSubSample = len(iterKnown)
+				numSubSample = len(giKnown)
 			#end if
 
 			voteScores[:,vote] = cfPredLabel
@@ -337,29 +298,15 @@ def predictIterative(printFlag) :
 
 		# first, average across the random negative samples (votes)
 #TODO: really, I should either normalize the score or vote across rank
-		voteScores = mp.normalizeFeatureColumns(voteScores)
+		voteScores = cl.normalizeFeatureColumns(voteScores)
 		voteAvgScore = np.mean(voteScores, axis=1)
-
-		# then, place into full gene score array
-		#	NOTE: carry the scores forward from each iteration
-#			for u in range(len(iterUnknown)) :
-#				geneScores[iterUnknown[u],iter] = voteAvgScore[u]
-		for g in range(len(giAll)) :
-			geneScores[giAll[g],1] = voteAvgScore[g]
-
-#TODO: continue HERE
-
-
-		# 10) Rank the genes across the iterations
-#TODO: should I average these, or just take the last column ?
-#	test that option later
-		useScore = np.mean(geneScores[giUnknown,0:(itr+1)], axis=1)
+		voteUnknownScore = voteAvgScore[giUnknown]
 
 		ranker = np.recarray(len(giUnknown),
 			dtype=[('inverse', 'f4'), ('score', 'f4'), ('geneIdx', 'i4')])
 
-		ranker['score'] = useScore
-		ranker['inverse'] = np.multiply(useScore, -1)
+		ranker['score'] = voteUnknownScore
+		ranker['inverse'] = np.multiply(voteUnknownScore, -1)
 		ranker['geneIdx'] = giUnknown
 
 		ranker.sort(order=['inverse', 'geneIdx'])
@@ -378,60 +325,7 @@ def predictIterative(printFlag) :
 				if not firstRow :
 					fout.write('\n')
 				fout.write('{:3.3f}{}{}'.format(ranker['score'][row],
-					textDelim, geneNames[ranker['geneIdx'][row]]))
-				firstRow = False
-		#end with
-
-
-		# 10-b) Rank the genes across the iterations
-#TODO: should I average these, or just take the last column ?
-#	test that option later
-		useScore = geneScores[giUnknown,itr]
-
-		ranker = np.recarray(len(giUnknown),
-			dtype=[('inverse', 'f4'), ('score', 'f4'), ('geneIdx', 'i4')])
-		ranker['score'] = useScore
-		ranker['inverse'] = np.multiply(useScore, -1)
-		ranker['geneIdx'] = giUnknown
-		ranker.sort(order=['inverse', 'geneIdx'])
-	
-		# 11-b) Output the ranked genes to file
-		# write the file
-		fname = 'ranked_genes-' + useLabel + '_Last.txt'
-		if printFlag :
-			print("  Saving ranked genes to file {}".format(fname))
-		with open(si+fname, 'w') as fout :
-			firstRow = True
-			for row in range(len(ranker)) :
-				if not firstRow :
-					fout.write('\n')
-				fout.write('{:3.3f}{}{}'.format(ranker['score'][row],
-					textDelim, geneNames[ranker['geneIdx'][row]]))
-				firstRow = False
-		#end with
-
-		# 10-c) Rank the genes across the iterations
-#TODO: should I average these, or just take the last column ?
-#	test that option later
-		useScore = geneScores[giUnknown,0]
-		ranker = np.recarray(len(giUnknown),
-			dtype=[('inverse', 'f4'), ('score', 'f4'), ('geneIdx', 'i4')])
-		ranker['score'] = useScore
-		ranker['inverse'] = np.multiply(useScore, -1)
-		ranker['geneIdx'] = giUnknown
-		ranker.sort(order=['inverse', 'geneIdx'])
-			# 11-b) Output the ranked genes to file
-		# write the file
-		fname = 'ranked_genes-' + useLabel + '_First.txt'
-		if printFlag :
-			print("  Saving ranked genes to file {}".format(fname))
-		with open(si+fname, 'w') as fout :
-			firstRow = True
-			for row in range(len(ranker)) :
-				if not firstRow :
-					fout.write('\n')
-				fout.write('{:3.3f}{}{}'.format(ranker['score'][row],
-					textDelim, geneNames[ranker['geneIdx'][row]]))
+					'\t', geneNames[ranker['geneIdx'][row]]))
 				firstRow = False
 		#end with
 
@@ -441,7 +335,6 @@ def predictIterative(printFlag) :
 
 
 		# 13) Output the parameters to file
-#TODO: this
 		fname = 'parameters-' + useLabel + '.txt'
 		with open(si+fname, 'w') as fout :
 			fout.write('\n')
@@ -449,24 +342,20 @@ def predictIterative(printFlag) :
 			fout.write('  as One-Class w/ iterations on the weaker predictions\n')
 			fout.write('\n')
 			fout.write('Features Used\n')
-			fout.write('PathSim sum:{}{}\n'.format(textDelim, useFeatPathSim))
-			fout.write('path Z-Score:{}{}\n'.format(textDelim, useFeatPathZScore))
-			fout.write('Neighborhood:{}{}\n'.format(textDelim, useFeatNeighbor))
-			fout.write('Term Weights:{}{}\n'.format(textDelim, useFeatTermWeights))
+			fout.write('path Z-Score:{}{}\n'.format('\t', useFeatPathZScore))
+			fout.write('Neighborhood:{}{}\n'.format('\t', useFeatNeighbor))
+			fout.write('Term Weights:{}{}\n'.format('\t', useFeatTermWeights))
 			fout.write('\n')
 
-	#TODO: collect some stats (ie: common alphas, l1 ratios, etc)
+#TODO: collect some stats (ie: common alphas, l1 ratios, etc)
 			fout.write('Classifier Parameters\n')
-			if useCfier == 1 :
-				fout.write('method:{}Lasso\n'.format(textDelim))
-			elif useCfier == 2: 
-				fout.write('method:{}ElasticNet\n'.format(textDelim))
-			fout.write('positive:{}{}\n'.format(textDelim, usePos))
-			# fout.write('alpha range:{}{}\n'.format(textDelim, useGivenRange))
-			# fout.write('alpha chosen:{}{}\n'.format(textDelim, cfier.alpha_))
-			fout.write('max_iter:{}{}\n'.format(textDelim, lMaxIter))
-			fout.write('normalize:{}{}\n'.format(textDelim, lNorm))
-			fout.write('fit_intercept:{}{}\n'.format(textDelim, lFitIcpt))
+			fout.write('method:{}Lasso\n'.format('\t'))
+			fout.write('positive:{}{}\n'.format('\t', usePos))
+			fout.write('alpha range:{}{}\n'.format('\t', useGivenRange))
+			fout.write('alpha chosen:{}{}\n'.format('\t', cfier.alpha_))
+			fout.write('max_iter:{}{}\n'.format('\t', lMaxIter))
+			fout.write('normalize:{}{}\n'.format('\t', lNorm))
+			fout.write('fit_intercept:{}{}\n'.format('\t', lFitIcpt))
 			fout.write('\n')
 		#end with
 
