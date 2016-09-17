@@ -70,20 +70,8 @@ verboseOutput = True
 #	a matrix of z-score feature vectors for that sample
 def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 
-	######## ######## ######## ######## 
 	# Parameters
 	percHide = 0.25
-#TODO: remove any superfluous params
-
-	#1) define an appropriate output directory
-	#	save parameters file
-	#2) Read in the samples
-	#	for each, create 4 folds
-	#	Save samples & folds to oDir
-	#3) Read in network info (gene names, etc)
-	#4) for each mp & set, create z-score feature
-	#5) save the feature matrix to each set
-
 
 
 	# 1) Name & create a folder to store output files
@@ -225,7 +213,6 @@ def createFeatureZScore(eName, ePath, sDir, oRoot, printFlag) :
 		print("Finished examining matrix similarity matrices.")
 
 
-#TODO: clean this
 	# 5) Save the feature matrix for each sub-directory
 	i = -1
 	twrite = time.time()
