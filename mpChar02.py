@@ -44,12 +44,16 @@ def predictIterative(printFlag) :
 #	remove any superfluous ...
 
 	# Parameters
+
 	numVotes = 11
-	usePos = True	# True/False: limit to only Positive coefficient values
+	usePos = True	
+		# True/False: limit to only Positive coefficient values
+
 	# Label for pos & neg labels
 	pLabel = 1
 	nLabel = 0
 	negMultiplier = 1
+	
 	# LASSO params
 	lMaxIter = 800
 	lNorm = True
@@ -181,6 +185,7 @@ def predictIterative(printFlag) :
 			features = np.hstack( (features, featTWVals[:,keepIdx[0]]) )
 			featNames.extend(np.ravel(featTWNames[keepIdx]))
 		# verify some features have been loaded
+		numFeatAll = len(featNames)
 		if features.shape[1] == 0 :
 			print("ERROR: No features were specified for classification.")
 			sys.exit 
@@ -206,6 +211,18 @@ def predictIterative(printFlag) :
 				numVotes, len(giKnown), len(giAll), (len(giKnown) * (1 + negMultiplier)) ))
 		#end if
 
+
+
+		# Store how many samples use certain features
+		featT1List = np.zeros( (numFeatAll, 1), dtype=np.int16)
+		featT5List = np.zeros( (numFeatAll, 1), dtype=np.int16)
+		featTAList = np.zeros( (numFeatAll, 1), dtype=np.int16)
+		# featT1Dict = dict()
+		# featT1Set = set()
+		# featT5Dict = dict()
+		# featT5Set = set()
+		# featTADict = dict()
+		# featTASet = set()
 
 
 		# 6) Prepare the test/train vectors & labels
@@ -284,8 +301,40 @@ def predictIterative(printFlag) :
 				else :
 					if printFlag :
 						print("WARNING: used all retries.")
+
+			# Else, collect info about the top-used features
 			else :
 				numSubSample = len(giKnown)
+
+				# Extract indices corresponding to top 5 weighted features
+				featWeights = cfier.coef_
+				numFeats = len(np.nonzero(featWeights)[0])
+				topFeats = np.ones( (numFeats), dtype=np.int32 ) * (-1)
+				for num in range(numFeats) :
+					featIdx = np.argmax(featWeights)
+					topFeats[num] = featIdx
+					featWeights[featIdx] = 0
+				#end loop
+
+				# Increment count for the Top 1 path
+				featT1List[topFeats[0]] += 1
+
+				# Increment count for the Top 5 paths
+				for num in range(5) :
+					if numFeats <= num :
+						break
+					#end if
+					featT5List[topFeats[num]] += 1
+				#end loop
+
+
+				# Increment count for all non-zero paths
+				for num in range(numFeats) :
+					if numFeats <= num :
+						break
+					#end if
+					featTAList[topFeats[num]] += 1
+				#end loop
 			#end if
 
 			voteScores[:,vote] = cfPredLabel
@@ -332,6 +381,70 @@ def predictIterative(printFlag) :
 
 		# 12) Output the selected feature info to file
 #TODO: this
+
+		# Sort the Top 1 paths
+		featT1Sort = np.recarray( numFeatAll, dtype=[('featIdx', 'i4'), ('count', 'i4')])
+		for row in range(numFeatAll) :
+			featT1Sort['featIdx'][row] = row
+			featT1Sort['count'][row] = featT1List[row]
+		#end if
+		featT1Sort[::-1].sort(order=['count', 'featIdx'])
+
+		# Save the Top 1 paths to file
+		fname = 'ranked_features_Top1-' + useLabel + '.txt'
+		with open(si + fname, 'w') as fout :
+			fout.write('Votes:{}{}'.format('\t', numVotes))
+			row = 0
+			nextVal = featT1Sort['count'][row]
+			while nextVal != 0 :
+				fout.write('\n{}{}{}'.format( nextVal, '\t',
+					featNames[featT1Sort['featIdx'][row]]))
+				row += 1
+				nextVal = featT1Sort['count'][row]
+		#end with
+
+		# Sort the Top 5 paths
+		featT5Sort = np.recarray( numFeatAll, dtype=[('featIdx', 'i4'), ('count', 'i4')])
+		for row in range(numFeatAll) :
+			featT5Sort['featIdx'][row] = row
+			featT5Sort['count'][row] = featT5List[row]
+		#end if
+		featT5Sort[::-1].sort(order=['count', 'featIdx'])
+
+		# Save the Top 5 paths to file
+		fname = 'ranked_features_Top5-' + useLabel + '.txt'
+		with open(si + fname, 'w') as fout :
+			fout.write('Votes:{}{}'.format('\t', numVotes))
+			row = 0
+			nextVal = featT5Sort['count'][row]
+			while nextVal != 0 :
+				fout.write('\n{}{}{}'.format( nextVal, '\t',
+					featNames[featT5Sort['featIdx'][row]]))
+				row += 1
+				nextVal = featT5Sort['count'][row]
+		#end with
+
+		# Sort the Top All Non-Zero paths
+		featTASort = np.recarray( numFeatAll, dtype=[('featIdx', 'i4'), ('count', 'i4')])
+		for row in range(numFeatAll) :
+			featTASort['featIdx'][row] = row
+			featTASort['count'][row] = featTAList[row]
+		#end if
+		featTASort[::-1].sort(order=['count', 'featIdx'])
+
+		# Save the Top All Non-Zero paths to file
+		fname = 'ranked_features_TopNZ-' + useLabel + '.txt'
+		with open(si + fname, 'w') as fout :
+			fout.write('Votes:{}{}'.format('\t', numVotes))
+			row = 0
+			nextVal = featTASort['count'][row]
+			while nextVal != 0 :
+				fout.write('\n{}{}{}'.format( nextVal, '\t',
+					featNames[featTASort['featIdx'][row]]))
+				row += 1
+				nextVal = featTASort['count'][row]
+		#end with
+
 
 
 		# 13) Output the parameters to file
