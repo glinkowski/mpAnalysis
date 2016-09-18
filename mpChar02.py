@@ -24,8 +24,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-dbgap300'
-sDir = 'outputFake/char01-batch-027'
+sDir = '../Dropbox/mp/output/char01-msigGood01'
 
 # verbose feedback ?
 verboseOutput = True
@@ -55,7 +54,7 @@ def predictIterative(printFlag) :
 	negMultiplier = 1
 	
 	# LASSO params
-	lMaxIter = 800
+	lMaxIter = 1000
 	lNorm = True
 	lFitIcpt = True
 
@@ -63,7 +62,7 @@ def predictIterative(printFlag) :
 		# True/False: use the pathsim sum features
 	fZScoreSim = 'features_ZScoreSim.gz'
 		# File name containing path z-score vectors
-	useFeatTermWeights = False
+	useFeatTermWeights = True
 		# True/False: use the indirect term features
 	useFeatNeighbor = False
 		# True/False: use the neighborhood features

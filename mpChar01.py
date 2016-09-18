@@ -28,7 +28,7 @@ import random
 # PARAMETERS
 
 # Input names & locations
-useNtwk = 0		# network & samples to use (0 means fake)
+useNtwk = 1		# network & samples to use (0 means fake)
 if useNtwk == 0 :
 #	eName = 'fakeNtwk00_g2e3t10'
 	eName = 'fakeNtwk01_g3e4t1'
@@ -38,7 +38,7 @@ if useNtwk == 0 :
 else :
 	eName = 'all_v3beta_g2e9t0'
 	ePath = '../Dropbox/mp/networks/'
-	sPath = '../Dropbox/mp/samples/MSIGDB/select01/'
+	sPath = '../Dropbox/mp/samples/MSIGDB/select02/'
 #	sPath = '../Dropbox/mp/samples-test1/'
 	oRoot = '../Dropbox/mp/output/'
 #end if

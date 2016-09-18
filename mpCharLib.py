@@ -748,8 +748,8 @@ def getFeaturesNeighborhood(path, suffix) :
 		ePath = lv[1]
 	#end with
 
-	if verbose :
-		print("Reading neighborhood features file for {}".format(eName))
+#	if verbose :
+#		print("Reading neighborhood features file for {}".format(eName))
 	
 	if not ePath.endswith('/') :
 		ePath = ePath + '/'
@@ -797,8 +797,8 @@ def getFeaturesTerms(path, suffix) :
 		ePath = lv[1]
 	#end with
 
-	if verbose :
-		print("Reading term membership features file for {}".format(eName))
+#	if verbose :
+#		print("Reading term membership features file for {}".format(eName))
 	
 	if not ePath.endswith('/') :
 		ePath = ePath + '/'
