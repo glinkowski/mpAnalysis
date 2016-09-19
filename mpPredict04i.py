@@ -33,7 +33,7 @@ import random
 # PARAMETERS
 
 # folder containing the pre-processed samples
-sDir = '../Dropbox/mp/output/pred04-dbgap300'
+sDir = '../Dropbox/mp/output/pred04-msig300'
 
 # Control the iterations & error
 numIterations = 1
@@ -54,6 +54,9 @@ retrySubPortion = 0.75
 retryMinValid = 9
 	# minimum Known genes to use for PosTrain
 
+alwaysNewAlpha = True
+	# calculate new alpha for every round
+
 # verbose feedback ?
 verbose = True
 
@@ -63,7 +66,7 @@ verbose = True
 
 
 # Adjustible classifier parameters
-useCfier = 2
+useCfier = 1
 	# 1 = Lasso, 2 = ElasticNet, ...
 limitMPLen = [1, 2, 3]
 	# select only meta-paths of specific length(s)
@@ -77,7 +80,7 @@ useFeatPathZScore = True
 	# True/False: use the pathsim sum features
 fZScoreSim = 'features_ZScoreSim.gz'
 	# File name containing path z-score vectors
-useFeatTermWeights = False
+useFeatTermWeights = True
 	# True/False: use the indirect term features
 useFeatNeighbor = False
 	# True/False: use the neighborhood features
@@ -180,6 +183,8 @@ def predictIterative(printFlag) :
 	if retryOnZeroCoeffs :
 		useLabel = useLabel + '_wRS2' # indicating resample on 0 score
 	#end if
+	if alwaysNewAlpha :
+		useLabel = useLabel + '_aA'
 
 	if printFlag :
 		print("Using label: {}".format(useLabel))
@@ -400,6 +405,8 @@ def predictIterative(printFlag) :
 				# 7) Train classifier, predict on test, collect scores
 
 #TODO: add other classifier options ??
+				if alwaysNewAlpha :
+					retryNewAlpha = True
 				if useCfier == 1 :	# 1 = Lasso
 					if retryNewAlpha :
 						cfier = lm.LassoCV(alphas=useGivenRange, positive=usePos,
@@ -444,7 +451,7 @@ def predictIterative(printFlag) :
 				if retryOnZeroCoeffs :
 #					print("--  coeffs: {}".format(len(np.nonzero(cfier.coef_)[0])))
 					if len(np.nonzero(cfier.coef_)[0]) <= 0 :
-						if retries < (numVotes * 3) :
+						if retries < (numVotes * 5) :
 #							if printFlag :
 #								print("--  No coefficients, re-sampling  --")
 							retryNewAlpha = True
