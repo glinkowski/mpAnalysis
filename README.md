@@ -1,5 +1,8 @@
-Repo: 15-Falls
+Repo: mpAnalysis
 # Metapath Analysis of Genomic Data
+## author: Greg Linkowski
+for the KnowEnG big data center at UIUC, 
+funded by the NIH
 
 ##Hypothesis:
 We have access to a multitude of data regarding how genes are related to each other. Yet, for specific cancers and other diseases, we still don't know the specific mechanism that connects the affected genes. Here, I use an analysis of meta-paths -- specific patterns of edge types in a graph -- to approximate those connections. This allows us to describe the connections between the genes in question in terms of weighted combinations of the data we have. Further work will allow us to drill down deeper into that data to uncover biologically relevant details describing those connections.
@@ -28,9 +31,6 @@ We have access to a multitude of data regarding how genes are related to each ot
 
 
 ##Description of the scripts in this repository
-###Part 00: modify the network 
-* mkSubNtwk00 -- select certain edge and node types to create a sub-network, these functions have been subsumed by the preProcessing script
-* mkToy00 -- trim the network, keeping only a certain percent of the nodes (create a smaller network for testing)
 
 ###Part 01: pre-process the network  
 Must be done before any further work. Allows fast statistics generation on network.
